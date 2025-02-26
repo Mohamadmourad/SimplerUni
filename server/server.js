@@ -17,11 +17,12 @@ app.use((req, res, next) => {
 (async () => {
     db.connect() ? console.log("database connected") : console.log("failed to connect to db")
     await createTables();
+
+    app.listen(PORT, () => {
+        console.log(`Server is running on Port: ${PORT}`);
+    });
 })();
 
-app.listen(PORT, () => {
-    console.log(`Server is running on Port: ${PORT}`);
-});
 
 
 

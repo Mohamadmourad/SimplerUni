@@ -1,11 +1,12 @@
 const {Client} = require('pg');
+require('dotenv').config();
 
 const db = new Client({
-    host:"localhost",
-    user:"postgres",
-    password:"admin",
-    port:5432,
-    database:"simplerUni"
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT,
+    database: process.env.DB_NAME
 })
 
 const checkTableExists = async (tableName)=>{
