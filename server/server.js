@@ -1,7 +1,10 @@
 const express = require('express');
 const cors = require('cors'); 
 const {db, createTables} = require('./db');
+const setupSwagger = require('./swaggerConfig');
 require('dotenv').config();
+
+const userRoutes = require("./user/routes");
 
 const PORT = process.env.PORT;
 const app = express();
@@ -14,8 +17,10 @@ app.use((req, res, next) => {
   next();
 });
 
+setupSwagger(app);
+
 (async () => {
-    db.connect() ? console.log("database connected") : console.log("failed to connect to db")
+    await db.connect() ? console.log("database connected") : console.log("failed to connect to db")
     await createTables();
 
     app.listen(PORT, () => {
@@ -23,6 +28,6 @@ app.use((req, res, next) => {
     });
 })();
 
-
+app.use("/auth",userRoutes);
 
 

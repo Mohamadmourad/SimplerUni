@@ -47,10 +47,13 @@ const tables =
     {
         name: "users",
         schema:`CREATE TABLE users (
-         userId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-         name VARCHAR(100), 
-         email VARCHAR(100) UNIQUE
-        );`
+        userId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+        username VARCHAR(100) UNIQUE, 
+        email VARCHAR(100) UNIQUE,
+        password VARCHAR(255),
+        isEmailVerified BOOLEAN,
+        emailOtp INTEGER
+    );`
     },
     {
         name:"test",
