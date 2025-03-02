@@ -95,7 +95,8 @@
  * @swagger
  * /auth/sendOtp:
  *   post:
- *     summary: Send OTP for email verification
+ *     summary: Sends an OTP to the user's email.
+ *     description: Generates an OTP, sets an expiration time, and emails it to the user.
  *     tags: [Authentication]
  *     requestBody:
  *       required: true
@@ -104,23 +105,40 @@
  *           schema:
  *             type: object
  *             required:
- *               - email
+ *               - emailReceiver
+ *               - authToken
  *             properties:
- *               email:
+ *               emailReceiver:
  *                 type: string
- *                 example: user@example.com
+ *                 example: "user@example.com"
+ *                 description: The email to receive the OTP.
+ *               authToken:
+ *                 type: string
+ *                 example: "your-jwt-token"
+ *                 description: The user's authentication token.
  *     responses:
  *       200:
- *         description: OTP sent successfully
+ *         description: OTP sent successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "otpSent"
  *       400:
- *         description: Email not found or OTP request limit exceeded
+ *         description: User not found or OTP already sent.
+ *       500:
+ *         description: Internal server error.
  */
 
 /**
  * @swagger
  * /auth/verifyOtp:
  *   post:
- *     summary: Verify OTP for email confirmation
+ *     summary: Verifies the OTP entered by the user.
+ *     description: Checks if the OTP is correct and not expired.
  *     tags: [Authentication]
  *     requestBody:
  *       required: true
@@ -129,18 +147,30 @@
  *           schema:
  *             type: object
  *             required:
- *               - email
- *               - otp
+ *               - authToken
+ *               - enteredOtp
  *             properties:
- *               email:
+ *               authToken:
  *                 type: string
- *                 example: user@example.com
- *               otp:
- *                 type: string
- *                 example: "123456"
+ *                 example: "your-jwt-token"
+ *                 description: The user's authentication token.
+ *               enteredOtp:
+ *                 type: integer
+ *                 example: 12345
+ *                 description: The OTP entered by the user.
  *     responses:
  *       200:
- *         description: Email verified successfully
+ *         description: OTP verified successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "otpVerified"
  *       400:
- *         description: Incorrect OTP or expired OTP
+ *         description: OTP is expired, incorrect, or not generated.
+ *       500:
+ *         description: Internal server error.
  */

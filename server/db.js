@@ -52,7 +52,9 @@ const tables =
         email VARCHAR(100) UNIQUE,
         password VARCHAR(255),
         isEmailVerified BOOLEAN,
-        emailOtp INTEGER
+        emailOtp INTEGER,
+        emailOtpExpire VARCHAR(30),
+        created_at TIMESTAMPTZ DEFAULT now()
     );`
     },
     {
