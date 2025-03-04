@@ -1,33 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:senior_project/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
+import 'package:senior_project/screens/auth/otp_verification_page.dart';
 
-class SignupPage extends StatefulWidget {
-  const SignupPage({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  State<SignupPage> createState() => _SignupPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _SignupPageState extends State<SignupPage> {
+class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   bool _isPasswordVisible = false;
-  bool _isConfirmPasswordVisible = false;
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  void _signUp() {
+  void _login() {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -36,16 +34,16 @@ class _SignupPageState extends State<SignupPage> {
       _isLoading = true;
     });
 
-    // TODO: Implement actual sign-up logic (API call, authentication, etc.)
+    // TODO: Implement actual login logic (API call, authentication, etc.)
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Sign up successful!')),
+          const SnackBar(content: Text('Login successful!')),
         );
-        context.go('/otp-verify');  // Navigate to login page after successful signup
+        context.go('/otp-verify'); // Navigate to OTP verification page after login
       }
     });
   }
@@ -65,14 +63,12 @@ class _SignupPageState extends State<SignupPage> {
                   const Text(
                     'SimplerUni',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 69, fontWeight: FontWeight.bold, color: AppColors.primaryColor),
+                    style: TextStyle(fontSize: 50, fontWeight: FontWeight.bold, color: AppColors.primaryColor),
                   ),
-                  const Icon(Icons.person_add, size: 80, color: AppColors.primaryColor),
+                  const Icon(Icons.login, size: 80, color: AppColors.primaryColor),
                   const SizedBox(height: 16),
-                  
-                  const SizedBox(height: 8),
                   const Text(
-                    'Create Account',
+                    'Log In',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   ),
@@ -90,9 +86,7 @@ class _SignupPageState extends State<SignupPage> {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your email';
                       }
-                      if (!value.contains('@')) {
-                        return 'Please enter a valid email';
-                      }
+                      
                       return null;
                     },
                   ),
@@ -118,68 +112,35 @@ class _SignupPageState extends State<SignupPage> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter a password';
-                      }
-                      if (value.length < 6) {
-                        return 'Password must be at least 6 characters';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Confirm Password
-                  TextFormField(
-                    controller: _confirmPasswordController,
-                    obscureText: !_isConfirmPasswordVisible,
-                    decoration: InputDecoration(
-                      labelText: 'Confirm Password',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _isConfirmPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
-                          });
-                        },
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please confirm your password';
-                      }
-                      if (value != _passwordController.text) {
-                        return 'Passwords do not match';
+                        return 'Please enter your password';
                       }
                       return null;
                     },
                   ),
                   const SizedBox(height: 24),
 
-                  // Sign Up Button
+                  // Login Button
                   ElevatedButton(
-                    onPressed: _isLoading ? null : _signUp,
+                    onPressed: _isLoading ? null : _login,
                     child: _isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text('SIGN UP'),
+                        : const Text('LOG IN'),
                   ),
                   const SizedBox(height: 16),
 
-                  
+                  // Don't have an account? Sign up
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Text(
-                        'Already have an account?',
+                        'Don\'t have an account?',
                         style: TextStyle(color: AppColors.textSecondary),
                       ),
                       TextButton(
                         onPressed: () {
-                          context.go('/login');
+                          context.go('/signup');
                         },
-                        child: const Text('Log In'),
+                        child: const Text('Sign Up'),
                       ),
                     ],
                   ),
