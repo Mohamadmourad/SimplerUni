@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:senior_project/screens/auth/otp_verification_page.dart';
 import 'package:senior_project/screens/auth/signup.dart';
+import 'package:senior_project/screens/auth/login.dart';
+import 'package:senior_project/theme/app_theme.dart';
 
 void main() {
   runApp(const MyApp());
@@ -8,30 +11,31 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-  
 
   @override
   Widget build(BuildContext context) {
-  
     final GoRouter router = GoRouter(
       initialLocation: '/',
       routes: [
+        GoRoute(path: '/', builder: (context, state) => const LoginPage()),
         GoRoute(
-          path: '/',
-          builder: (context, state) => const Signup(),
+          path: '/signup',
+          builder: (context, state) => const SignupPage(),
         ),
-        // GoRoute(
-        //   path: '/second',
-        //   builder: (context, state) => const SecondScreen(),
-        // ),
-
+        GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
+        GoRoute(
+          path: '/otp-verify',
+          builder: (context, state) => OtpVerificationPage(email: 'waelmok23@gmail.com'),
+        ),
       ],
     );
 
     return MaterialApp.router(
       routerConfig: router,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.dark,
       debugShowCheckedModeBanner: false,
     );
   }
 }
-
