@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:senior_project/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
-import 'package:senior_project/screens/auth/otp_verification_page.dart';
+import 'package:senior_project/services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -25,7 +25,7 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _login() {
+  Future<void> _login() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -34,17 +34,33 @@ class _LoginPageState extends State<LoginPage> {
       _isLoading = true;
     });
 
-    // TODO: Implement actual login logic (API call, authentication, etc.)
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+    try {
+      String? authToken = await AuthService.login(
+        _emailController.text,
+        _passwordController.text,
+      );
+
+      if (authToken != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Login successful!')),
         );
-        context.go('/otp-verify'); // Navigate to OTP verification page after login
+        context.go('/otp-verify', extra: {
+        'email': _emailController.text,
+        'authToken': authToken,
+      });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid credentials. Please try again.')),
+        );
       }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Login failed: $e')),
+      );
+    }
+
+    setState(() {
+      _isLoading = false;
     });
   }
 
@@ -86,7 +102,9 @@ class _LoginPageState extends State<LoginPage> {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your email';
                       }
-                      
+                      if (!value.contains('@')) {
+                        return 'Please enter a valid email';
+                      }
                       return null;
                     },
                   ),

@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:senior_project/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
+import 'package:senior_project/services/auth_service.dart';
+import 'dart:async';
 
 class OtpVerificationPage extends StatefulWidget {
   final String email;
+  final String authToken;
 
   const OtpVerificationPage({
     super.key,
     required this.email,
+    required this.authToken,
   });
 
   @override
@@ -26,6 +30,29 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
   );
   
   bool _isLoading = false;
+  int _resendCountdown = 30;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startResendTimer();
+  }
+
+  void _startResendTimer() {
+    setState(() {
+      _resendCountdown = 30;
+    });
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_resendCountdown > 0) {
+        setState(() {
+          _resendCountdown--;
+        });
+      } else {
+        timer.cancel();
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -35,10 +62,11 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
     for (var node in _focusNodes) {
       node.dispose();
     }
+    _timer?.cancel();
     super.dispose();
   }
 
-  void _verifyOtp() {
+  Future<void> _verifyOtp() async {
     String otp = _otpControllers.map((controller) => controller.text).join();
     
     if (otp.length != 6) {
@@ -52,32 +80,47 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
       _isLoading = true;
     });
 
-    // Simulate OTP verification
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('OTP verified successfully!')),
-        );
-        context.go('/home'); // Navigate to the home page after OTP verification
-      }
+    bool success = await AuthService.verifyOtp(widget.authToken, otp);
+    
+    setState(() {
+      _isLoading = false;
     });
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('OTP verified successfully!')),
+      );
+      context.go('/home'); // Navigate to home page after OTP verification
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invalid OTP. Please try again.')),
+      );
+    }
   }
 
-  void _resendOtp() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('OTP resent!')),
-    );
+  Future<void> _resendOtp() async {
+    if (_resendCountdown > 0) return;
+
+    bool success = await AuthService.sendOtp(widget.email, widget.authToken);
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('OTP resent successfully!')),
+      );
+      _startResendTimer();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to resend OTP. Try again later.')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
+      appBar: AppBar(
+        title: const Text('OTP Verification'),
+      ),
       body: SafeArea(
-        
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
@@ -145,14 +188,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
               ElevatedButton(
                 onPressed: _isLoading ? null : _verifyOtp,
                 child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
+                    ? const CircularProgressIndicator(color: Colors.white)
                     : const Text('VERIFY'),
               ),
               
@@ -162,9 +198,11 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    'Didn\'t receive the code?',
-                    style: TextStyle(color: AppColors.textSecondary),
+                  Text(
+                    _resendCountdown > 0
+                        ? 'Resend available in $_resendCountdown sec'
+                        : 'Didn\'t receive the code?',
+                    style: const TextStyle(color: AppColors.textSecondary),
                   ),
                   TextButton(
                     onPressed: _resendOtp,

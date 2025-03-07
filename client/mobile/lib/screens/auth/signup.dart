@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:senior_project/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
+import 'package:senior_project/services/auth_service.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -27,7 +28,7 @@ class _SignupPageState extends State<SignupPage> {
     super.dispose();
   }
 
-  void _signUp() {
+  Future<void> _signUp() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -36,17 +37,34 @@ class _SignupPageState extends State<SignupPage> {
       _isLoading = true;
     });
 
-    // TODO: Implement actual sign-up logic (API call, authentication, etc.)
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+    try {
+      String? authToken = await AuthService.signUp(
+        _emailController.text,
+        _passwordController.text,
+        _emailController.text.split('@')[0],
+      );
+
+      if (authToken != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Sign up successful!')));
+        context.go('/otp-verify', extra: {
+        'email': _emailController.text,
+        'authToken': authToken,
+      });
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Sign up successful!')),
+          const SnackBar(content: Text('User already exists')),
         );
-        context.go('/otp-verify');  // Navigate to login page after successful signup
       }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Network Error: $e')));
+    }
+
+    setState(() {
+      _isLoading = false;
     });
   }
 
@@ -63,13 +81,21 @@ class _SignupPageState extends State<SignupPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Text(
-                    'SimplerUni',
+                    'UniConnect',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 69, fontWeight: FontWeight.bold, color: AppColors.primaryColor),
+                    style: TextStyle(
+                      fontSize: 50,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primaryColor,
+                    ),
                   ),
-                  const Icon(Icons.person_add, size: 80, color: AppColors.primaryColor),
+                  const Icon(
+                    Icons.person_add,
+                    size: 80,
+                    color: AppColors.primaryColor,
+                  ),
                   const SizedBox(height: 16),
-                  
+
                   const SizedBox(height: 8),
                   const Text(
                     'Create Account',
@@ -107,7 +133,9 @@ class _SignupPageState extends State<SignupPage> {
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                          _isPasswordVisible
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                         ),
                         onPressed: () {
                           setState(() {
@@ -137,11 +165,14 @@ class _SignupPageState extends State<SignupPage> {
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _isConfirmPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                          _isConfirmPasswordVisible
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                         ),
                         onPressed: () {
                           setState(() {
-                            _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                            _isConfirmPasswordVisible =
+                                !_isConfirmPasswordVisible;
                           });
                         },
                       ),
@@ -161,13 +192,15 @@ class _SignupPageState extends State<SignupPage> {
                   // Sign Up Button
                   ElevatedButton(
                     onPressed: _isLoading ? null : _signUp,
-                    child: _isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text('SIGN UP'),
+                    child:
+                        _isLoading
+                            ? const CircularProgressIndicator(
+                              color: Colors.white,
+                            )
+                            : const Text('SIGN UP'),
                   ),
                   const SizedBox(height: 16),
 
-                  
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
