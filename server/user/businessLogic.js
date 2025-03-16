@@ -101,7 +101,7 @@ module.exports.sendOtp = async (req, res) => {
                 });
             }
         }
-        const otp = Math.floor(Math.random() * (99999 - 10000 + 1)) + 10000;
+        const otp = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
         const subject = "Email Verification";
         const expireAt = now.plus({ minutes: 3 }).toISO();
         const htmlContent = `
