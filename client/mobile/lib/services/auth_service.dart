@@ -1,15 +1,18 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
+import 'package:shared_preferences/shared_preferences.dart';
 class AuthService {
   static const String _baseUrl = 'http://localhost:5000/auth';
-
+  
+  
  
   static Future<String?> signUp(
+    
     String email,
     String password,
     String username,
   ) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
     final Uri url = Uri.parse('$_baseUrl/signup');
 
     final response = await http.post(
@@ -26,6 +29,7 @@ class AuthService {
       final data = jsonDecode(response.body);
       print('User registered successfully: ${data["message"]}');
       print('Auth token: ${data["authToken"]}');
+      prefs.setString('authToken', data["authToken"]);
       return data["authToken"];
     } else {
       print('Error: ${response.statusCode}, ${response.body}');
@@ -34,6 +38,7 @@ class AuthService {
   }
 
   static Future<String?> login(String email, String password) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
     final Uri url = Uri.parse('$_baseUrl/login');
 
     final response = await http.post(
@@ -45,6 +50,7 @@ class AuthService {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       print('Login successful: ${data["message"]}');
+      prefs.setString('authToken', data["authToken"]);
       return data["authToken"];
     } else if (response.statusCode == 400) {
       print('Invalid credentials.');
@@ -55,11 +61,12 @@ class AuthService {
   }
   static Future<bool> sendOtp(String email, String authToken) async {
     final Uri url = Uri.parse('$_baseUrl/sendotp');
-
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('authToken');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'emailReceiver': email, 'authToken': authToken}),
+      body: jsonEncode({'emailReceiver': email, 'authToken': token}),
     );
 
     if (response.statusCode == 200) {
@@ -70,14 +77,15 @@ class AuthService {
       return false;
     }
   }
-
+  
   static Future<bool> verifyOtp(String authToken, String enteredOtp) async {
     final Uri url = Uri.parse('$_baseUrl/verifyotp');
-
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('authToken');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'authToken': authToken, 'enteredOtp': enteredOtp}),
+      body: jsonEncode({'authToken': token, 'enteredOtp': enteredOtp}),
     );
 
     if (response.statusCode == 200) {

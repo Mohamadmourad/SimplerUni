@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:senior_project/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:senior_project/services/auth_service.dart';
+import 'package:shared_preferences_android/shared_preferences_android.dart';
+
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -12,6 +14,7 @@ class SignupPage extends StatefulWidget {
 
 class _SignupPageState extends State<SignupPage> {
   final _formKey = GlobalKey<FormState>();
+  
   bool _isLoading = false;
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
