@@ -25,7 +25,13 @@ class MyApp extends StatelessWidget {
         GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
         GoRoute(
           path: '/otp-verify',
-          builder: (context, state) => OtpVerificationPage(email: 'waelmok23@gmail.com'),
+          builder: (context, state) {
+            final Map<String, dynamic> args = state.extra as Map<String, dynamic>;
+            return OtpVerificationPage(
+              email: args['email'],
+              authToken: args['authToken'],
+            );
+          },
         ),
       ],
     );
