@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const sgMail = require('@sendgrid/mail')
 
 module.exports.createToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET);
@@ -48,15 +47,3 @@ module.exports.handleErrors = (err) => {
     return errors;
 };
 
-module.exports.sendEmail = async (emailReceiver, subject, htmlContent)=>{
-    sgMail.setApiKey(process.env.SENDGRID_KEY);
-
-    const email = {
-        from: "mohamadmourad511@gmail.com",
-        to: emailReceiver,
-        subject,
-        html: htmlContent,
-      };
-  
-    await sgMail.send(email);
-}

@@ -2,15 +2,21 @@ const express = require('express');
 const cors = require('cors'); 
 const {db, createTables} = require('./db');
 const setupSwagger = require('./swaggerConfig');
+const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
-const userRoutes = require("./user/routes");
+const userRoutes = require("./endpoints/user/routes");
+const universityRoutes = require("./endpoints/university/routes");
 
 const PORT = process.env.PORT;
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000', 
+  credentials: true 
+}));
+app.use(cookieParser());
 
 app.use((req, res, next) => {
   console.log(req.path, req.method);
@@ -29,5 +35,4 @@ setupSwagger(app);
 })();
 
 app.use("/auth",userRoutes);
-
-
+app.use("/university",universityRoutes);

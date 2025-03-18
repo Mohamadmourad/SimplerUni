@@ -151,7 +151,7 @@ const tables =
         schema:`CREATE TABLE universities (
         universityId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
         name VARCHAR(60),
-        serialNumber varchar(255),
+        serialNumber varchar(32),
         password VARCHAR(255),
         studentDomain VARCHAR(255),
         instructorDomain VARCHAR(255),

@@ -1,6 +1,8 @@
-const {db} = require("../db");
+const {db} = require("../../db");
 const {DateTime} = require("luxon");
-const { hashText, createToken, handleErrors, compareHashedText, sendEmail, getUserIdFromToken } = require("./helper");
+const { hashText, createToken, handleErrors, compareHashedText, getUserIdFromToken } = require("./helper");
+const { sendEmail } = require("../helper");
+const { otpVerificationEmail } = require("../emailTemplates");
 
 module.exports.signup_post = async (req, res) => {
     let { email, password, username } = req.body;
@@ -104,51 +106,7 @@ module.exports.sendOtp = async (req, res) => {
         const otp = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
         const subject = "Email Verification";
         const expireAt = now.plus({ minutes: 3 }).toISO();
-        const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8" />
-            <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <title>OTP Verification</title>
-            <style>
-            body { margin: 0; padding: 0; background-color: #030712; font-family: Arial, sans-serif; }
-            .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 6px; overflow: hidden; }
-            .header { background-color: #6d28d9; padding: 20px; text-align: center; color: #ffffff; }
-            .content { padding: 30px 20px; color: #030712; text-align: center; }
-            .otp-code { display: inline-block; font-weight: bold; font-size: 24px; color: #6d28d9; margin: 20px 0; }
-            .footer { background-color: #6d28d9; padding: 15px; text-align: center; color: #ffffff; font-size: 14px; }
-            a.button { background-color: #6d28d9; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 4px; display: inline-block; margin-top: 20px; }
-            a.button:hover { opacity: 0.9; }
-            </style>
-        </head>
-        <body>
-            <table class="container" width="100%" border="0" cellspacing="0" cellpadding="0">
-            <tr>
-                <td class="header">
-                <h1>Verify Your Account</h1>
-                </td>
-            </tr>
-            <tr>
-                <td class="content">
-                <p>Hello,</p>
-                <p>Please use the OTP code below to complete your verification process:</p>
-                <div class="otp-code">${otp}</div>
-                <p>
-                    If you didn't request this verification code, you can safely ignore this email.
-                </p>
-                </td>
-            </tr>
-            <tr>
-                <td class="footer">
-                <p>© 2025 Your Company. All rights reserved.</p>
-                </td>
-            </tr>
-            </table>
-        </body>
-        </html>
-        `;
+        const htmlContent = otpVerificationEmail(otp);
         await sendEmail(emailReceiver, subject, htmlContent);
         await db.query(`UPDATE users SET emailOtp = $1, emailOtpExpire = $2 WHERE userId = $3`, [otp, expireAt, userId]);
         res.status(200).json({ message: "otpSent" });
