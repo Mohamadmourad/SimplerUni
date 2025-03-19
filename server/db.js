@@ -165,7 +165,7 @@ const tables =
     {
         name: "roles",
         schema:`CREATE TABLE roles (
-        roleId UUID REFERENCES questions(questionId) ON DELETE CASCADE,
+        roleId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
         name varchar(32),
         password VARCHAR(255),
         universityId UUID REFERENCES universities(universityId) ON DELETE CASCADE,
@@ -183,7 +183,7 @@ const tables =
     {
         name: "web_admins",
         schema:`CREATE TABLE web_admins (
-        adminId UUID REFERENCES questions(questionId) ON DELETE CASCADE,
+        adminId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
         username varchar(32),
         password VARCHAR(255),
         universityId UUID REFERENCES universities(universityId) ON DELETE CASCADE,
