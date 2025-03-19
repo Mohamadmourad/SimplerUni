@@ -151,14 +151,45 @@ const tables =
         schema:`CREATE TABLE universities (
         universityId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
         name VARCHAR(60),
-        serialNumber varchar(32),
-        password VARCHAR(255),
         studentDomain VARCHAR(255),
         instructorDomain VARCHAR(255),
         created_at TIMESTAMPTZ DEFAULT now()
         );
         ALTER TABLE users ADD COLUMN universityId UUID REFERENCES universities(universityId) ON DELETE SET NULL;
+        ALTER TABLE questions ADD COLUMN universityId UUID REFERENCES universities(universityId) ON DELETE SET NULL;
+        ALTER TABLE quizes ADD COLUMN universityId UUID REFERENCES universities(universityId) ON DELETE SET NULL;
+        ALTER TABLE clubs ADD COLUMN universityId UUID REFERENCES universities(universityId) ON DELETE SET NULL;
+        ALTER TABLE chatrooms ADD COLUMN universityId UUID REFERENCES universities(universityId) ON DELETE SET NULL;
         `
+    },
+    {
+        name: "roles",
+        schema:`CREATE TABLE roles (
+        roleId UUID REFERENCES questions(questionId) ON DELETE CASCADE,
+        name varchar(32),
+        password VARCHAR(255),
+        universityId UUID REFERENCES universities(universityId) ON DELETE CASCADE,
+        created_at TIMESTAMPTZ DEFAULT now()
+        );`
+    },
+    {
+        name: "role_permissions",
+        schema:`CREATE TABLE role_permissions (
+        name varchar(32),
+        universityId UUID REFERENCES universities(universityId) ON DELETE CASCADE,
+        created_at TIMESTAMPTZ DEFAULT now()
+        );`
+    },
+    {
+        name: "web_admins",
+        schema:`CREATE TABLE web_admins (
+        adminId UUID REFERENCES questions(questionId) ON DELETE CASCADE,
+        username varchar(32),
+        password VARCHAR(255),
+        universityId UUID REFERENCES universities(universityId) ON DELETE CASCADE,
+        roleId UUID REFERENCES roles(roleId) ON DELETE CASCADE,
+        created_at TIMESTAMPTZ DEFAULT now()
+        );`
     },
     {
         name:"campusus",
@@ -171,11 +202,11 @@ const tables =
         `
     },
     {
-        name:"university_majors",
-        schema:`CREATE TABLE university_majors (
+        name:"majors",
+        schema:`CREATE TABLE majors (
         majorId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
         name VARCHAR(60),
-        universityId UUID REFERENCES universities(universityId) ON DELETE SET NULL
+        campusId UUID REFERENCES campusus(campusId) ON DELETE SET NULL
         );`
     },
     {
