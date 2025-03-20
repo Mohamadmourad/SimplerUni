@@ -4,6 +4,7 @@ const { hashText } = require("../user/helper");
 const { sendEmail } = require("../helper");
 const { accountAcceptanceEmail } = require("../emailTemplates");
 const { createToken } = require("./helper");
+const { addRole } = require("../role/businessLogic");
 
 module.exports.createUniversity = async (req, res)=>{
     let { universityName, universityEmail, username } = req.body;
@@ -16,13 +17,12 @@ module.exports.createUniversity = async (req, res)=>{
     });
     const password = await hashText(Originalpassword);
 
-    const result = await db.query('INSERT INTO universities(name) VALUES ($1,$2,$3) RETURNING *',[universityName]);
-    //TODO: adding role function 
-
+    const result = await db.query('INSERT INTO universities(name) VALUES ($1) RETURNING *',[universityName]); 
     const  universityId = result.rows[0].universityid;
-    await db.query('INSERT INTO web_admins(username, password, universityId, roledId) VALUES ($1,$2,$3,$4)',[ username, password, universityId]);
+    const roleId = await addRole("general admin",universityId,["universityDashboard"]);
+    await db.query('INSERT INTO web_admins(username, password, universityid, roleid) VALUES ($1,$2,$3,$4)',[ username, password, universityId, roleId]);
 
-    const htmlContent = accountAcceptanceEmail(serialNumber, password);
+    const htmlContent = accountAcceptanceEmail(username, Originalpassword);
 
     await sendEmail(universityEmail, "simplerUni acceptance", htmlContent);
 
@@ -34,7 +34,7 @@ module.exports.createUniversity = async (req, res)=>{
 
 module.exports.universityLogin = async (req, res)=>{
   const { username, password } = req.body;
-
+  password = await hashText(password);
   const result = await db.query(`SELECT * FROM web_admins WHERE username=$1 AND password=$2`,[username, password]);
 
   if(result.rowCount === 0){
@@ -42,8 +42,8 @@ module.exports.universityLogin = async (req, res)=>{
   }
 
   const universityId = result.rows[0].universityid;
-
-  const authToken = createToken(universityId);
+  const maxAge = 3 * 24 * 60 * 60;
+  const authToken = createToken(universityId, maxAge);
   res.cookie('jwt', authToken, { httpOnly: true, maxAge: maxAge * 1000 });
 
   return res.status(200).json({
@@ -61,12 +61,17 @@ const checkUniversityAuth = async (token)=>{
     }
 }
 
+const getUniversityId = async (adminId)=>{
+  const result = await db.query("SELECT * FROM web_admins WHERE adminin=$1",[adminId]);
+  return result.rows[0].universityid;
+}
+
 module.exports.addDomains = async (req, res)=>{
    const { studentDomain, instructorDomain } = req.body;
    const token = req.cookies.jwt;
    try{
-    const universityId = checkUniversityAuth(token);
-    //TODO: add getting uniId from admin
+    const adminId = checkUniversityAuth(token);
+    const universityId = getUniversityId(adminId);
     await db.query("UPDATE universities SET studentDomain=$1, instructorDomain=$2 WHERE universityid=$3",[studentDomain, instructorDomain, universityId]);
     return res.status(200).json({message: "domains added succesfully"})
    }
@@ -80,8 +85,8 @@ module.exports.addCampus = async (req, res)=>{
   const token = req.cookies.jwt;
   if(!campus && !campususGroup) return res.status(400).json({message:"campus or campsus are required"});
   try{
-    //TODO: add getting uniId from admin
-    const universityId = checkUniversityAuth(token);
+    const adminId = checkUniversityAuth(token);
+    const universityId = getUniversityId(adminId);
     if(campus){
       const result = await db.query('INSERT INTO campusus(name, universityid) VALUES ($1,$2) RETURNING *',[campus,universityId]);
       return res.status(200).json({
@@ -106,8 +111,8 @@ module.exports.addMajor = async (req, res)=>{
   const token = req.cookies.jwt;
   if(!major && !majors) return res.status(400).json({message:"major or majors are required"});
   try{
-    //TODO: add getting uniId from admin
-    const universityId = checkUniversityAuth(token);
+    const adminId = checkUniversityAuth(token);
+    const universityId = getUniversityId(adminId);
     if(major){
       const result = await db.query('INSERT INTO university_majors(name, universityid) VALUES ($1,$2) RETURNING *',[major,universityId]);
       return res.status(200).json({
@@ -130,8 +135,8 @@ module.exports.addMajor = async (req, res)=>{
 module.exports.getAllCampsus = async (req, res)=>{
   try{
     const token = req.cookies.jwt;
-    //TODO: add getting uniId from admin
-    const universityId = checkUniversityAuth(token);
+    const adminId = checkUniversityAuth(token);
+    const universityId = getUniversityId(adminId);
 
     const result = await db.query("SELECT campusid,name FROM campusus WHERE universityid=$1",[universityId]);
     return res.status(200).json({
@@ -147,8 +152,8 @@ module.exports.getAllCampsus = async (req, res)=>{
 module.exports.getAllMajors = async (req, res)=>{
   try{
     const token = req.cookies.jwt;
-    //TODO: add getting uniId from admin
-    const universityId = checkUniversityAuth(token);
+    const adminId = checkUniversityAuth(token);
+    const universityId = getUniversityId(adminId);
 
     const result = await db.query("SELECT majorid,name FROM majors WHERE universityid=$1",[universityId]);
     return res.status(200).json({

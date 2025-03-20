@@ -1,4 +1,4 @@
-export const accountAcceptanceEmail = (serialNumber, originalPassword) => `
+export const accountAcceptanceEmail = (username, originalPassword) => `
     <!DOCTYPE html>
     <html>
     <head>
@@ -33,7 +33,7 @@ export const accountAcceptanceEmail = (serialNumber, originalPassword) => `
         <tr>
             <td class="content">
                 <div class="congrats">Congrats, you have been accepted to SimplerUni!</div>
-                <p class="info">Serial Number: ${serialNumber}</p>
+                <p class="info">username: ${username}</p>
                 <p class="info">Password: ${originalPassword}</p>
             </td>
         </tr>

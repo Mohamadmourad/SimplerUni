@@ -176,7 +176,7 @@ const tables =
         name: "role_permissions",
         schema:`CREATE TABLE role_permissions (
         name varchar(32),
-        universityId UUID REFERENCES universities(universityId) ON DELETE CASCADE,
+        roleId UUID REFERENCES roles(roleId) ON DELETE CASCADE,
         created_at TIMESTAMPTZ DEFAULT now()
         );`
     },
