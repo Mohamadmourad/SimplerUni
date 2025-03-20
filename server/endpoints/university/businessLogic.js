@@ -4,17 +4,12 @@ const { hashText } = require("../user/helper");
 const { sendEmail } = require("../helper");
 const { accountAcceptanceEmail } = require("../emailTemplates");
 const { createToken } = require("./helper");
+const { addRole } = require("../role/businessLogic");
 
 module.exports.createUniversity = async (req, res)=>{
-    let { universityName, universityEmail } = req.body;
+    let { universityName, universityEmail, username } = req.body;
     if(!universityName){
         return res.status(400).json({ error: "university name is required" });
-    }
-    let serialNumber = "";
-    for(let i = 0;i<4;i++){
-      const random = generator.generate({ length: 7, numbers: true });
-      serialNumber += random;
-      i !== 3 ? serialNumber += '-' : null;
     }
     const  Originalpassword = generator.generate({
         length: 15,
@@ -22,10 +17,12 @@ module.exports.createUniversity = async (req, res)=>{
     });
     const password = await hashText(Originalpassword);
 
-    const result = await db.query('INSERT INTO universities(name, serialNumber, password) VALUES ($1,$2,$3) RETURNING *',[universityName,serialNumber,password]);
-
+    const result = await db.query('INSERT INTO universities(name) VALUES ($1) RETURNING *',[universityName]); 
     const  universityId = result.rows[0].universityid;
-    const htmlContent = accountAcceptanceEmail(serialNumber, password);
+    const roleId = await addRole("general admin",universityId,["universityDashboard"]);
+    await db.query('INSERT INTO web_admins(username, password, universityid, roleid) VALUES ($1,$2,$3,$4)',[ username, password, universityId, roleId]);
+
+    const htmlContent = accountAcceptanceEmail(username, Originalpassword);
 
     await sendEmail(universityEmail, "simplerUni acceptance", htmlContent);
 
@@ -36,17 +33,17 @@ module.exports.createUniversity = async (req, res)=>{
 }
 
 module.exports.universityLogin = async (req, res)=>{
-  const { serialNumber, password } = req.body;
-
-  const result = await db.query(`SELECT * FROM universities WHERE serialNumber=$1 AND password=$2`,([serialNumber, password]));
+  const { username, password } = req.body;
+  password = await hashText(password);
+  const result = await db.query(`SELECT * FROM web_admins WHERE username=$1 AND password=$2`,[username, password]);
 
   if(result.rowCount === 0){
     return res.status(400).json({ error: "wrong credentials" });
   }
 
   const universityId = result.rows[0].universityid;
-
-  const authToken = createToken(universityId);
+  const maxAge = 3 * 24 * 60 * 60;
+  const authToken = createToken(universityId, maxAge);
   res.cookie('jwt', authToken, { httpOnly: true, maxAge: maxAge * 1000 });
 
   return res.status(200).json({
@@ -64,15 +61,111 @@ const checkUniversityAuth = async (token)=>{
     }
 }
 
+const getUniversityId = async (adminId)=>{
+  const result = await db.query("SELECT * FROM web_admins WHERE adminin=$1",[adminId]);
+  return result.rows[0].universityid;
+}
+
 module.exports.addDomains = async (req, res)=>{
    const { studentDomain, instructorDomain } = req.body;
    const token = req.cookies.jwt;
    try{
-    const universityId = checkUniversityAuth(token);
-    await db.query("UPDATE universities SET studentDomain=$1, instructorDomain=$2 WHERE universityid=$3",([studentDomain, instructorDomain, universityId]));
+    const adminId = checkUniversityAuth(token);
+    const universityId = getUniversityId(adminId);
+    await db.query("UPDATE universities SET studentDomain=$1, instructorDomain=$2 WHERE universityid=$3",[studentDomain, instructorDomain, universityId]);
     return res.status(200).json({message: "domains added succesfully"})
    }
    catch(e){
     console.log("error while adding the domains: ",e);
    }
+}
+
+module.exports.addCampus = async (req, res)=>{
+  const { campus, campususGroup } = req.body;
+  const token = req.cookies.jwt;
+  if(!campus && !campususGroup) return res.status(400).json({message:"campus or campsus are required"});
+  try{
+    const adminId = checkUniversityAuth(token);
+    const universityId = getUniversityId(adminId);
+    if(campus){
+      const result = await db.query('INSERT INTO campusus(name, universityid) VALUES ($1,$2) RETURNING *',[campus,universityId]);
+      return res.status(200).json({
+        message: "campus added succesfully",
+        campusId : result.rows[0].campusid
+      });
+    }
+    else{
+      for(let campus of campususGroup){
+        await db.query('INSERT INTO campusus(name, universityid) VALUES ($1,$2) RETURNING *',[campus,universityId]);
+      }
+      return res.status(200).json({message: "campus added succesfully"});
+    }
+   }
+   catch(e){
+    console.log("error while adding the campusus: ",e);
+   }
+}
+
+module.exports.addMajor = async (req, res)=>{
+  const { major, majors } = req.body;
+  const token = req.cookies.jwt;
+  if(!major && !majors) return res.status(400).json({message:"major or majors are required"});
+  try{
+    const adminId = checkUniversityAuth(token);
+    const universityId = getUniversityId(adminId);
+    if(major){
+      const result = await db.query('INSERT INTO university_majors(name, universityid) VALUES ($1,$2) RETURNING *',[major,universityId]);
+      return res.status(200).json({
+        message: "major added succesfully",
+        major : result.rows[0].majorid
+      });
+    }
+    else{
+      for(let major of majors){
+        await db.query('INSERT INTO university_majors(name, universityid) VALUES ($1,$2) RETURNING *',[major,universityId]);
+      }
+      return res.status(200).json({message: "majors added succesfully"});
+    }
+   }
+   catch(e){
+    console.log("error while adding the major: ",e);
+   }
+}
+
+module.exports.getAllCampsus = async (req, res)=>{
+  try{
+    const token = req.cookies.jwt;
+    const adminId = checkUniversityAuth(token);
+    const universityId = getUniversityId(adminId);
+
+    const result = await db.query("SELECT campusid,name FROM campusus WHERE universityid=$1",[universityId]);
+    return res.status(200).json({
+      message:"data retreive succsefull",
+      data: result.rows[0]
+    });
+  }
+  catch(e){
+    console.log("getting campsus error: ",e)
+  }
+}
+
+module.exports.getAllMajors = async (req, res)=>{
+  try{
+    const token = req.cookies.jwt;
+    const adminId = checkUniversityAuth(token);
+    const universityId = getUniversityId(adminId);
+
+    const result = await db.query("SELECT majorid,name FROM majors WHERE universityid=$1",[universityId]);
+    return res.status(200).json({
+      message:"data retreive succsefull",
+      data: result.rows[0]
+    });
+  }
+  catch(e){
+    console.log("getting major error: ",e)
+  }
+}
+
+module.exports.getUniversity = async (req,res)=>{
+  
 }
