@@ -23,7 +23,7 @@ export default function RequestAccess() {
         {/* Logo & Heading */}
         <div className="text-center mb-8">
           <School className="w-12 h-12 text-purple-500 mx-auto mb-4" />
-          <h2 className="text-3xl font-bold text-white">Request University Access</h2>
+          <h2 className="text-3xl font-bold text-white">Join Our Family</h2>
         </div>
 
         {/* Request Access Form */}
@@ -47,24 +47,7 @@ export default function RequestAccess() {
             </div>
           </div>
 
-          {/* Contact Person */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Contact Person
-            </label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Contact Person"
-                className="pl-10 w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white bg-gray-700"
-                value={contactPerson}
-                onChange={(e) => setContactPerson(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
+          
           {/* Email */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
