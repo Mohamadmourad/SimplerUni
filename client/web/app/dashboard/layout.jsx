@@ -2,40 +2,49 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
-  School,
+  CalculatorIcon,
   Home,
   Users,
-  MessageCircle,
-  Calendar,
-  Settings,
-  Menu as MenuIcon,
+  FilePlus,
+  Upload,
+  Menu,
   X,
-  BookOpen,
-  BarChart2,
+  FileText,
+  LogOut,
 } from "lucide-react";
 
 export default function DashboardLayout({ children }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Default closed on mobile
   const pathname = usePathname();
+  const router = useRouter();
 
   const navigation = [
     { name: "Home", icon: Home, path: "/dashboard" },
-    { name: "University Data", icon: School, path: "/dashboard/university-data" },
+    { name: "Analytics", icon: CalculatorIcon, path: "/dashboard/analytics" },
+    { name: "Majors", icon: FilePlus, path: "/dashboard/majors" },
+    { name: "Domains", icon: FileText, path: "/dashboard/domains" },
+    { name: "Admins", icon: Users, path: "/dashboard/admins" },
   ];
+
+  const handleSignOut = () => {
+    console.log("Signing out...");
+    router.push("/auth/login");
+  };
 
   return (
     <div className="min-h-screen flex bg-gray-800 text-gray-300">
       {/* Sidebar */}
       <aside
-        className={`w-64 bg-gray-900 shadow-lg transition-transform duration-200 ease-in-out lg:static lg:inset-0 ${
-          isSidebarOpen ? "block" : "hidden"
-        } lg:block`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 flex flex-col bg-gray-900 shadow-lg transition-transform duration-300 ease-in-out transform ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-64"
+        } lg:translate-x-0 lg:static`}
       >
+        {/* Sidebar Header */}
         <div className="flex items-center justify-between h-16 px-6 bg-gray-950">
           <div className="flex items-center">
-            <School className="w-8 h-8 text-purple-500" />
+            <CalculatorIcon className="w-8 h-8 text-purple-500" />
             <span className="ml-2 text-white text-xl font-bold">SimplerUni</span>
           </div>
           <button
@@ -45,7 +54,9 @@ export default function DashboardLayout({ children }) {
             <X className="w-6 h-6" />
           </button>
         </div>
-        <nav className="mt-6 px-4">
+
+        {/* Sidebar Navigation */}
+        <nav className="mt-6 px-4 flex-1">
           {navigation.map((item) => (
             <Link
               key={item.name}
@@ -55,13 +66,33 @@ export default function DashboardLayout({ children }) {
                   ? "bg-purple-600 text-white shadow-md"
                   : "text-gray-400 hover:bg-gray-700 hover:text-white"
               }`}
+              onClick={() => setIsSidebarOpen(false)} // Close on mobile tap
             >
               <item.icon className="w-5 h-5 mr-3" />
               {item.name}
             </Link>
           ))}
         </nav>
+
+        {/* Sign Out Button (Bottom Left) */}
+        <div className="p-4">
+          <button
+            onClick={handleSignOut}
+            className="w-full flex items-center px-4 py-3 rounded-lg transition text-gray-400 hover:bg-red-600 hover:text-white"
+          >
+            <LogOut className="w-5 h-5 mr-3" />
+            Sign Out
+          </button>
+        </div>
       </aside>
+
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setIsSidebarOpen(true)}
+        className="fixed top-4 left-4 z-50 p-2 bg-gray-900 text-gray-400 rounded-lg lg:hidden"
+      >
+        <Menu className="w-6 h-6" />
+      </button>
 
       {/* Main Content */}
       <div className="flex-1 min-w-0 bg-gray-800">
