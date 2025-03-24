@@ -5,6 +5,7 @@ const { sendEmail } = require("../helper");
 const { accountAcceptanceEmail } = require("../emailTemplates");
 const { createToken } = require("./helper");
 const { addRole } = require("../role/businessLogic");
+const bcrypt = require('bcrypt');
 
 module.exports.createUniversity = async (req, res)=>{
     let { universityName, universityEmail, username } = req.body;
@@ -32,24 +33,25 @@ module.exports.createUniversity = async (req, res)=>{
     })
 }
 
-module.exports.universityLogin = async (req, res)=>{
+module.exports.universityLogin = async (req, res) => {
   const { username, password } = req.body;
-  password = await hashText(password);
-  const result = await db.query(`SELECT * FROM web_admins WHERE username=$1 AND password=$2`,[username, password]);
-
-  if(result.rowCount === 0){
+  const result = await db.query(`SELECT * FROM web_admins WHERE username=$1`, [username]);
+  if (result.rowCount === 0) {
     return res.status(400).json({ error: "wrong credentials" });
   }
-
-  const universityId = result.rows[0].universityid;
+  const user = result.rows[0];
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) {
+    return res.status(400).json({ error: "wrong credentials" });
+  }
+  const universityId = user.adminid;
   const maxAge = 3 * 24 * 60 * 60;
   const authToken = createToken(universityId, maxAge);
   res.cookie('jwt', authToken, { httpOnly: true, maxAge: maxAge * 1000 });
-
   return res.status(200).json({
-    message: "login succesful"
-  })
-}
+    message: "login successful"
+  });
+};
 
 const checkUniversityAuth = async (token)=>{
     const result = verifyToken(token);
@@ -165,6 +167,47 @@ module.exports.getAllMajors = async (req, res)=>{
     console.log("getting major error: ",e)
   }
 }
+
+module.exports.deleteCampus = async (req, res) => {
+  const { campusId } = req.body;
+  const token = req.cookies.jwt;
+  if (!campusId) return res.status(400).json({ message: "campusId is required" });
+  try {
+    const adminId = checkUniversityAuth(token);
+    const universityId = getUniversityId(adminId);
+    const result = await db.query(
+      'DELETE FROM campusus WHERE campusid=$1 AND universityid=$2 RETURNING *',
+      [campusId, universityId]
+    );
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Campus not found or not authorized" });
+    }
+    return res.status(200).json({ message: "campus deleted successfully" });
+  } catch (e) {
+    console.log("error while deleting the campus: ", e);
+  }
+};
+
+module.exports.deleteMajor = async (req, res) => {
+  const { majorId } = req.body;
+  const token = req.cookies.jwt;
+  if (!majorId) return res.status(400).json({ message: "majorId is required" });
+  try {
+    const adminId = checkUniversityAuth(token);
+    const universityId = getUniversityId(adminId);
+    const result = await db.query(
+      'DELETE FROM university_majors WHERE majorid=$1 AND universityid=$2 RETURNING *',
+      [majorId, universityId]
+    );
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Major not found or not authorized" });
+    }
+    return res.status(200).json({ message: "major deleted successfully" });
+  } catch (e) {
+    console.log("error while deleting the major: ", e);
+  }
+};
+
 
 module.exports.getUniversity = async (req,res)=>{
   
