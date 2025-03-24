@@ -167,7 +167,6 @@ const tables =
         schema:`CREATE TABLE roles (
         roleId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
         name varchar(32),
-        password VARCHAR(255),
         universityId UUID REFERENCES universities(universityId) ON DELETE CASCADE,
         created_at TIMESTAMPTZ DEFAULT now()
         );`
