@@ -98,7 +98,7 @@ export default function DashboardLayout({ children }) {
 
       {/* Main Content */}
       <div className="flex-1 min-w-0 bg-gray-800">
-        <main className="p-8 w-full max-w-4xl">{children}</main>
+        <main className="p-8 w-full">{children}</main>
       </div>
     </div>
   );
