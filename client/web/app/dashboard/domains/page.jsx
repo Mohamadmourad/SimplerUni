@@ -20,7 +20,6 @@ export default function DomainsPage() {
     setDomains(domains.filter((_, i) => i !== index));
   };
 
-  // Check if a student or instructor domain already exists
   const hasStudentDomain = domains.some((d) => d.type === "Student");
   const hasInstructorDomain = domains.some((d) => d.type === "Instructor");
 
