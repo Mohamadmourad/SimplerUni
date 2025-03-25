@@ -8,6 +8,7 @@ require('dotenv').config();
 const userRoutes = require("./endpoints/user/routes");
 const universityRoutes = require("./endpoints/university/routes");
 const roleRoutes = require("./endpoints/role/routes");
+const adminRoutes = require("./endpoints/admin/routes");
 
 const PORT = process.env.PORT;
 const app = express();
@@ -37,4 +38,5 @@ setupSwagger(app);
 
 app.use("/auth",userRoutes);
 app.use("/university",universityRoutes);
-app.use("/role",roleRoutes)
+app.use("/role",roleRoutes);
+app.use("/admin",adminRoutes);
