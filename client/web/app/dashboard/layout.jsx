@@ -13,6 +13,7 @@ import {
   X,
   FileText,
   LogOut,
+  UserPlus
 } from "lucide-react";
 
 export default function DashboardLayout({ children }) {
@@ -26,6 +27,7 @@ export default function DashboardLayout({ children }) {
     { name: "Majors", icon: FilePlus, path: "/dashboard/majors" },
     { name: "Domains", icon: FileText, path: "/dashboard/domains" },
     { name: "Admins", icon: Users, path: "/dashboard/admins" },
+    { name: "Roles", icon: UserPlus, path: "/dashboard/admins" },
   ];
 
   const handleSignOut = () => {
