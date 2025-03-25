@@ -3,7 +3,7 @@ const generator = require('generate-password');
 const { hashText } = require("../user/helper");
 const { sendEmail } = require("../helper");
 const { accountAcceptanceEmail } = require("../emailTemplates");
-const { createToken } = require("./helper");
+const { createToken, verifyToken } = require("./helper");
 const { addRole } = require("../role/businessLogic");
 const bcrypt = require('bcrypt');
 
@@ -44,9 +44,10 @@ module.exports.universityLogin = async (req, res) => {
   if (!isMatch) {
     return res.status(400).json({ error: "wrong credentials" });
   }
-  const universityId = user.adminid;
+  const adminId = user.adminid;
+  const universityId = user.universityid;
   const maxAge = 3 * 24 * 60 * 60;
-  const authToken = createToken(universityId, maxAge);
+  const authToken = createToken(adminId, universityId, maxAge);
   res.cookie('jwt', authToken, { httpOnly: true, maxAge: maxAge * 1000 });
   return res.status(200).json({
     message: "login successful"
@@ -64,7 +65,7 @@ const checkUniversityAuth = async (token)=>{
 }
 
 module.exports.getUniversityId = async (adminId)=>{
-  const result = await db.query("SELECT * FROM web_admins WHERE adminin=$1",[adminId]);
+  const result = await db.query("SELECT * FROM web_admins WHERE adminid=$1",[adminId]);
   return result.rows[0].universityid;
 }
 
@@ -72,9 +73,8 @@ module.exports.addStudentDomain = async (req, res)=>{
    const { studentDomain } = req.body;
    const token = req.cookies.jwt;
    try{
-    const adminId = checkUniversityAuth(token);
-    const universityId = await this.getUniversityId(adminId);
-    await db.query("UPDATE universities SET studentDomain=$1,WHERE universityid=$2",[studentDomain, universityId]);
+    const {adminId, universityId} = verifyToken(token);
+    await db.query("UPDATE universities SET studentDomain=$1 WHERE universityid=$2",[studentDomain, universityId]);
     return res.status(200).json({message: "domains added succesfully"})
    }
    catch(e){
@@ -86,8 +86,7 @@ module.exports.addIntructorDomain = async (req, res)=>{
   const { instructorDomain } = req.body;
   const token = req.cookies.jwt;
   try{
-   const adminId = checkUniversityAuth(token);
-   const universityId = await this.getUniversityId(adminId);
+    const {adminId, universityId} = verifyToken(token);
    await db.query("UPDATE universities SET instructorDomain=$1 WHERE universityid=$2",[ instructorDomain, universityId]);
    return res.status(200).json({message: "domains added succesfully"})
   }
