@@ -2,6 +2,7 @@ const {db} = require("../../db");
 const { isAuthed } = require("../role/businessLogic");
 const { checkAdminToken } = require("../role/helper");
 const { getUniversityId } = require("../university/businessLogic");
+const { verifyToken } = require("../university/helper");
 const { hashText } = require("../user/helper");
 
 module.exports.addAdmin = async (req, res) => {
@@ -9,10 +10,9 @@ module.exports.addAdmin = async (req, res) => {
     const token = req.cookies.jwt;
   
     try {
-      const adminId = await checkAdminToken(token);
+      const {adminId, universityId} = verifyToken(token);
       if (!isAuthed("admindPage", adminId)) return res.status(401).json({ message: "Unauthorized" });
   
-      const universityId = await getUniversityId(adminId);
       const hashedPassword = await hashText(password);
   
       const result = await db.query(`
@@ -33,7 +33,7 @@ module.exports.updateAdmin = async (req, res) => {
     const token = req.cookies.jwt;
   
     try {
-      const adminId = await checkAdminToken(token);
+      const {adminId, universityId} = verifyToken(token);
       if (!isAuthed("admindPage", adminId)) return res.status(401).json({ message: "Unauthorized" });
   
       const result = await db.query(`
@@ -57,7 +57,7 @@ module.exports.deleteAdmin = async (req, res) => {
   const token = req.cookies.jwt;
 
   try {
-    const adminId = await checkAdminToken(token);
+    const {adminId, universityId} = verifyToken(token);
     if (!isAuthed("admindPage", adminId)) return res.status(401).json({ message: "Unauthorized" });
 
     const result = await db.query(`
@@ -78,7 +78,7 @@ module.exports.deleteAdmin = async (req, res) => {
     const token = req.cookies.jwt;
   
     try {
-      const adminId = await checkAdminToken(token);
+      const {adminId, universityId} = verifyToken(token);
       if (!isAuthed("admindPage", adminId)) return res.status(401).json({ message: "Unauthorized" });
   
       const result = await db.query(`
@@ -97,10 +97,8 @@ module.exports.deleteAdmin = async (req, res) => {
 module.exports.getAllAdmins = async (req, res) => {
     const token = req.cookies.jwt;
     try {
-      const adminId = await checkAdminToken(token);
+      const {adminId, universityId} = verifyToken(token);
       if (!isAuthed("admindPage", adminId)) return res.status(401).json({ message: "Unauthorized" });
-  
-      const universityId = await getUniversityId(adminId);
   
       const result = await db.query(`
         SELECT a.adminid, a.firstname, a.lastname, a.username, r.name AS rolename
@@ -119,7 +117,7 @@ module.exports.getAllAdmins = async (req, res) => {
   module.exports.getAdmin = async (req, res) => {
     const token = req.cookies.jwt;
     try {
-      const adminId = await checkAdminToken(token);
+      const {adminId, universityId} = verifyToken(token);
       if (!isAuthed("adminPage", adminId)) return res.status(401).json({ message: "Unauthorized" });
       const result = await db.query(
         `SELECT a.adminid, a.firstname, a.lastname, a.username, r.name AS rolename, 

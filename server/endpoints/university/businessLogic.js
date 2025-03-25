@@ -4,7 +4,7 @@ const { hashText } = require("../user/helper");
 const { sendEmail } = require("../helper");
 const { accountAcceptanceEmail } = require("../emailTemplates");
 const { createToken, verifyToken } = require("./helper");
-const { addRole } = require("../role/businessLogic");
+const { addRoleMethode } = require("../role/businessLogic");
 const bcrypt = require('bcrypt');
 
 module.exports.createUniversity = async (req, res)=>{
@@ -20,7 +20,7 @@ module.exports.createUniversity = async (req, res)=>{
 
     const result = await db.query('INSERT INTO universities(name) VALUES ($1) RETURNING *',[universityName]); 
     const  universityId = result.rows[0].universityid;
-    const roleId = await addRole("general admin",universityId,["universityDashboard"]);
+    const roleId = await addRoleMethode("generalAdmin",universityId,["universityDashboard"]);
     await db.query('INSERT INTO web_admins(username, password, universityid, roleid) VALUES ($1,$2,$3,$4)',[ username, password, universityId, roleId]);
 
     const htmlContent = accountAcceptanceEmail(username, Originalpassword);
