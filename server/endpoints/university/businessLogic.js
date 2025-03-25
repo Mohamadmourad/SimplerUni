@@ -100,8 +100,7 @@ module.exports.addCampus = async (req, res)=>{
   const token = req.cookies.jwt;
   if(!campus && !campususGroup) return res.status(400).json({message:"campus or campsus are required"});
   try{
-    const adminId = checkUniversityAuth(token);
-    const universityId = getUniversityId(adminId);
+    const {adminId, universityId} = verifyToken(token);
     if(campus){
       const result = await db.query('INSERT INTO campusus(name, universityid) VALUES ($1,$2) RETURNING *',[campus,universityId]);
       return res.status(200).json({
@@ -126,8 +125,7 @@ module.exports.addMajor = async (req, res)=>{
   const token = req.cookies.jwt;
   if(!major && !majors) return res.status(400).json({message:"major or majors are required"});
   try{
-    const adminId = checkUniversityAuth(token);
-    const universityId = getUniversityId(adminId);
+    const {adminId, universityId} = verifyToken(token);
     if(major){
       const result = await db.query('INSERT INTO university_majors(name, universityid) VALUES ($1,$2) RETURNING *',[major,universityId]);
       return res.status(200).json({
@@ -150,8 +148,7 @@ module.exports.addMajor = async (req, res)=>{
 module.exports.getAllCampsus = async (req, res)=>{
   try{
     const token = req.cookies.jwt;
-    const adminId = checkUniversityAuth(token);
-    const universityId = await this.getUniversityId(adminId);
+    const {adminId, universityId} = verifyToken(token);
 
     const result = await db.query("SELECT campusid,name FROM campusus WHERE universityid=$1",[universityId]);
     return res.status(200).json({
@@ -167,8 +164,7 @@ module.exports.getAllCampsus = async (req, res)=>{
 module.exports.getAllMajors = async (req, res)=>{
   try{
     const token = req.cookies.jwt;
-    const adminId = checkUniversityAuth(token);
-    const universityId = await this.getUniversityId(adminId);
+    const {adminId, universityId} = verifyToken(token);
 
     const result = await db.query("SELECT majorid,name FROM majors WHERE universityid=$1",[universityId]);
     return res.status(200).json({
@@ -186,8 +182,7 @@ module.exports.deleteCampus = async (req, res) => {
   const token = req.cookies.jwt;
   if (!campusId) return res.status(400).json({ message: "campusId is required" });
   try {
-    const adminId = checkUniversityAuth(token);
-    const universityId = await this.getUniversityId(adminId);
+    const {adminId, universityId} = verifyToken(token);
     const result = await db.query(
       'DELETE FROM campusus WHERE campusid=$1 AND universityid=$2 RETURNING *',
       [campusId, universityId]
@@ -206,8 +201,7 @@ module.exports.deleteMajor = async (req, res) => {
   const token = req.cookies.jwt;
   if (!majorId) return res.status(400).json({ message: "majorId is required" });
   try {
-    const adminId = checkUniversityAuth(token);
-    const universityId = await this.getUniversityId(adminId);
+    const {adminId, universityId} = verifyToken(token);
     const result = await db.query(
       'DELETE FROM university_majors WHERE majorid=$1 AND universityid=$2 RETURNING *',
       [majorId, universityId]
@@ -224,8 +218,7 @@ module.exports.deleteMajor = async (req, res) => {
 module.exports.getUniversity = async (req,res)=>{
   const token = req.cookies.jwt;
   try {
-    const adminId = checkUniversityAuth(token);
-    const universityId = await this.getUniversityId(adminId);
+    const {adminId, universityId} = verifyToken(token);
     const result = await db.query(
       'SELECT * FROM universities WHERE universityid=$1 RETURNING *',
       [universityId]
