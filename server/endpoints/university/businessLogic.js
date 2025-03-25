@@ -68,18 +68,32 @@ module.exports.getUniversityId = async (adminId)=>{
   return result.rows[0].universityid;
 }
 
-module.exports.addDomains = async (req, res)=>{
-   const { studentDomain, instructorDomain } = req.body;
+module.exports.addStudentDomain = async (req, res)=>{
+   const { studentDomain } = req.body;
    const token = req.cookies.jwt;
    try{
     const adminId = checkUniversityAuth(token);
-    const universityId = getUniversityId(adminId);
-    await db.query("UPDATE universities SET studentDomain=$1, instructorDomain=$2 WHERE universityid=$3",[studentDomain, instructorDomain, universityId]);
+    const universityId = await this.getUniversityId(adminId);
+    await db.query("UPDATE universities SET studentDomain=$1,WHERE universityid=$2",[studentDomain, universityId]);
     return res.status(200).json({message: "domains added succesfully"})
    }
    catch(e){
     console.log("error while adding the domains: ",e);
    }
+}
+
+module.exports.addIntructorDomain = async (req, res)=>{
+  const { instructorDomain } = req.body;
+  const token = req.cookies.jwt;
+  try{
+   const adminId = checkUniversityAuth(token);
+   const universityId = await this.getUniversityId(adminId);
+   await db.query("UPDATE universities SET instructorDomain=$1 WHERE universityid=$2",[ instructorDomain, universityId]);
+   return res.status(200).json({message: "domains added succesfully"})
+  }
+  catch(e){
+   console.log("error while adding the domains: ",e);
+  }
 }
 
 module.exports.addCampus = async (req, res)=>{
@@ -138,7 +152,7 @@ module.exports.getAllCampsus = async (req, res)=>{
   try{
     const token = req.cookies.jwt;
     const adminId = checkUniversityAuth(token);
-    const universityId = getUniversityId(adminId);
+    const universityId = await this.getUniversityId(adminId);
 
     const result = await db.query("SELECT campusid,name FROM campusus WHERE universityid=$1",[universityId]);
     return res.status(200).json({
@@ -155,7 +169,7 @@ module.exports.getAllMajors = async (req, res)=>{
   try{
     const token = req.cookies.jwt;
     const adminId = checkUniversityAuth(token);
-    const universityId = getUniversityId(adminId);
+    const universityId = await this.getUniversityId(adminId);
 
     const result = await db.query("SELECT majorid,name FROM majors WHERE universityid=$1",[universityId]);
     return res.status(200).json({
@@ -174,7 +188,7 @@ module.exports.deleteCampus = async (req, res) => {
   if (!campusId) return res.status(400).json({ message: "campusId is required" });
   try {
     const adminId = checkUniversityAuth(token);
-    const universityId = getUniversityId(adminId);
+    const universityId = await this.getUniversityId(adminId);
     const result = await db.query(
       'DELETE FROM campusus WHERE campusid=$1 AND universityid=$2 RETURNING *',
       [campusId, universityId]
@@ -194,7 +208,7 @@ module.exports.deleteMajor = async (req, res) => {
   if (!majorId) return res.status(400).json({ message: "majorId is required" });
   try {
     const adminId = checkUniversityAuth(token);
-    const universityId = getUniversityId(adminId);
+    const universityId = await this.getUniversityId(adminId);
     const result = await db.query(
       'DELETE FROM university_majors WHERE majorid=$1 AND universityid=$2 RETURNING *',
       [majorId, universityId]
@@ -208,7 +222,17 @@ module.exports.deleteMajor = async (req, res) => {
   }
 };
 
-
 module.exports.getUniversity = async (req,res)=>{
-  
+  const token = req.cookies.jwt;
+  try {
+    const adminId = checkUniversityAuth(token);
+    const universityId = await this.getUniversityId(adminId);
+    const result = await db.query(
+      'SELECT * FROM universities WHERE universityid=$1 RETURNING *',
+      [universityId]
+    );
+    return res.status(200).json({ result });
+  } catch (e) {
+    console.log("error while getting university: ", e);
+  }
 }
