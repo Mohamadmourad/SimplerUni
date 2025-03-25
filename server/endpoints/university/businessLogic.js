@@ -63,7 +63,7 @@ const checkUniversityAuth = async (token)=>{
     }
 }
 
-const getUniversityId = async (adminId)=>{
+module.exports.getUniversityId = async (adminId)=>{
   const result = await db.query("SELECT * FROM web_admins WHERE adminin=$1",[adminId]);
   return result.rows[0].universityid;
 }

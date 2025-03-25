@@ -184,6 +184,8 @@ const tables =
         schema:`CREATE TABLE web_admins (
         adminId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
         username varchar(32),
+        firstName varchar(50),
+        lastName varchar(50),
         password VARCHAR(255),
         universityId UUID REFERENCES universities(universityId) ON DELETE CASCADE,
         roleId UUID REFERENCES roles(roleId) ON DELETE CASCADE,
