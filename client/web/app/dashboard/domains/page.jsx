@@ -1,67 +1,55 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 
 export default function DomainsPage() {
-  const [studentDomain, setStudentDomain] = useState("");
-  const [instructorDomain, setInstructorDomain] = useState("");
-  const [domains, setDomains] = useState([]);
+  const [studentDomain, setStudentDomain] = useState(null);
+  const [instructorDomain, setInstructorDomain] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isStudentDomainSet, setIsStudentDomainSet] = useState(false);
+  const [isInstructorDomainSet, setIsInstructorDomainSet] = useState(false);
 
-  const handleAddDomain = async (type) => {
-    setError(""); // Clear any previous error
-    setLoading(true); // Show loading state
-
-    try {
-      if (type === "Student" && studentDomain.trim()) {
-        await axios.post("http://localhost:5000/university/addStudentDomain", {
-          studentDomain: studentDomain.trim(),
-          
-        },{withCredentials: true});
-
-        setDomains([...domains, { type, domain: studentDomain.trim() }]);
-        setStudentDomain("");
-      } else if (type === "Instructor" && instructorDomain.trim()) {
-        await axios.post("http://localhost:5000/university/addIntructorDomain", {
-          instructorDomain: instructorDomain.trim(),
-        },{withCredentials: true});
-
-        setDomains([...domains, { type, domain: instructorDomain.trim() }]);
-        setInstructorDomain("");
+  useEffect(() => {
+    const fetchUniversityData = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/university/getUniversity", { withCredentials: true });
+        const university = response.data;
+        console.log(university);
+        setStudentDomain(university.studentdomain);
+        setInstructorDomain(university.instructordomain);
+        setIsStudentDomainSet(!!university.studentdomain);
+        setIsInstructorDomainSet(!!university.instructordomain);
+      } catch (err) {
+        setError("Failed to fetch university data.");
       }
-    } catch (err) {
-      setError(`Failed to add ${type} domain. Please try again.`);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    
+    fetchUniversityData();
+  }, []);
 
-  const handleDeleteDomain = async (type, domain) => {
+  const handleAddDomain = async (type, domainValue) => {
     setError("");
     setLoading(true);
 
     try {
-      if (type === "Student") {
-        await axios.delete("http://localhost:5000/university/removeStudentDomain", {
-          studentDomain: domain,
-        });
-      } else if (type === "Instructor") {
-        await axios.delete("http://localhost:5000/university/removeInstructorDomain", {
-          instructorDomain: domain,
-        });
+      if (type === "Student" && domainValue.trim()) {
+        await axios.post("http://localhost:5000/university/addStudentDomain", {
+          studentDomain: domainValue.trim(),
+        }, { withCredentials: true });
+        fetchUniversityData();
+      } else if (type === "Instructor" && domainValue.trim()) {
+        await axios.post("http://localhost:5000/university/addIntructorDomain", {
+          instructorDomain: domainValue.trim(),
+        }, { withCredentials: true });
+        fetchUniversityData();
       }
-
-      setDomains(domains.filter((d) => d.domain !== domain));
     } catch (err) {
-      setError(`Failed to remove ${type} domain. Please try again.`);
+      setError(`Failed to add ${type} domain.`);
     } finally {
       setLoading(false);
     }
   };
-
-  const hasStudentDomain = domains.some((d) => d.type === "Student");
-  const hasInstructorDomain = domains.some((d) => d.type === "Instructor");
 
   return (
     <div className="">
@@ -76,20 +64,16 @@ export default function DomainsPage() {
         <label className="block text-sm mb-1">Student Domain</label>
         <input
           type="text"
-          value={studentDomain}
+          value={studentDomain || ""}
           onChange={(e) => setStudentDomain(e.target.value)}
           className="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:ring-2 focus:ring-purple-500"
           placeholder="e.g., student.edu"
-          disabled={hasStudentDomain || loading}
+          disabled={loading || isStudentDomainSet}
         />
         <button
-          onClick={() => handleAddDomain("Student")}
-          className={`mt-2 px-4 py-2 rounded ${
-            hasStudentDomain || loading
-              ? "bg-gray-500 cursor-not-allowed"
-              : "bg-purple-600 hover:bg-purple-700 text-white"
-          }`}
-          disabled={hasStudentDomain || loading}
+          onClick={() => handleAddDomain("Student", studentDomain)}
+          className={`mt-2 px-4 py-2 rounded ${loading || isStudentDomainSet ? "bg-gray-500 cursor-not-allowed" : "bg-purple-600 hover:bg-purple-700 text-white"}`}
+          disabled={loading || isStudentDomainSet}
         >
           {loading ? "Adding..." : "Add Student Domain"}
         </button>
@@ -100,46 +84,27 @@ export default function DomainsPage() {
         <label className="block text-sm mb-1">Instructor Domain</label>
         <input
           type="text"
-          value={instructorDomain}
+          value={instructorDomain || ""}
           onChange={(e) => setInstructorDomain(e.target.value)}
           className="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:ring-2 focus:ring-purple-500"
           placeholder="e.g., prof.university.com"
-          disabled={hasInstructorDomain || loading}
+          disabled={loading || isInstructorDomainSet}
         />
         <button
-          onClick={() => handleAddDomain("Instructor")}
-          className={`mt-2 px-4 py-2 rounded ${
-            hasInstructorDomain || loading
-              ? "bg-gray-500 cursor-not-allowed"
-              : "bg-purple-600 hover:bg-purple-700 text-white"
-          }`}
-          disabled={hasInstructorDomain || loading}
+          onClick={() => handleAddDomain("Instructor", instructorDomain)}
+          className={`mt-2 px-4 py-2 rounded ${loading || isInstructorDomainSet ? "bg-gray-500 cursor-not-allowed" : "bg-purple-600 hover:bg-purple-700 text-white"}`}
+          disabled={loading || isInstructorDomainSet}
         >
           {loading ? "Adding..." : "Add Instructor Domain"}
         </button>
       </div>
 
-      {/* Domains List */}
-      <h2 className="text-xl font-semibold mt-6 mb-4 text-white">Imported Domains</h2>
+      {/* Display Existing Domains */}
+      <h2 className="text-xl font-semibold mt-6 mb-4 text-white">Existing Domains</h2>
       <div className="space-y-2">
-        {domains.length > 0 ? (
-          domains.map((d, index) => (
-            <div key={index} className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
-              <span className="text-gray-300">
-                {d.type}: {d.domain}
-              </span>
-              <button
-                onClick={() => handleDeleteDomain(d.type, d.domain)}
-                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
-                disabled={loading}
-              >
-                {loading ? "Removing..." : "Delete"}
-              </button>
-            </div>
-          ))
-        ) : (
-          <p className="text-gray-400">No domains added.</p>
-        )}
+        {isStudentDomainSet && <p className="text-gray-300">Student Domain: {studentDomain}</p>}
+        {isInstructorDomainSet && <p className="text-gray-300">Instructor Domain: {instructorDomain}</p>}
+        {!isStudentDomainSet && !isInstructorDomainSet && <p className="text-gray-400">No domains available.</p>}
       </div>
     </div>
   );
