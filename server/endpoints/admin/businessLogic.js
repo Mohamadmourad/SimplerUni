@@ -1,6 +1,7 @@
 const {db} = require("../../db");
 const { isAuthed } = require("../role/businessLogic");
 const { checkAdminToken } = require("../role/helper");
+const { getUniversityId } = require("../university/businessLogic");
 const { hashText } = require("../user/helper");
 
 module.exports.addAdmin = async (req, res) => {
@@ -11,7 +12,7 @@ module.exports.addAdmin = async (req, res) => {
       const adminId = await checkAdminToken(token);
       if (!isAuthed("admindPage", adminId)) return res.status(401).json({ message: "Unauthorized" });
   
-      const universityId = getUniversityId(adminId);
+      const universityId = await getUniversityId(adminId);
       const hashedPassword = await hashText(password);
   
       const result = await db.query(`
@@ -95,12 +96,11 @@ module.exports.deleteAdmin = async (req, res) => {
 
 module.exports.getAllAdmins = async (req, res) => {
     const token = req.cookies.jwt;
-  
     try {
       const adminId = await checkAdminToken(token);
       if (!isAuthed("admindPage", adminId)) return res.status(401).json({ message: "Unauthorized" });
   
-      const universityId = getUniversityId(adminId);
+      const universityId = await getUniversityId(adminId);
   
       const result = await db.query(`
         SELECT a.adminid, a.firstname, a.lastname, a.username, r.name AS rolename
@@ -112,6 +112,31 @@ module.exports.getAllAdmins = async (req, res) => {
       return res.status(200).json({ admins: result.rows });
     } catch (e) {
       console.log("Error fetching admins:", e);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  };
+
+  module.exports.getAdmin = async (req, res) => {
+    const token = req.cookies.jwt;
+    try {
+      const adminId = await checkAdminToken(token);
+      if (!isAuthed("adminPage", adminId)) return res.status(401).json({ message: "Unauthorized" });
+      const result = await db.query(
+        `SELECT a.adminid, a.firstname, a.lastname, a.username, r.name AS rolename, 
+         ARRAY_AGG(p.name) AS permissions
+         FROM web_admins AS a
+         JOIN roles AS r ON a.roleid = r.roleid
+         LEFT JOIN role_permissions AS p ON r.roleid = p.roleid
+         WHERE a.adminid = $1
+         GROUP BY a.adminid, a.firstname, a.lastname, a.username, r.name`,
+        [adminId]
+      );
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: "Admin not found" });
+      }
+      return res.status(200).json({ admin: result.rows[0] });
+    } catch (e) {
+      console.log("Error fetching admin:", e);
       return res.status(500).json({ message: "Internal server error" });
     }
   };

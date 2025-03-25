@@ -1,6 +1,14 @@
 /**
  * @swagger
  * tags:
+ *   name: Mobile
+ *   description: endpoints for mobile
+ */
+
+
+/**
+ * @swagger
+ * tags:
  *   name: Authentication
  *   description: User authentication and account management
  */
@@ -173,6 +181,13 @@
  *         description: OTP is expired, incorrect, or not generated.
  *       500:
  *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * tags:
+ *   name: Web
+ *   description: endpoints for Web
  */
 
 /**
@@ -650,6 +665,59 @@
  *       500:
  *         description: Internal server error.
  */
+
+/**
+ * @swagger
+ * /admin/getAdmin:
+ *   get:
+ *     summary: Retrieves the authenticated admin's details.
+ *     tags: [Admin]
+ *     parameters:
+ *       - in: cookie
+ *         name: jwt
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Admin JWT token.
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved admin details.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 admin:
+ *                   type: object
+ *                   properties:
+ *                     adminid:
+ *                       type: integer
+ *                       example: 1
+ *                     firstname:
+ *                       type: string
+ *                       example: "John"
+ *                     lastname:
+ *                       type: string
+ *                       example: "Doe"
+ *                     username:
+ *                       type: string
+ *                       example: "jdoe"
+ *                     rolename:
+ *                       type: string
+ *                       example: "Super Admin"
+ *                     permissions:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                       example: ["manage_users", "edit_content"]
+ *       401:
+ *         description: Unauthorized.
+ *       404:
+ *         description: Admin not found.
+ *       500:
+ *         description: Internal server error.
+ */
+
 
 
 
