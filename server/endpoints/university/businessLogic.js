@@ -69,6 +69,7 @@ module.exports.getUniversityId = async (adminId)=>{
 }
 
 module.exports.addStudentDomain = async (req, res)=>{
+  console.log("meow");
    const { studentDomain } = req.body;
    const token = req.cookies.jwt;
    try{

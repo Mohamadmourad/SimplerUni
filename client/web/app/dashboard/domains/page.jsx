@@ -15,16 +15,17 @@ export default function DomainsPage() {
 
     try {
       if (type === "Student" && studentDomain.trim()) {
-        await axios.post("/university/addStudentDomain", {
+        await axios.post("http://localhost:5000/university/addStudentDomain", {
           studentDomain: studentDomain.trim(),
-        });
+          
+        },{withCredentials: true});
 
         setDomains([...domains, { type, domain: studentDomain.trim() }]);
         setStudentDomain("");
       } else if (type === "Instructor" && instructorDomain.trim()) {
-        await axios.post("/university/addInstructorDomain", {
+        await axios.post("http://localhost:5000/university/addIntructorDomain", {
           instructorDomain: instructorDomain.trim(),
-        });
+        },{withCredentials: true});
 
         setDomains([...domains, { type, domain: instructorDomain.trim() }]);
         setInstructorDomain("");
@@ -32,7 +33,7 @@ export default function DomainsPage() {
     } catch (err) {
       setError(`Failed to add ${type} domain. Please try again.`);
     } finally {
-      setLoading(false); // Hide loading state
+      setLoading(false);
     }
   };
 
@@ -42,11 +43,11 @@ export default function DomainsPage() {
 
     try {
       if (type === "Student") {
-        await axios.post("/university/removeStudentDomain", {
+        await axios.delete("http://localhost:5000/university/removeStudentDomain", {
           studentDomain: domain,
         });
       } else if (type === "Instructor") {
-        await axios.post("/university/removeInstructorDomain", {
+        await axios.delete("http://localhost:5000/university/removeInstructorDomain", {
           instructorDomain: domain,
         });
       }
@@ -63,7 +64,7 @@ export default function DomainsPage() {
   const hasInstructorDomain = domains.some((d) => d.type === "Instructor");
 
   return (
-    <div className="min-h-screen p-8 bg-gray-900 text-gray-300">
+    <div className="">
       <h1 className="text-2xl font-bold mb-6 text-white">Manage Domains</h1>
 
       {error && <p className="text-red-500 mb-4">{error}</p>}
