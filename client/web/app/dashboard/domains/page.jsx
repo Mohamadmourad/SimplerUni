@@ -75,7 +75,7 @@ export default function DomainsPage() {
         <div className="space-y-2">
           {domains.length > 0 ? (
             domains.map((d, index) => (
-              <div key={index} className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
+              <div key={index} className="flex justify-center items-center p-3 bg-gray-700 rounded-lg">
                 <span className="text-gray-300">{d.type}: {d.domain}</span>
                 <button
                   onClick={() => handleDeleteDomain(index)}
