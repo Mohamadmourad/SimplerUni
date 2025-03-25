@@ -221,10 +221,10 @@ module.exports.getUniversity = async (req,res)=>{
   try {
     const {adminId, universityId} = verifyToken(token);
     const result = await db.query(
-      'SELECT * FROM universities WHERE universityid=$1 RETURNING *',
+      'SELECT * FROM universities WHERE universityid=$1',
       [universityId]
     );
-    return res.status(200).json({ result });
+    return res.status(200).json( result.rows[0] );
   } catch (e) {
     console.log("error while getting university: ", e);
   }

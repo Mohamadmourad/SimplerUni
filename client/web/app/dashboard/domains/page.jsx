@@ -15,6 +15,7 @@ export default function DomainsPage() {
       try {
         const response = await axios.get("http://localhost:5000/university/getUniversity", { withCredentials: true });
         const university = response.data;
+        console.log(response.data)
         console.log(university);
         setStudentDomain(university.studentdomain);
         setInstructorDomain(university.instructordomain);
