@@ -107,7 +107,7 @@ module.exports.getAllAdmins = async (req, res) => {
         WHERE a.universityid = $1
       `, [universityId]);
   
-      return res.status(200).json({ admins: result.rows });
+      return res.status(200).json(result.rows);
     } catch (e) {
       console.log("Error fetching admins:", e);
       return res.status(500).json({ message: "Internal server error" });

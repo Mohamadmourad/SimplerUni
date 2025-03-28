@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import axios from "axios";
-import Cookies from "js-cookie"; // Import js-cookie for handling cookies
+import Cookies from "js-cookie";
 import {
   CalculatorIcon,
   Home,
@@ -42,7 +42,8 @@ export default function DashboardLayout({ children }) {
           setPermissions(response.data.permissions || []);
         }
       } catch (error) {
-        console.error("Error fetching roles:", error);
+        router.push("/auth/login"); 
+        
       }
     };
 
