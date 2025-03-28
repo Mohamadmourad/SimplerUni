@@ -10,6 +10,6 @@ router.get("/getRoles", rolesController.getRoles);
 
 router.put("/updateRolePermissions", rolesController.updateRolePermissions);
 
-router.delete("/deleteRole",rolesController.deleteRole);
+router.delete("/deleteRole/:roleId",rolesController.deleteRole);
 
 module.exports = router;

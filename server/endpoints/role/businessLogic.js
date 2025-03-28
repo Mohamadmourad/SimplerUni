@@ -48,13 +48,11 @@ module.exports.getRoles = async (req, res)=>{
   const token = req.cookies.jwt;
   try{
     const {adminId, universityId} = verifyToken(token);
-    if(!await this.isAuthed("generalAdmin", adminId)) return res.status(401).json({message: "Unauthorized"});
+    if(!await this.isAuthed("rolesPage", adminId)) return res.status(401).json({message: "Unauthorized"});
 
-    const result = await db.query(`SELECT r.name AS roleName, r.roleid AS roleId, ARRAY_AGG(p.name) AS permissions FROM roles AS r JOIN role_permissions AS p ON r.roleid = p.roleid WHERE r.universityid = $1 GROUP BY r.name`, [universityId]);
-
+    const result = await db.query(`SELECT r.name AS roleName, r.roleid AS roleId, ARRAY_AGG(p.name) AS permissions FROM roles AS r JOIN role_permissions AS p ON r.roleid = p.roleid WHERE r.universityid = $1 GROUP BY r.name, r.roleid`, [universityId]);
     const roles = result.rows;
-
-    return res.status(200).json({roles});
+    return res.status(200).json(roles);
   }
   catch(e){
     console.log(e);
@@ -63,15 +61,15 @@ module.exports.getRoles = async (req, res)=>{
 }
 
 module.exports.deleteRole = async (req, res) => {
-  const { roleId } = req.body;
+  const { roleId } = req.params;
   const token = req.cookies.jwt;
 
   if (!roleId) {
     return res.status(400).json({ message: "roleId is required" });
   }
   try {
-    const adminId = await checkAdminToken(token);
-    if (!await isAuthed("rolesRoles", adminId)) {
+    const {adminId} = verifyToken(token);
+    if (!await this.isAuthed("rolesRoles", adminId)) {
       return res.status(401).json({ message: "Unauthorized" });
     }
     const result = await db.query("DELETE FROM roles WHERE roleid = $1 RETURNING *", [roleId]);
@@ -94,7 +92,7 @@ module.exports.updateRolePermissions = async (req, res) => {
   }
   try {
     const {adminId} = verifyToken(token);
-    if (!await isAuthed("rolesRoles", adminId)) {
+    if (!await this.isAuthed("rolesRoles", adminId)) {
       return res.status(401).json({ message: "Unauthorized" });
     }
     await db.query("DELETE FROM role_permissions WHERE roleid = $1", [roleId]);
@@ -114,7 +112,7 @@ module.exports.isAuthed = async (permission, adminId)=>{
     const permissionsRequest = await db.query(`
       SELECT p.name FROM web_admins AS a JOIN roles AS r ON a.roleid = r.roleid JOIN role_permissions AS p ON r.roleid = p.roleid WHERE a.adminid = $1`, [adminId]);
     const permissions = permissionsRequest.rows;
-    const isAllowed = permissions.some(p => p.name === permission) || permissions.includes("generalAdmin");
+    const isAllowed = permissions.some(p => p.name === permission || p.name === "universityDashboard")
     if(isAllowed)
       return true
     return false
