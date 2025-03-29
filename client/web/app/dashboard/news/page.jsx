@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import axios from "axios";
-import { Image as ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Image as ImageIcon } from 'lucide-react';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -12,21 +12,18 @@ const News = () => {
   const [preview, setPreview] = useState("");
   const [loading, setLoading] = useState(false);
   const [news, setNews] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const itemsPerPage = 6;
 
   useEffect(() => {
-    fetchNews(currentPage);
-  }, [currentPage]);
+    fetchNews();
+  }, []);
 
-  const fetchNews = async (page) => {
+  const fetchNews = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/news?page=${page}&limit=${itemsPerPage}`, {
+      const response = await axios.get("http://localhost:5000/news/getAllNews", {
         withCredentials: true
       });
-      setNews(response.data.news);
-      setTotalPages(Math.ceil(response.data.total / itemsPerPage));
+      setNews(response.data); 
+      console.log(news);
     } catch (err) {
       toast.error("Failed to fetch news");
     }
@@ -74,11 +71,23 @@ const News = () => {
       titleRef.current.value = "";
       contentRef.current.value = "";
       setPreview("");
-      fetchNews(currentPage);
+      fetchNews(); 
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to add news. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/news/deleteNews/${id}`, {
+        withCredentials: true,
+      });
+      toast.success("News deleted successfully!");
+      fetchNews(); 
+    } catch (err) {
+      toast.error("Failed to delete news");
     }
   };
 
@@ -170,47 +179,37 @@ const News = () => {
 
         <div className="mt-12">
           <h2 className="text-2xl font-bold text-white mb-6">News List</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {news.map((item) => (
-              <div key={item.id} className="bg-gray-900 rounded-lg overflow-hidden shadow-lg">
-                <div className="h-48 overflow-hidden">
-                  <img
-                    src={item.imageUrl}
-                    alt={item.title}
-                    className="w-full h-full object-cover"
-                  />
+          <div className="flex overflow-x-auto space-x-6">
+            {news.length > 0 ? (
+              news.map((item) => (
+                <div key={item.newsid} className="flex p-3 bg-gray-700 rounded-lg space-x-4 w-80">
+                  <div className="flex-shrink-0">
+                    <img
+                      src={item.imageurl}
+                      alt={item.title}
+                      className="w-32 h-32 object-cover rounded-lg"
+                    />
+                  </div>
+                  <div className="flex-grow">
+                    <h3 className="text-lg font-semibold text-white mb-2">{item.title}</h3>
+                    <p className="text-gray-400 text-sm">
+                      {new Date(item.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="space-x-2">
+                    <button
+                      onClick={() => handleDelete(item.newsid)}
+                      className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
-                <div className="p-4">
-                  <h3 className="text-lg font-semibold text-white mb-2">{item.title}</h3>
-                  <p className="text-gray-400 text-sm">
-                    {new Date(item.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-gray-400">No news available.</p>
+            )}
           </div>
-
-          {totalPages > 1 && (
-            <div className="flex justify-center items-center space-x-4 mt-8">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="p-2 rounded-lg bg-gray-700 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <span className="text-white">
-                Page {currentPage} of {totalPages}
-              </span>
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className="p-2 rounded-lg bg-gray-700 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>

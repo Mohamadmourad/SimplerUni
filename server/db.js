@@ -217,6 +217,7 @@ const tables =
         title VARCHAR(60),
         content TEXT,
         imageUrl VARCHAR(255),
+        created_at TIMESTAMPTZ DEFAULT now(),
         universityId UUID REFERENCES universities(universityId) ON DELETE SET NULL
         );`
     },
