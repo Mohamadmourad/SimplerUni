@@ -1,10 +1,13 @@
 const {db} = require("../../db");
-const { checkAdminToken } = require("./helper");
+const { verifyToken } = require("../university/helper");
 
-module.exports.addRole = async (roleName, universityId, permissions)=>{
-  if(!roleName || !universityId || !permissions){
-        return res.status(400).json({ error: "wrong parameters" });
+module.exports.addRole = async (req, res)=>{
+  const { roleName, permissions } = req.body;
+  if(!roleName || !permissions){
+    return res.status(400).json({ error: "wrong parameters" });
   }
+  const token = req.cookies.jwt;
+  const {universityId} = verifyToken(token);
   try{
     const result = await db.query("INSERT INTO roles(name, universityid) VALUES ($1,$2) RETURNING *",[roleName, universityId]);
     const roleId = result.rows[0].roleid;
@@ -13,7 +16,7 @@ module.exports.addRole = async (roleName, universityId, permissions)=>{
     );
     await Promise.all(permissionQueries); 
 
-    return roleId;
+    res.status(200).json({roleId})
   }
   catch(e){
     console.log(e)
@@ -25,7 +28,7 @@ module.exports.checkPermission = async (req, res)=>{
   const {permission} = req.body;
   const token = req.cookies.jwt;
   try {
-    const adminId = await checkAdminToken(token);
+    const {adminId, universityId} = verifyToken(token);
     const permissionsRequest = await db.query(`
       SELECT p.name FROM web_admins AS a JOIN roles AS r ON a.roleid = r.roleid JOIN role_permissions AS p ON r.roleid = p.roleid WHERE a.adminid = $1`, [adminId]);
     const permissions = permissionsRequest.rows;
@@ -41,17 +44,14 @@ module.exports.checkPermission = async (req, res)=>{
 }
 
 module.exports.getRoles = async (req, res)=>{
-  const {universityId} = req.body;
   const token = req.cookies.jwt;
   try{
-    const adminId = await checkAdminToken(token);
-    if(!await isAuthed("rolesRoles", adminId)) return res.status(401).json({message: "Unauthorized"});
+    const {adminId, universityId} = verifyToken(token);
+    if(!await this.isAuthed("rolesPage", adminId)) return res.status(401).json({message: "Unauthorized"});
 
-    const result = await db.query(`SELECT r.name AS roleName, ARRAY_AGG(p.name) AS permissions FROM roles AS r JOIN role_permissions AS p ON r.roleid = p.roleid WHERE r.universityid = $1 GROUP BY r.name`, [universityId]);
-
+    const result = await db.query(`SELECT r.name AS roleName, r.roleid AS roleId, ARRAY_AGG(p.name) AS permissions FROM roles AS r JOIN role_permissions AS p ON r.roleid = p.roleid WHERE r.universityid = $1 GROUP BY r.name, r.roleid`, [universityId]);
     const roles = result.rows;
-
-    return res.status(200).json({roles});
+    return res.status(200).json(roles);
   }
   catch(e){
     console.log(e);
@@ -60,15 +60,15 @@ module.exports.getRoles = async (req, res)=>{
 }
 
 module.exports.deleteRole = async (req, res) => {
-  const { roleId } = req.body;
+  const { roleId } = req.params;
   const token = req.cookies.jwt;
 
   if (!roleId) {
     return res.status(400).json({ message: "roleId is required" });
   }
   try {
-    const adminId = await checkAdminToken(token);
-    if (!await isAuthed("rolesRoles", adminId)) {
+    const {adminId} = verifyToken(token);
+    if (!await this.isAuthed("rolesRoles", adminId)) {
       return res.status(401).json({ message: "Unauthorized" });
     }
     const result = await db.query("DELETE FROM roles WHERE roleid = $1 RETURNING *", [roleId]);
@@ -90,8 +90,8 @@ module.exports.updateRolePermissions = async (req, res) => {
     return res.status(400).json({ message: "roleId and permissions array are required" });
   }
   try {
-    const adminId = await checkAdminToken(token);
-    if (!await isAuthed("rolesRoles", adminId)) {
+    const {adminId} = verifyToken(token);
+    if (!await this.isAuthed("rolesRoles", adminId)) {
       return res.status(401).json({ message: "Unauthorized" });
     }
     await db.query("DELETE FROM role_permissions WHERE roleid = $1", [roleId]);
@@ -111,7 +111,7 @@ module.exports.isAuthed = async (permission, adminId)=>{
     const permissionsRequest = await db.query(`
       SELECT p.name FROM web_admins AS a JOIN roles AS r ON a.roleid = r.roleid JOIN role_permissions AS p ON r.roleid = p.roleid WHERE a.adminid = $1`, [adminId]);
     const permissions = permissionsRequest.rows;
-    const isAllowed = permissions.some(p => p.name === permission);
+    const isAllowed = permissions.some(p => p.name === permission || p.name === "universityDashboard")
     if(isAllowed)
       return true
     return false
@@ -119,5 +119,21 @@ module.exports.isAuthed = async (permission, adminId)=>{
   catch(e){
     console.log("Unauthorized action");
     return false
+  }
+}
+
+module.exports.addRoleMethode = async (roleName, universityId, permissions)=>{
+  try{
+    const result = await db.query("INSERT INTO roles(name, universityid) VALUES ($1,$2) RETURNING *",[roleName, universityId]);
+    const roleId = result.rows[0].roleid;
+    const permissionQueries = permissions.map(permission =>
+      db.query("INSERT INTO role_permissions(name, roleid) VALUES ($1, $2)", [permission, roleId])
+    );
+    await Promise.all(permissionQueries); 
+    return roleId;
+  }
+  catch(e){
+    console.log(e)
+    res.status(500).json({message:"error happend while adding role"})
   }
 }

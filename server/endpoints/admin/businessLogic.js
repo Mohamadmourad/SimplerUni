@@ -2,6 +2,7 @@ const {db} = require("../../db");
 const { isAuthed } = require("../role/businessLogic");
 const { checkAdminToken } = require("../role/helper");
 const { getUniversityId } = require("../university/businessLogic");
+const { verifyToken } = require("../university/helper");
 const { hashText } = require("../user/helper");
 
 module.exports.addAdmin = async (req, res) => {
@@ -9,10 +10,9 @@ module.exports.addAdmin = async (req, res) => {
     const token = req.cookies.jwt;
   
     try {
-      const adminId = await checkAdminToken(token);
+      const {adminId, universityId} = verifyToken(token);
       if (!isAuthed("admindPage", adminId)) return res.status(401).json({ message: "Unauthorized" });
   
-      const universityId = await getUniversityId(adminId);
       const hashedPassword = await hashText(password);
   
       const result = await db.query(`
@@ -33,7 +33,7 @@ module.exports.updateAdmin = async (req, res) => {
     const token = req.cookies.jwt;
   
     try {
-      const adminId = await checkAdminToken(token);
+      const {adminId, universityId} = verifyToken(token);
       if (!isAuthed("admindPage", adminId)) return res.status(401).json({ message: "Unauthorized" });
   
       const result = await db.query(`
@@ -57,7 +57,7 @@ module.exports.deleteAdmin = async (req, res) => {
   const token = req.cookies.jwt;
 
   try {
-    const adminId = await checkAdminToken(token);
+    const {adminId, universityId} = verifyToken(token);
     if (!isAuthed("admindPage", adminId)) return res.status(401).json({ message: "Unauthorized" });
 
     const result = await db.query(`
@@ -78,7 +78,7 @@ module.exports.deleteAdmin = async (req, res) => {
     const token = req.cookies.jwt;
   
     try {
-      const adminId = await checkAdminToken(token);
+      const {adminId, universityId} = verifyToken(token);
       if (!isAuthed("admindPage", adminId)) return res.status(401).json({ message: "Unauthorized" });
   
       const result = await db.query(`
@@ -97,10 +97,8 @@ module.exports.deleteAdmin = async (req, res) => {
 module.exports.getAllAdmins = async (req, res) => {
     const token = req.cookies.jwt;
     try {
-      const adminId = await checkAdminToken(token);
+      const {adminId, universityId} = verifyToken(token);
       if (!isAuthed("admindPage", adminId)) return res.status(401).json({ message: "Unauthorized" });
-  
-      const universityId = await getUniversityId(adminId);
   
       const result = await db.query(`
         SELECT a.adminid, a.firstname, a.lastname, a.username, r.name AS rolename
@@ -109,7 +107,7 @@ module.exports.getAllAdmins = async (req, res) => {
         WHERE a.universityid = $1
       `, [universityId]);
   
-      return res.status(200).json({ admins: result.rows });
+      return res.status(200).json(result.rows);
     } catch (e) {
       console.log("Error fetching admins:", e);
       return res.status(500).json({ message: "Internal server error" });
@@ -119,7 +117,7 @@ module.exports.getAllAdmins = async (req, res) => {
   module.exports.getAdmin = async (req, res) => {
     const token = req.cookies.jwt;
     try {
-      const adminId = await checkAdminToken(token);
+      const {adminId, universityId} = verifyToken(token);
       if (!isAuthed("adminPage", adminId)) return res.status(401).json({ message: "Unauthorized" });
       const result = await db.query(
         `SELECT a.adminid, a.firstname, a.lastname, a.username, r.name AS rolename, 
@@ -134,12 +132,38 @@ module.exports.getAllAdmins = async (req, res) => {
       if (result.rows.length === 0) {
         return res.status(404).json({ message: "Admin not found" });
       }
-      return res.status(200).json({ admin: result.rows[0] });
+      return res.status(200).json(result.rows[0]);
     } catch (e) {
       console.log("Error fetching admin:", e);
       return res.status(500).json({ message: "Internal server error" });
     }
   };
+
+  module.exports.addSuperAdmin = async () => {
+    try {
+      var result = await db.query("SELECT * FROM web_admins");
+      if(result.rowCount > 0){
+        console.log("super admin already exist");
+        return;
+      }
+      const username = process.env.SUPER_ADMIN_USERNAME;
+      const password = process.env.SUPER_ADMIN_PASSWORD;
+      const hashedPassword = await hashText(password);
+      result = await db.query("INSERT INTO roles(name) VALUES ($1) RETURNING *",["superAdmin"]);
+      const roleId = result.rows[0].roleid;
+      await db.query("INSERT INTO role_permissions(name, roleid) VALUES ($1, $2)", ["superAdmin", roleId])
+  
+       result = await db.query(`
+        INSERT INTO web_admins(username, password, roleid)
+        VALUES ($1, $2, $3)
+        RETURNING *
+      `, [username, hashedPassword, roleId]);
+      console.log("superAdmin created succesfully");
+      return result.rows[0];
+    } catch (e) {
+      console.log("Error adding super admin:", e);
+    }
+};
   
   
   

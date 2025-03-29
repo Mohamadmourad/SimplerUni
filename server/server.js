@@ -9,6 +9,9 @@ const userRoutes = require("./endpoints/user/routes");
 const universityRoutes = require("./endpoints/university/routes");
 const roleRoutes = require("./endpoints/role/routes");
 const adminRoutes = require("./endpoints/admin/routes");
+const newsRoutes = require("./endpoints/news/routes");
+
+const { addSuperAdmin } = require('./endpoints/admin/businessLogic');
 
 const PORT = process.env.PORT;
 const app = express();
@@ -30,7 +33,7 @@ setupSwagger(app);
 (async () => {
     await db.connect() ? console.log("database connected") : console.log("failed to connect to db")
     await createTables();
-
+    await addSuperAdmin();
     app.listen(PORT, () => {
         console.log(`Server is running on Port: ${PORT}`);
     });
@@ -40,3 +43,4 @@ app.use("/auth",userRoutes);
 app.use("/university",universityRoutes);
 app.use("/role",roleRoutes);
 app.use("/admin",adminRoutes);
+app.use("/news",newsRoutes);

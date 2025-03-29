@@ -214,8 +214,10 @@ const tables =
         name:"news",
         schema:`CREATE TABLE news (
         newsId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-        content VARCHAR(60),
+        title VARCHAR(60),
+        content TEXT,
         imageUrl VARCHAR(255),
+        created_at TIMESTAMPTZ DEFAULT now(),
         universityId UUID REFERENCES universities(universityId) ON DELETE SET NULL
         );`
     },
