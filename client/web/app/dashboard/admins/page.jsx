@@ -23,9 +23,9 @@ const Admins = () => {
         withCredentials: true 
       });
       console.log("Current admin data:", response.data);
-      
-      if (response.data && response.data.admin) {
-        setCurrentAdminId(response.data.admin.adminid);
+      console.log("Current admin ID:", response.data.adminid);
+      if (response.data) {
+        setCurrentAdminId(response.data.adminid);
       }
     } catch (err) {
       console.error("Error fetching current admin:", err);
@@ -41,11 +41,11 @@ const Admins = () => {
       if (Array.isArray(result.data)) {
         const temp = result.data.map(admin => ({
           id: admin.adminid,
-          firstName: admin.firstName,
-          lastName: admin.lastName,
+          firstName: admin.firstname,
+          lastName: admin.lastname,
           username: admin.username,
-          roleId: admin.roleid, // Store actual roleId for editing
-          roleName: admin.rolename // Display role name
+          roleId: admin.roleid,
+          roleName: admin.rolename
         }));
         setAdmins(temp);
       } else {
@@ -173,7 +173,7 @@ const Admins = () => {
 
   const openEditModal = (admin) => {
     // Prevent editing own account
-    if (admin.id === currentAdminId) {
+    if (admin.adminid === currentAdminId) {
       setError("You cannot edit your own account.");
       return;
     }
@@ -188,12 +188,6 @@ const Admins = () => {
     
     if (!editingAdmin) return;
     
-    // Double-check to prevent editing own account
-    if (editingAdmin.id === currentAdminId) {
-      setError("You cannot edit your own account.");
-      setIsEditModalOpen(false);
-      return;
-    }
     
     if (!editingAdmin.firstName.trim() || !editingAdmin.lastName.trim() || !editingAdmin.username.trim() || !editingAdmin.roleId) {
       setError("All fields are required");
@@ -205,11 +199,11 @@ const Admins = () => {
     
     try {
       console.log("Updating admin with data:", editingAdmin);
-      
+      console.log("meow: "+editingAdmin.roleId)
       await axios.put(
         "http://localhost:5000/admin/updateAdmin", 
         {
-          adminid: editingAdmin.id,
+          adminToUpdateId: editingAdmin.id,
           firstName: editingAdmin.firstName,
           lastName: editingAdmin.lastName,
           username: editingAdmin.username,
@@ -313,13 +307,17 @@ const Admins = () => {
           <p className="text-gray-400">No admins found.</p>
         ) : (
           <div className="space-y-2">
+            
             {admins.map(admin => (
+              
               <div 
-                key={admin.id} 
+                key={admin.id}
+                
                 className={`flex flex-col md:flex-row justify-between items-start md:items-center p-3 bg-gray-700 rounded-lg ${
                   isCurrentUser(admin.id) ? 'border-l-4 border-purple-500' : ''
                 }`}
               >
+                {console.log(admin)} 
                 <div className="mb-2 md:mb-0">
                   <div className="flex items-center">
                     <p className="text-white font-medium">{admin.firstName} {admin.lastName}</p>
@@ -358,7 +356,7 @@ const Admins = () => {
 
       {/* Edit Modal */}
       {isEditModalOpen && editingAdmin && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
           <div className="bg-gray-800 p-6 rounded-lg w-full max-w-md">
             <h2 className="text-xl font-semibold text-white mb-4">Edit Admin</h2>
             {error && <p className="text-red-500 mb-4 p-2 bg-red-900 bg-opacity-30 rounded">{error}</p>}

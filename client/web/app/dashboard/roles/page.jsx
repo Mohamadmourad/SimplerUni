@@ -175,15 +175,15 @@ const Roles = () => {
         </div>
       </div>
 
-      <div className="flex-none px-8">
-        <h2 className="text-xl font-semibold mb-4 text-white">Existing Roles</h2>
-      </div>
+      <div className="bg-gray-900 p-4 rounded-lg">
+        <h2 className="text-xl font-semibold text-white mb-3">Existing Roles</h2>
+      
 
       <div className="flex-1 px-8 pb-8 overflow-y-auto">
         <div className="space-y-2">
           {roles.length > 0 ? (
             roles.map((role) => (
-              <div key={role.id} className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
+              <div key={role.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-3 bg-gray-700 rounded-lg">
                 <div>
                   <span className="text-gray-300 font-semibold">{role.name}</span>
                   <p className="text-gray-400 text-sm">
@@ -215,6 +215,7 @@ const Roles = () => {
             <p className="text-gray-400">No roles added.</p>
           )}
         </div>
+      </div>
       </div>
       {isEditModalOpen && editingRole && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4">

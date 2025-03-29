@@ -31,7 +31,7 @@ module.exports.addAdmin = async (req, res) => {
 module.exports.updateAdmin = async (req, res) => {
     const { adminToUpdateId, firstName, lastName, roleId } = req.body;
     const token = req.cookies.jwt;
-  
+    console.log("updateAdmin: ", req.body);
     try {
       const {adminId, universityId} = verifyToken(token);
       if (!isAuthed("admindPage", adminId)) return res.status(401).json({ message: "Unauthorized" });
@@ -101,7 +101,7 @@ module.exports.getAllAdmins = async (req, res) => {
       if (!isAuthed("admindPage", adminId)) return res.status(401).json({ message: "Unauthorized" });
   
       const result = await db.query(`
-        SELECT a.adminid, a.firstname, a.lastname, a.username, r.name AS rolename
+        SELECT a.adminid, a.firstname, a.lastname, a.username, r.name AS rolename, r.roleid AS roleid
         FROM web_admins AS a
         JOIN roles AS r ON a.roleid = r.roleid
         WHERE a.universityid = $1
