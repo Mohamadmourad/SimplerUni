@@ -216,8 +216,6 @@ const Roles = () => {
           )}
         </div>
       </div>
-
-      {/* Edit Modal */}
       {isEditModalOpen && editingRole && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4">
           <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">

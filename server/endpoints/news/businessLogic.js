@@ -6,8 +6,6 @@ const { verifyToken } = require("../university/helper");
 module.exports.createNews = async (req, res) => {
     const { title ,content, imageBase64 } = req.body;
     const token = req.cookies.jwt;
-    console.log(imageBase64);
-
     try {
       const { adminId, universityId } = verifyToken(token);
       if (!await isAuthed("newsPage", adminId)) {
@@ -25,20 +23,6 @@ module.exports.createNews = async (req, res) => {
       return res.status(500).json({ message: "Error while creating news" });
     }
   };
-
-  module.exports.getAllNews = async (req, res) => {
-    try {
-     const { adminId, universityId } = verifyToken(token);
-     if (!await isAuthed("newsPage", adminId)) {
-          return res.status(401).json({ message: "Unauthorized" });
-      }  
-      const result = await db.query("SELECT * FROM news WHERE universityid");
-      return res.status(200).json(result.rows);
-    } catch (e) {
-      console.log(e);
-      return res.status(500).json({ message: "Error while retrieving news" });
-    }
-  };
   
   module.exports.deleteNews = async (req, res) => {
     const { newsId } = req.params;
@@ -52,8 +36,7 @@ module.exports.createNews = async (req, res) => {
       if (!await isAuthed("newsPage", adminId)) {
         return res.status(401).json({ message: "Unauthorized" });
       }
-  
-      const result = await db.query("DELETE FROM news WHERE newsId = $1 RETURNING *", [newsId]);
+      const result = await db.query("DELETE FROM news WHERE newsid = $1 RETURNING *", [newsId]);
       if (result.rowCount === 0) {
         return res.status(404).json({ message: "News not found" });
       }
@@ -61,6 +44,21 @@ module.exports.createNews = async (req, res) => {
     } catch (e) {
       console.log(e);
       return res.status(500).json({ message: "Error while deleting news" });
+    }
+}
+
+  module.exports.getAllNews = async (req, res) => {
+    const token = req.cookies.jwt;
+    try {
+     const { adminId, universityId } = verifyToken(token);
+     if (!await isAuthed("newsPage", adminId)) {
+          return res.status(401).json({ message: "Unauthorized" });
+      }  
+      const result = await db.query("SELECT * FROM news WHERE universityid = $1",[universityId]);
+      return res.status(200).json(result.rows);
+    } catch (e) {
+      console.log(e);
+      return res.status(500).json({ message: "Error while retrieving news" });
     }
   };
   
