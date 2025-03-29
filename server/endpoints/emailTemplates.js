@@ -90,3 +90,49 @@ export const otpVerificationEmail = (otp) => `
     </html>
 `;
 
+export const newUniversityRequestEmail = (name, email, phoneNumber, additionalInfo) => `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>New University Request</title>
+        <style>
+        body { margin: 0; padding: 0; background-color: #030712; font-family: Arial, sans-serif; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 6px; overflow: hidden; }
+        .header { background-color: #6d28d9; padding: 20px; text-align: center; color: #ffffff; }
+        .content { padding: 30px 20px; color: #030712; text-align: center; }
+        .info { background-color: #f3f4f6; padding: 15px; border-radius: 6px; text-align: left; margin: 20px 0; }
+        .footer { background-color: #6d28d9; padding: 15px; text-align: center; color: #ffffff; font-size: 14px; }
+        a.button { background-color: #6d28d9; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 4px; display: inline-block; margin-top: 20px; }
+        a.button:hover { opacity: 0.9; }
+        </style>
+    </head>
+    <body>
+        <table class="container" width="100%" border="0" cellspacing="0" cellpadding="0">
+        <tr>
+            <td class="header">
+            <h1>New University Request</h1>
+            </td>
+        </tr>
+        <tr>
+            <td class="content">
+            <p>Hello,</p>
+            <p>A new university request has been submitted with the following details:</p>
+            <div class="info">
+                <p><strong>Name:</strong> ${name}</p>
+                <p><strong>Email:</strong> ${email}</p>
+                <p><strong>Phone Number:</strong> ${phoneNumber}</p>
+                <p><strong>Additional Information:</strong> ${additionalInfo || "N/A"}</p>
+            </div>
+            <p>Please review the request as soon as possible.</p>
+            </td>
+        </tr>
+        <tr>
+            <td class="footer">
+            <p>© 2025 simplerUni. All rights reserved.</p>
+            </td>
+        </tr>
+        </table>
+    </body>
+    </html>
+`;
+

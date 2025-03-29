@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { School, Mail, User, Phone, FileText } from "lucide-react";
+import axios from "axios";
+import { useRouter } from 'next/navigation';
 
 export default function RequestAccess() {
   const [university, setUniversity] = useState("");
@@ -9,27 +11,33 @@ export default function RequestAccess() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [additionalInfo, setAdditionalInfo] = useState("");
+  
+  const router = useRouter();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Request Access Submitted:", { university, contactPerson, email, phone, additionalInfo });
-    // Add form submission logic here
+    try{
+      await axios.post("http://localhost:5000/university/universityRequest",{
+        name: university,
+        email,
+        phoneNumber: phone, 
+        additionalInfo: additionalInfo
+      } ,{ withCredentials: true });
+      router.push("/");
+    }
+    catch(e){
+      console.log("error sending request")
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900">
       <div className="bg-gray-800 rounded-2xl p-8 max-w-lg w-full mx-4 relative shadow-lg">
-        
-        {/* Logo & Heading */}
         <div className="text-center mb-8">
           <School className="w-12 h-12 text-purple-500 mx-auto mb-4" />
           <h2 className="text-3xl font-bold text-white">Join Our Family</h2>
         </div>
-
-        {/* Request Access Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          
-          {/* University Name */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
               University Name
@@ -46,9 +54,6 @@ export default function RequestAccess() {
               />
             </div>
           </div>
-
-          
-          {/* Email */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
               Email
@@ -65,8 +70,6 @@ export default function RequestAccess() {
               />
             </div>
           </div>
-
-          {/* Phone Number */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
               Phone Number
@@ -83,8 +86,6 @@ export default function RequestAccess() {
               />
             </div>
           </div>
-
-          {/* Additional Information */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
               Additional Information
@@ -100,12 +101,9 @@ export default function RequestAccess() {
               />
             </div>
           </div>
-
-          {/* Submit Button */}
           <button
             type="submit"
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-          >
+            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
             Submit Request
           </button>
         </form>
