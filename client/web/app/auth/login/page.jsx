@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { School, Mail, Lock, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import axios from "axios";
@@ -12,6 +12,19 @@ export default function AdminLogin() {
   const [error, setError] = useState("");
   const [isClickable, setisClickable] = useState(true);
   const router = useRouter();
+
+  useEffect(()=>{
+    const check = async()=>{
+      try{
+        await axios.get("http://localhost:5000/university/checkLogin",{ withCredentials: true });
+        router.push("/dashboard")
+      }
+      catch(e){
+
+      }
+    }
+    check();
+  },[])
 
   const handleSubmit = async (e) => {
     e.preventDefault();

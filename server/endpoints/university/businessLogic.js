@@ -2,9 +2,9 @@ const {db} = require("../../db");
 const generator = require('generate-password');
 const { hashText } = require("../user/helper");
 const { sendEmail } = require("../helper");
-const { accountAcceptanceEmail } = require("../emailTemplates");
+const { accountAcceptanceEmail, newUniversityRequestEmail } = require("../emailTemplates");
 const { createToken, verifyToken } = require("./helper");
-const { addRoleMethode } = require("../role/businessLogic");
+const { addRoleMethode, isAuthed } = require("../role/businessLogic");
 const bcrypt = require('bcrypt');
 
 module.exports.createUniversity = async (req, res)=>{
@@ -54,23 +54,25 @@ module.exports.universityLogin = async (req, res) => {
   });
 };
 
-const checkUniversityAuth = async (token)=>{
-    const result = verifyToken(token);
+module.exports.universityLogout = async (req, res) => {
+  try {
+    res.clearCookie("jwt", { httpOnly: true });
+    return res.status(200).json({ message: "Logout successful" });
+  } catch (e) {
+    console.error("Error during logout:", e);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
 
-    if (result.id) {
-       return result.id;
-    } else {
-      throw 'Invalid token or expired token';
-    }
-}
 
-module.exports.getUniversityId = async (adminId)=>{
-  const result = await db.query("SELECT * FROM web_admins WHERE adminid=$1",[adminId]);
-  return result.rows[0].universityid;
+module.exports.checkLogin = async (req,res)=>{
+  const token = req.cookies.jwt;
+ const {adminId} = verifyToken(token);
+ if(adminId) return res.status(200).json("success");
+ return res.status(500).json("unautherized");
 }
 
 module.exports.addStudentDomain = async (req, res)=>{
-  console.log("meow");
    const { studentDomain } = req.body;
    const token = req.cookies.jwt;
    try{
@@ -227,5 +229,86 @@ module.exports.getUniversity = async (req,res)=>{
     return res.status(200).json( result.rows[0] );
   } catch (e) {
     console.log("error while getting university: ", e);
+  }
+}
+
+module.exports.universityRequest = async(req,res)=>{
+  const {name, email, phoneNumber, additionalInfo} = req.body;
+
+  await db.query(`INSERT INTO university_requests (name, email, phoneNumber, additional_information,status) VALUES ($1, $2, $3, $4,$5)`,[name, email, phoneNumber, additionalInfo,"pending"]);
+  const htmlContent = newUniversityRequestEmail(name, email, phoneNumber, additionalInfo);
+  await sendEmail(process.env.SUPER_ADMIN_EMAIL, "request", htmlContent);
+
+  return res.status(200);
+}
+
+module.exports.getPendingUniversityAcessList = async(req,res)=>{
+  const token = req.cookies.jwt;
+  try {
+    const {adminId} = verifyToken(token);
+    if(!await isAuthed("superAdmin", adminId)) return res.status(401).json({message: "Unauthorized"});
+    const result = await db.query(
+      `SELECT * FROM university_requests WHERE status=$1`,["pending"]);
+    return res.status(200).json(result.rows);
+  } catch (e) {
+    console.log("error while getting university: ", e);
+  }
+}
+
+module.exports.getAcceptedUniversityAcessList = async(req,res)=>{
+  const token = req.cookies.jwt;
+  try {
+    const {adminId} = verifyToken(token);
+    if(!await isAuthed("superAdmin", adminId)) return res.status(401).json({message: "Unauthorized"});
+    const result = await db.query(
+      `SELECT * FROM university_requests WHERE status=$1`,["approved"]);
+    return res.status(200).json(result.rows);
+  } catch (e) {
+    console.log("error while getting university: ", e);
+  }
+}
+
+module.exports.universityRequestAccept = async(req,res)=>{
+  const token = req.cookies.jwt;
+  const { requestId } = req.body;
+  try {
+    const { adminId } = verifyToken(token);
+    if (!await isAuthed("superAdmin", adminId)) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const result = await db.query(
+      `UPDATE university_requests SET status=$1 WHERE requestid=$2 RETURNING *`,
+      ["approved", requestId]
+    );
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "University request not found" });
+    }
+    return res.status(200).json({ message: "University request approved successfully", university: result.rows[0] });
+  } catch (e) {
+    console.error("Error while approving university request: ", e);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
+module.exports.universityRequestReject = async(req,res)=>{
+  const token = req.cookies.jwt;
+  const { requestId } = req.body;
+  console.log(requestId);
+  try {
+    const { adminId } = verifyToken(token);
+    if (!await isAuthed("superAdmin", adminId)) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const result = await db.query(
+      `UPDATE university_requests SET status=$1 WHERE requestid=$2 RETURNING *`,
+      ["rejected", requestId]
+    );
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "University request not found" });
+    }
+    return res.status(200).json({ message: "University request approved successfully", university: result.rows[0] });
+  } catch (e) {
+    console.error("Error while approving university request: ", e);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 }
