@@ -221,6 +221,18 @@ const tables =
         universityId UUID REFERENCES universities(universityId) ON DELETE SET NULL
         );`
     },
+    {
+        name:"university_requests",
+        schema:`CREATE TABLE university_requests (
+        requestId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+        name VARCHAR(60),
+        email VARCHAR(60),
+        phoneNumber VARCHAR(60),
+        additional_information TEXT,
+        status varchar(30),
+        created_at TIMESTAMPTZ DEFAULT now()
+        );`
+    },
 ]
 
 module.exports = {

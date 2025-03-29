@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import axios from "axios";
-import Cookies from "js-cookie";
 import {
   CalculatorIcon,
   Home,
@@ -19,7 +18,8 @@ import {
   ChartArea,
   ChartNoAxesGantt,
   Building,
-  Newspaper
+  Newspaper,
+  BookOpenCheck
 } from "lucide-react";
 
 export default function DashboardLayout({ children }) {
@@ -42,6 +42,7 @@ export default function DashboardLayout({ children }) {
   const superAdminnavigationItems = [
     { name: "Home", icon: Home, path: "/dashboard", permission: null }, 
     { name: "Add University", icon: CirclePlus, path: "/dashboard/addUniversity"},
+    { name: "University requests", icon: BookOpenCheck, path: "/dashboard/requestAccess"},
     { name: "Statistics", icon: ChartArea, path: "/dashboard/statictics"},
   ];
 
@@ -64,9 +65,8 @@ export default function DashboardLayout({ children }) {
 
   useEffect(() => {}, [permissions]);
 
-  const handleSignOut = () => {
-    Cookies.remove("jwt"); 
-    console.log("Signing out...");
+  const handleSignOut = async() => {
+    await axios.post("http://localhost:5000/university/logout", {},{withCredentials: true})
     router.push("/auth/login");
   };
 
