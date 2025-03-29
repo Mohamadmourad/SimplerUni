@@ -1,6 +1,5 @@
 const {db} = require("../../db");
 const { verifyToken } = require("../university/helper");
-const { checkAdminToken } = require("./helper");
 
 module.exports.addRole = async (req, res)=>{
   const { roleName, permissions } = req.body;

@@ -1,0 +1,10 @@
+const express = require('express');
+const newsController = require('./businessLogic');
+
+const router = express.Router();
+
+router.post("/createNews", newsController.createNews);
+router.get("/getAllNews", newsController.getAllNews);
+router.get("/deletNews", newsController.deleteNews);
+
+module.exports = router;

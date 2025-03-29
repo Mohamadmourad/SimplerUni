@@ -15,6 +15,11 @@ import {
   UserPlus,
   Menu,
   X,
+  CirclePlus,
+  ChartArea,
+  ChartNoAxesGantt,
+  Building,
+  Newspaper
 } from "lucide-react";
 
 export default function DashboardLayout({ children }) {
@@ -27,9 +32,17 @@ export default function DashboardLayout({ children }) {
     { name: "Home", icon: Home, path: "/dashboard", permission: null }, 
     { name: "Analytics", icon: CalculatorIcon, path: "/dashboard/analytics", permission: "analyticsPage" },
     { name: "Majors", icon: FilePlus, path: "/dashboard/majors", permission: "majorsPage" },
+    { name: "Campuses", icon: Building, path: "/dashboard/campuses", permission: "campusesPage" },
     { name: "Domains", icon: FileText, path: "/dashboard/domains", permission: "domainsPage" },
     { name: "Admins", icon: Users, path: "/dashboard/admins", permission: "adminEditPage" },
     { name: "Roles", icon: UserPlus, path: "/dashboard/roles", permission: "rolesPage" },
+    { name: "Club Management", icon: ChartNoAxesGantt, path: "/dashboard/clubs", permission: "clubsPage" },
+    { name: "News", icon: Newspaper, path: "/dashboard/news", permission: "newsPage" },
+  ];
+  const superAdminnavigationItems = [
+    { name: "Home", icon: Home, path: "/dashboard", permission: null }, 
+    { name: "Add University", icon: CirclePlus, path: "/dashboard/addUniversity"},
+    { name: "Statistics", icon: ChartArea, path: "/dashboard/statictics"},
   ];
 
   useEffect(() => {
@@ -78,7 +91,25 @@ export default function DashboardLayout({ children }) {
           </button>
         </div>
         <nav className="mt-6 px-4 flex-1">
-          {navigationItems.map(
+          { permissions.includes("superAdmin") ?
+          superAdminnavigationItems.map(
+            (item) => (
+                <Link
+                  key={item.name}
+                  href={item.path}
+                  className={`flex items-center px-4 py-3 mb-2 rounded-lg transition ${
+                    pathname === item.path
+                      ? "bg-purple-600 text-white shadow-md"
+                      : "text-gray-400 hover:bg-gray-700 hover:text-white"
+                  }`}
+                  onClick={() => setIsSidebarOpen(false)} 
+                >
+                  <item.icon className="w-5 h-5 mr-3" />
+                  {item.name}
+                </Link>
+              )
+          ) :
+          navigationItems.map(
             (item) =>
               (!item.permission || permissions.includes(item.permission) || permissions.includes("universityDashboard")) && (
                 <Link
@@ -91,13 +122,11 @@ export default function DashboardLayout({ children }) {
                   }`}
                   onClick={() => setIsSidebarOpen(false)} 
                 >
-                  {console.log(permissions.includes(item.permission))}
-                  {console.log(item.permission)}
                   <item.icon className="w-5 h-5 mr-3" />
                   {item.name}
                 </Link>
-              )
-          )}
+              ))
+          }
         </nav>
         <div className="p-4">
           <button

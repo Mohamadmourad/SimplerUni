@@ -138,6 +138,32 @@ module.exports.getAllAdmins = async (req, res) => {
       return res.status(500).json({ message: "Internal server error" });
     }
   };
+
+  module.exports.addSuperAdmin = async () => {
+    try {
+      var result = await db.query("SELECT * FROM web_admins");
+      if(result.rowCount > 0){
+        console.log("super admin already exist");
+        return;
+      }
+      const username = process.env.SUPER_ADMIN_USERNAME;
+      const password = process.env.SUPER_ADMIN_PASSWORD;
+      const hashedPassword = await hashText(password);
+      result = await db.query("INSERT INTO roles(name) VALUES ($1) RETURNING *",["superAdmin"]);
+      const roleId = result.rows[0].roleid;
+      await db.query("INSERT INTO role_permissions(name, roleid) VALUES ($1, $2)", ["superAdmin", roleId])
+  
+       result = await db.query(`
+        INSERT INTO web_admins(username, password, roleid)
+        VALUES ($1, $2, $3)
+        RETURNING *
+      `, [username, hashedPassword, roleId]);
+      console.log("superAdmin created succesfully");
+      return result.rows[0];
+    } catch (e) {
+      console.log("Error adding super admin:", e);
+    }
+};
   
   
   
