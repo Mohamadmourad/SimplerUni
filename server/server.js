@@ -15,6 +15,7 @@ const newsRoutes = require("./endpoints/news/routes");
 const documentsRoutes = require("./endpoints/documents upload/routes");
 
 const { addSuperAdmin } = require('./endpoints/admin/businessLogic');
+const { connectWebSocket } = require('./webSocket');
 
 const PORT = process.env.PORT;
 const app = express();
@@ -25,17 +26,6 @@ const io = new Server(server, {
       methods: ["GET", "POST"]
   }
 }); 
-
-io.on('connection', (socket) => {
-    console.log('A user connected:', socket.id);
-    socket.on('chat message', (msg) => {
-        console.log('Message received:', msg);
-        io.emit('chat message', msg);  
-    });
-    socket.on('disconnect', () => {
-        console.log('A user disconnected:', socket.id);
-    });
-});
 
 app.use(express.json());
 app.use(cors({
@@ -52,7 +42,8 @@ app.use((req, res, next) => {
 setupSwagger(app);
 
 (async () => {
-    await db.connect() ? console.log("database connected") : console.log("failed to connect to db")
+    await db.connect() ? console.log("database connected") : console.log("failed to connect to db");
+    await connectWebSocket(io);
     await createTables();
     await addSuperAdmin();
     server.listen(PORT, () => {
