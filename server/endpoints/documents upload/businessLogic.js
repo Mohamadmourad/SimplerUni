@@ -1,4 +1,7 @@
 const AWS = require("aws-sdk");
+const Papa = require("papaparse");
+const XLSX = require("xlsx");
+const fs = require("fs");
 
 module.exports.uploadDocument = async (fileData, userId) => {
   const s3 = new AWS.S3({
@@ -29,3 +32,33 @@ module.exports.uploadDocument = async (fileData, userId) => {
   const cloudfrontUrl = `https://${process.env.CLOUDFRONT_DOMAIN}/${key}`;
   return cloudfrontUrl;
 };
+
+module.exports.uploadDocument = async(req,res)=>{
+  const filePath = req.file.path;
+  const fileExt = req.file.originalname.split(".").pop();
+
+  try {
+    let data;
+    
+    if (fileExt === "csv") {
+      const fileContent = fs.readFileSync(filePath, "utf8");
+      data = Papa.parse(fileContent, { header: true }).data;
+    } else if (fileExt === "xlsx") {
+      const workbook = XLSX.readFile(filePath);
+      const sheetName = workbook.SheetNames[0];
+      data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+    } else {
+      return res.status(400).json({ error: "Unsupported file format" });
+    }
+    fs.unlinkSync(filePath);
+    const result = {
+      majors: data.map(item => item.majors).filter(campus => campus !== undefined),
+      campuses: data.map(item => item.campuses).filter(campus => campus !== undefined),
+    };
+    console.log(result);
+    res.status(200).json("success");
+
+  } catch (error) {
+    res.status(500).json({ error: "Error processing file" });
+  }
+}
