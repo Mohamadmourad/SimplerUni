@@ -168,8 +168,9 @@ module.exports.getAllCampsus = async (req, res)=>{
 module.exports.getAllMajors = async (req, res)=>{
   try{
     const token = req.cookies.jwt;
+    
     const {adminId, universityId} = verifyToken(token);
-
+    console.log("university id: ", universityId);
     const result = await db.query("SELECT majorid,name FROM majors WHERE universityid=$1",[universityId]);
     return res.status(200).json({
       message:"data retreive succsefull",

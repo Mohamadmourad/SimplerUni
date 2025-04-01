@@ -85,6 +85,15 @@ const AddCampuses = () => {
       },
     });
   };
+  const handleDownloadTemplate = () => {
+    const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent("name\nExample Campus 1\nExample Campus 2");
+    const link = document.createElement("a");
+    link.setAttribute("href", csvContent);
+    link.setAttribute("download", "campus_template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="flex flex-col p-6">
@@ -133,6 +142,12 @@ const AddCampuses = () => {
               Import File
             </button>
           )}
+          <button 
+            onClick={handleDownloadTemplate} 
+            className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+          >
+            Download CSV Template
+          </button>
         </div>
       </div>
 
