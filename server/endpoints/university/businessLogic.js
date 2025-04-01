@@ -6,6 +6,7 @@ const { accountAcceptanceEmail, newUniversityRequestEmail } = require("../emailT
 const { createToken, verifyToken } = require("./helper");
 const { addRoleMethode, isAuthed } = require("../role/businessLogic");
 const bcrypt = require('bcrypt');
+const { createChatroom } = require("../chat/businessLogic");
 
 module.exports.createUniversity = async (req, res)=>{
     let { universityName, universityEmail, username } = req.body;
@@ -22,7 +23,10 @@ module.exports.createUniversity = async (req, res)=>{
     const  universityId = result.rows[0].universityid;
     const roleId = await addRoleMethode("generalAdmin",universityId,["universityDashboard"]);
     await db.query('INSERT INTO web_admins(username, password, universityid, roleid) VALUES ($1,$2,$3,$4)',[ username, password, universityId, roleId]);
-
+    await createChatroom({
+      name : `${universityName} global chat`, 
+      universityId
+    });
     const htmlContent = accountAcceptanceEmail(username, Originalpassword);
 
     await sendEmail(universityEmail, "simplerUni acceptance", htmlContent);
