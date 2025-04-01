@@ -31,7 +31,8 @@ export default function AdminLogin() {
     try{
     setisClickable(false);
     setError("");
-    await axios.post("http://localhost:5000/university/login",{
+    console.log(process.env.NEXT_PUBLIC_END_POINT + "/university/login")
+    await axios.post(process.env.NEXT_PUBLIC_END_POINT + "/university/login",{
       username,
       password
     },{ withCredentials: true });
