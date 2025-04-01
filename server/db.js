@@ -6,7 +6,10 @@ const db = new Client({
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
-    database: process.env.DB_NAME
+    database: process.env.DB_NAME,
+    // ssl: {
+    //     rejectUnauthorized: false, // Required for NeonDB
+    // },
 })
 
 const checkTableExists = async (tableName)=>{
@@ -207,7 +210,7 @@ const tables =
         schema:`CREATE TABLE majors (
         majorId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
         name VARCHAR(60),
-        campusId UUID REFERENCES campusus(campusId) ON DELETE SET NULL
+        universityId UUID REFERENCES universities(universityId) ON DELETE CASCADE,
         );`
     },
     {

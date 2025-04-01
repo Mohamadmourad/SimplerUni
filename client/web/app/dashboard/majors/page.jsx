@@ -1,10 +1,29 @@
+"use client";
+import axios from "axios";
+import { useState } from "react";
+
 export default function AddMajorPage() {
+  const [file, setFile] = useState(null);
+
+  const handleFileChange = (event) => {
+    if (event.target.files) {
+      setFile(event.target.files[0]);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!file) return alert("Please select a file");
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await axios.post("http://localhost:5000/document/uploadDocument", formData,{withCredentials: true});
+  };
+
     return (
-      <div className="p-8 bg-gray-700 shadow-md rounded-lg">
-        <h1 className="text-3xl font-bold text-white">University Data</h1>
-        <p className="text-gray-300 mt-2">
-          Here you can manage university details, majors, and domains.
-        </p>
+      <div className="p-8">
+        <input type="file" accept=".csv,.xlsx" onChange={handleFileChange} />
+        <button onClick={handleUpload}>Upload</button>
       </div>
     );
   }
