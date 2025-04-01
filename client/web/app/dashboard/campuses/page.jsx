@@ -18,8 +18,8 @@ const AddCampuses = () => {
   const fetchCampuses = async () => {
     try {
       const result = await axios.get("http://localhost:5000/university/getAllCampsus", { withCredentials: true });
-      console.log("API Response:", result.data);
-      setCampuses(Array.isArray(result.data) ? result.data : []);
+      console.log("API Response:", result.data.data);
+      setCampuses(Array.isArray(result.data.data) ? result.data.data : []);
     } catch (err) {
       setError("Failed to fetch campuses.");
     }
@@ -34,9 +34,9 @@ const AddCampuses = () => {
 
     setLoading(true);
     try {
-      await axios.post("http://localhost:5000/university/addCampus", { 
+      await axios.post("http://localhost:5000/university/addCampus",{
         campus: name.trim(),
-       });
+       },{withCredentials: true});
       fetchCampuses();
       setName("");
     } catch (err) {
@@ -49,9 +49,10 @@ const AddCampuses = () => {
   const handleRemoveCampus = async (campusId) => {
     setLoading(true);
     try {
+      console.log("Removing campus with ID:", campusId);
       await axios.delete(`http://localhost:5000/university/removeCampus`, {
-        data: { campusId },
-      }
+        campusId
+      }, { withCredentials: true }
       );
       fetchCampuses();
     } catch (err) {
@@ -59,6 +60,7 @@ const AddCampuses = () => {
     } finally {
       setLoading(false);
     }
+
   };
 
   const handleFileChange = (event) => {

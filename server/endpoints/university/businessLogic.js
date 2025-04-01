@@ -104,6 +104,7 @@ module.exports.addCampus = async (req, res)=>{
   if(!campus && !campususGroup) return res.status(400).json({message:"campus or campsus are required"});
   try{
     const {adminId, universityId} = verifyToken(token);
+    
     if(campus){
       const result = await db.query('INSERT INTO campusus(name, universityid) VALUES ($1,$2) RETURNING *',[campus,universityId]);
       return res.status(200).json({
@@ -156,7 +157,7 @@ module.exports.getAllCampsus = async (req, res)=>{
     const result = await db.query("SELECT campusid,name FROM campusus WHERE universityid=$1",[universityId]);
     return res.status(200).json({
       message:"data retreive succsefull",
-      data: result.rows[0]
+      data: result.rows
     });
   }
   catch(e){
@@ -172,7 +173,7 @@ module.exports.getAllMajors = async (req, res)=>{
     const result = await db.query("SELECT majorid,name FROM majors WHERE universityid=$1",[universityId]);
     return res.status(200).json({
       message:"data retreive succsefull",
-      data: result.rows[0]
+      data: result.rows
     });
   }
   catch(e){
@@ -183,6 +184,7 @@ module.exports.getAllMajors = async (req, res)=>{
 module.exports.deleteCampus = async (req, res) => {
   const { campusId } = req.body;
   const token = req.cookies.jwt;
+  console.log("campusId: ", campusId);
   if (!campusId) return res.status(400).json({ message: "campusId is required" });
   try {
     const {adminId, universityId} = verifyToken(token);
