@@ -210,7 +210,7 @@ const tables =
         schema:`CREATE TABLE majors (
         majorId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
         name VARCHAR(60),
-        universityId UUID REFERENCES universities(universityId) ON DELETE CASCADE,
+        universityId UUID REFERENCES universities(universityId) ON DELETE CASCADE
         );`
     },
     {
