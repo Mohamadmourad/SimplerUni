@@ -135,7 +135,7 @@ module.exports.addMajor = async (req, res)=>{
   try{
     const {adminId, universityId} = verifyToken(token);
     if(major){
-      const result = await db.query('INSERT INTO university_majors(name, universityid) VALUES ($1,$2) RETURNING *',[major,universityId]);
+      const result = await db.query('INSERT INTO majors(name, universityid) VALUES ($1,$2) RETURNING *',[major,universityId]);
       return res.status(200).json({
         message: "major added succesfully",
         major : result.rows[0].majorid
@@ -143,7 +143,7 @@ module.exports.addMajor = async (req, res)=>{
     }
     else{
       for(let major of majors){
-        await db.query('INSERT INTO university_majors(name, universityid) VALUES ($1,$2) RETURNING *',[major,universityId]);
+        await db.query('INSERT INTO majors(name, universityid) VALUES ($1,$2) RETURNING *',[major,universityId]);
       }
       return res.status(200).json({message: "majors added succesfully"});
     }

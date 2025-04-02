@@ -53,7 +53,7 @@ export default function DomainsPage() {
         setStudentDomain("");
         setCanAddStudent(false);
       } else if (type === "Instructor" && instructorDomain.trim()) {
-        await axios.post("http://localhost:5000/university/addInstructorDomain", {
+        await axios.post("http://localhost:5000/university/addIntructorDomain", {
           instructorDomain: instructorDomain.trim(),
         }, { withCredentials: true });
 
