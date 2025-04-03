@@ -1,8 +1,9 @@
 const {db} = require("../../db");
 const {DateTime} = require("luxon");
-const { hashText, createToken, handleErrors, compareHashedText, getUserIdFromToken } = require("./helper");
+const { hashText, createToken, handleErrors, compareHashedText, getUserIdFromToken, getEmailDomain } = require("./helper");
 const { sendEmail } = require("../helper");
 const { otpVerificationEmail } = require("../emailTemplates");
+const { addToChatroom } = require("../chat/businessLogic");
 
 module.exports.signup_post = async (req, res) => {
     let { email, password, username } = req.body;
@@ -19,10 +20,12 @@ module.exports.signup_post = async (req, res) => {
                 },
             });
         }
-
-        const result = await db.query('INSERT INTO users(username, email, password, isEmailVerified) VALUES ($1,$2,$3,false) RETURNING *',[username,email,password]);
+        const domain = getEmailDomain(email);
+        const uniRequest = await db.query("SELECT * FROM universities WHERE studentdomain=$1 OR instructordomain=$1",[domain]);
+        if(uniRequest.rowCount === 0) res.status(400).json("your university is not supported");
+        const type = domain === uniRequest.rows[0].studentDomain;
+        const result = await db.query('INSERT INTO users(username, email, password, isEmailVerified,isStudent,universityid) VALUES ($1,$2,$3,false,$4,$5) RETURNING *',[username,email,password,type,uniRequest.rows[0].universityid]);
         const authToken = createToken(result.rows[0].userid);
-
         res.status(200).json({
             message: "user inserted successfully",
             authToken

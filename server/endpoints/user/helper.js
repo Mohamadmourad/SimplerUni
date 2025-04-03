@@ -15,6 +15,10 @@ module.exports.getUserIdFromToken = (token) => {
     }
 };
 
+module.exports.getEmailDomain = (email)=> {
+    return email.split('@')[1];
+}
+
 module.exports.hashText = async (text) => {
     const saltRounds = 5;
     return await bcrypt.hash(text, saltRounds);

@@ -58,7 +58,7 @@ const tables =
         emailOtp INTEGER,
         emailOtpExpire VARCHAR(30),
         passwordResetToken VARCHAR(255),
-        type VARCHAR(30),
+        isStudent BOOLEAN,
         major VARCHAR(255),
         description VARCHAR(255),
         profilePicture VARCHAR(255),
@@ -210,7 +210,7 @@ const tables =
         schema:`CREATE TABLE majors (
         majorId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
         name VARCHAR(60),
-        universityId UUID REFERENCES universities(universityId) ON DELETE CASCADE,
+        universityId UUID REFERENCES universities(universityId) ON DELETE CASCADE
         );`
     },
     {

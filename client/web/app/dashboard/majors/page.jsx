@@ -17,7 +17,8 @@ export default function AddMajorPage() {
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await axios.post("http://localhost:5000/document/uploadDocument", formData,{withCredentials: true});
+    const response = await axios.post("http://localhost:5000/document/uploadCampusesDocument", formData,{withCredentials: true});
+    console.log(response.data);
   };
 
     return (
