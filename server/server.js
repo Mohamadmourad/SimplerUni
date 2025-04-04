@@ -51,7 +51,7 @@ setupSwagger(app);
     });
 })();
 
-app.use("/auth",userRoutes);
+app.use("/user",userRoutes);
 app.use("/university",universityRoutes);
 app.use("/role",roleRoutes);
 app.use("/admin",adminRoutes);

@@ -1,33 +1,42 @@
 const {db} = require("../../db");
 const { verifyToken } = require("../university/helper");
 
-module.exports.createChatroom = async (req, res)=>{
-    const {name, universityId} = req.body || req
+module.exports.createChatroom = async (name, universityId)=>{
     try{
         const result = await db.query("INSERT INTO chatrooms(name, universityid) VALUES ($1,$2) RETURNING *",[name, universityId]);
         const chatroomId = result.rows[0].chatroomid;
-       req.body ? res.status(200).json(chatroomId) : chatroomId;
+       return chatroomId;
     }
     catch(e){
         console.log("error while creating chatroom" + e);
-        res.status(500).json("failed");
     }
 }
 
+module.exports.deleteChatroom = async (chatroomId) => {
+    try {
+        const result = await db.query(
+            "DELETE FROM chatrooms WHERE chatroomid = $1 RETURNING *",
+            [chatroomId]
+        );
+
+    } catch (e) {
+        console.log("Error while deleting chatroom: " + e);
+    }
+};
+
 module.exports.getUserChatrooms = async (req, res) => {
     try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader) {
+        const token = req.headers.authorization;
+        if (!token) {
             return res.status(401).json({ error: "Authorization header missing" });
         }
-        const token = authHeader.split(" ")[1]; 
-        const { adminId, universityId } = verifyToken(token);
-        if (!adminId) {
+        const { userId, universityId } = verifyToken(token);
+        if (!userId) {
             return res.status(403).json({ error: "Invalid token" });
         }
         const result = await db.query(
             "SELECT * FROM chatrooms AS c JOIN chatroom_members AS cm ON c.chatroomid = cm.chatroomid WHERE cm.userid = $1",
-            [adminId]
+            [userId]
         );
         res.status(200).json(result.rows);
     } catch (e) {
