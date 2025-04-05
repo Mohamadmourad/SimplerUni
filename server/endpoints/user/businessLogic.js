@@ -108,8 +108,9 @@ module.exports.addAdditionalUserData = async (req, res)=>{
 
 module.exports.sendOtp = async (req, res) => {
     try {
-        const { emailReceiver, authToken } = req.body;
-        const userId = getUserIdFromToken(authToken);
+        const { emailReceiver } = req.body;
+        const token = req.headers.authorization;
+        const { userId, universityId } = verifyToken(token);
         const result = await db.query(`SELECT emailOtpExpire FROM users WHERE userId = $1`, [userId]);
         if (result.rowCount === 0) {
             return res.status(400).json({ message: "userNotFound" });
@@ -143,8 +144,9 @@ module.exports.sendOtp = async (req, res) => {
 
 module.exports.verifyOtp = async (req, res) => {
     try {
-        const { authToken, enteredOtp } = req.body;
-        const userId = getUserIdFromToken(authToken);
+        const { enteredOtp } = req.body;
+        const token = req.headers.authorization;
+        const { userId, universityId } = verifyToken(token);
 
         const result = await db.query(`SELECT emailOtp, emailOtpExpire FROM users WHERE userId = $1`, [userId]);
         if (result.rowCount === 0) {
