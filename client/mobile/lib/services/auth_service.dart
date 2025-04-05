@@ -1,23 +1,21 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+
 class AuthService {
-  static const String _baseUrl = 'http://localhost:5000/auth';
-  
-  
- 
+  static const String baseUrl = 'http://192.168.1.104:5000/user';
+
   static Future<String?> signUp(
-    
     String email,
     String password,
     String username,
   ) async {
+    
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final Uri url = Uri.parse('$_baseUrl/signup');
+    final Uri url = Uri.parse('$baseUrl/signup');
 
     final response = await http.post(
       url,
-      headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'email': email,
         'password': password,
@@ -39,7 +37,7 @@ class AuthService {
 
   static Future<String?> login(String email, String password) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final Uri url = Uri.parse('$_baseUrl/login');
+    final Uri url = Uri.parse('$baseUrl/login');
 
     final response = await http.post(
       url,
@@ -59,8 +57,9 @@ class AuthService {
     }
     return null;
   }
+
   static Future<bool> sendOtp(String email, String authToken) async {
-    final Uri url = Uri.parse('$_baseUrl/sendotp');
+    final Uri url = Uri.parse('$baseUrl/sendotp');
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('authToken');
     final response = await http.post(
@@ -77,9 +76,9 @@ class AuthService {
       return false;
     }
   }
-  
+
   static Future<bool> verifyOtp(String authToken, String enteredOtp) async {
-    final Uri url = Uri.parse('$_baseUrl/verifyotp');
+    final Uri url = Uri.parse('$baseUrl/verifyotp');
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('authToken');
     final response = await http.post(
