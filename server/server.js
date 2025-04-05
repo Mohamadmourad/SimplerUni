@@ -46,7 +46,7 @@ setupSwagger(app);
     await connectWebSocket(io);
     await createTables();
     await addSuperAdmin();
-    server.listen(PORT, () => {
+    app.listen(PORT, () => {
         console.log(`Server is running on Port: ${PORT}`);
     });
 })();

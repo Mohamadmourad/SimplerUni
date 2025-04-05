@@ -7,6 +7,7 @@ const { addToChatroom } = require("../chat/businessLogic");
 
 module.exports.signup_post = async (req, res) => {
     let { email, password, username } = req.body;
+    
     password = await hashText(password);
     try{
         const user = await db.query('SELECT * FROM users WHERE email = $1', [email]);

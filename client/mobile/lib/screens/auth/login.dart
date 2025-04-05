@@ -2,53 +2,58 @@ import 'package:flutter/material.dart';
 import 'package:senior_project/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:senior_project/services/auth_service.dart';
-import 'package:shared_preferences_android/shared_preferences_android.dart';
+import 'package:senior_project/components/form_input.dart';
+import 'package:senior_project/components/auth_button.dart';
+import 'package:senior_project/components/app_title.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<LoginPage> createState() => LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
-  final _formKey = GlobalKey<FormState>();
-  bool _isLoading = false;
-  bool _isPasswordVisible = false;
+class LoginPageState extends State<LoginPage> {
+  final formKey = GlobalKey<FormState>();
+  bool isLoading = false;
 
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
     super.dispose();
   }
 
-  Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) {
+  Future<void> login() async {
+    if (!formKey.currentState!.validate()) {
       return;
     }
 
     setState(() {
-      _isLoading = true;
+      isLoading = true;
     });
 
     try {
       String? authToken = await AuthService.login(
-        _emailController.text,
-        _passwordController.text,
+        emailController.text,
+        passwordController.text,
       );
 
       if (authToken != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Login successful!')),
         );
+        
+        // Send OTP after successful login
+        await AuthService.sendOtp(emailController.text, authToken);
+        
         context.go('/otp-verify', extra: {
-        'email': _emailController.text,
-        'authToken': authToken,
-      });
+          'email': emailController.text,
+          'authToken': authToken,
+        });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Invalid credentials. Please try again.')),
@@ -61,7 +66,7 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     setState(() {
-      _isLoading = false;
+      isLoading = false;
     });
   }
 
@@ -73,15 +78,11 @@ class _LoginPageState extends State<LoginPage> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
             child: Form(
-              key: _formKey,
+              key: formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
-                    'SimplerUni',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 50, fontWeight: FontWeight.bold, color: AppColors.primaryColor),
-                  ),
+                  const AppTitle(text: 'SimplerUni'),
                   const Icon(Icons.login, size: 80, color: AppColors.primaryColor),
                   const SizedBox(height: 16),
                   const Text(
@@ -92,13 +93,11 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 32),
 
                   // Email
-                  TextFormField(
-                    controller: _emailController,
+                  FormInput(
+                    controller: emailController,
+                    labelText: 'Email',
+                    prefixIcon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      prefixIcon: Icon(Icons.email_outlined),
-                    ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your email';
@@ -112,23 +111,11 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 16),
 
                   // Password
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: !_isPasswordVisible,
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _isPasswordVisible = !_isPasswordVisible;
-                          });
-                        },
-                      ),
-                    ),
+                  FormInput(
+                    controller: passwordController,
+                    labelText: 'Password',
+                    prefixIcon: Icons.lock_outline,
+                    isPassword: true,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your password';
@@ -139,11 +126,10 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 24),
 
                   // Login Button
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : _login,
-                    child: _isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text('LOG IN'),
+                  AuthButton(
+                    text: 'LOG IN',
+                    isLoading: isLoading,
+                    onPressed: login,
                   ),
                   const SizedBox(height: 16),
 
