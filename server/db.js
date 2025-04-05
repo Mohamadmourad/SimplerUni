@@ -30,7 +30,7 @@ const checkTableExists = async (tableName)=>{
 }
 
 const createTables = async ()=>{
-  tables.forEach(async (table)=>{
+  for(let table of tables){
     if(await checkTableExists(table.name)){
         console.log(`Table ${table.name} is already created`);
     }
@@ -42,7 +42,7 @@ const createTables = async ()=>{
             console.error(`Error creating table ${table.name}:`, err);
         }
     }
-  })
+  }
 }
 
 const tables =
@@ -58,9 +58,8 @@ const tables =
         emailOtp INTEGER,
         emailOtpExpire VARCHAR(30),
         passwordResetToken VARCHAR(255),
-        type VARCHAR(30),
-        major VARCHAR(255),
-        description VARCHAR(255),
+        isStudent BOOLEAN,
+        bio VARCHAR(255),
         profilePicture VARCHAR(255),
         startingUniYear VARCHAR(50),
         created_at TIMESTAMPTZ DEFAULT now()
@@ -200,7 +199,8 @@ const tables =
         schema:`CREATE TABLE campusus (
         campusId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
         name VARCHAR(60),
-        universityId UUID REFERENCES universities(universityId) ON DELETE SET NULL
+        universityId UUID REFERENCES universities(universityId) ON DELETE SET NULL,
+        chatroomId UUID REFERENCES chatrooms(chatroomId) ON DELETE CASCADE
         );
         ALTER TABLE users ADD COLUMN campusId UUID REFERENCES campusus(campusId) ON DELETE SET NULL;
         `
@@ -210,8 +210,11 @@ const tables =
         schema:`CREATE TABLE majors (
         majorId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
         name VARCHAR(60),
-        universityId UUID REFERENCES universities(universityId) ON DELETE CASCADE
-        );`
+        universityId UUID REFERENCES universities(universityId) ON DELETE CASCADE,
+        chatroomId UUID REFERENCES chatrooms(chatroomId) ON DELETE CASCADE
+        );
+         ALTER TABLE users ADD COLUMN majorId UUID REFERENCES majors(majorId) ON DELETE SET NULL;
+        `
     },
     {
         name:"news",

@@ -1,19 +1,22 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
-module.exports.createToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET);
+module.exports.createToken = (userId, universityId) => {
+    return jwt.sign({ userId, universityId }, process.env.JWT_SECRET);
 };
 
-module.exports.getUserIdFromToken = (token) => {
+module.exports.verifyToken = (token) => {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        return decoded.id || null; 
-    } catch (err) {
-        console.error("JWT verification error:", err);
-        return null; 
+        return { userId: decoded.userId, universityId: decoded.universityId, expired: false };
+    } catch (error) {
+        return { userId: null, universityId: null, expired: false, error: 'Invalid token' };
     }
 };
+
+module.exports.getEmailDomain = (email)=> {
+    return "@"+email.split('@')[1];
+}
 
 module.exports.hashText = async (text) => {
     const saltRounds = 5;
