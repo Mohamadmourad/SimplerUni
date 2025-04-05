@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  static const String baseUrl = 'http://192.168.1.104:5000/user';
+  static const String baseUrl = 'http://192.168.1.4:5000/user';
 
   static Future<String?> signUp(
     String email,
@@ -16,6 +16,9 @@ class AuthService {
 
     final response = await http.post(
       url,
+      headers: {
+    'Content-Type': 'application/json',
+      },
       body: jsonEncode({
         'email': email,
         'password': password,
