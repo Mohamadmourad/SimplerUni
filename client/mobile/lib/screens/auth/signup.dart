@@ -53,8 +53,8 @@ class SignupPageState extends State<SignupPage> {
         ).showSnackBar(const SnackBar(content: Text('Sign up successful!')));
 
         // Send OTP after successful signup
-        await AuthService.sendOtp(emailController.text, authToken);
-
+        await AuthService.sendOtp(emailController.text);
+        
         context.go(
           '/otp-verify',
           extra: {'email': emailController.text, 'authToken': authToken},

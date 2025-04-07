@@ -68,6 +68,7 @@ module.exports.login_post = async (req, res) => {
             });
         }
         if(!user.rows[0].majorid && !user.rows[0].campusid){
+            
             return res.status(204).json(authToken);
         }
         res.status(200).json({
@@ -110,6 +111,7 @@ module.exports.sendOtp = async (req, res) => {
     try {
         const { emailReceiver } = req.body;
         const token = req.headers.authorization;
+        console.log("MEOW: " + token);
         const { userId, universityId } = verifyToken(token);
         const result = await db.query(`SELECT emailOtpExpire FROM users WHERE userId = $1`, [userId]);
         if (result.rowCount === 0) {
@@ -129,6 +131,7 @@ module.exports.sendOtp = async (req, res) => {
             }
         }
         const otp = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
+        console.log("OTP: " + otp);
         const subject = "Email Verification";
         const expireAt = now.plus({ minutes: 3 }).toISO();
         const htmlContent = otpVerificationEmail(otp);

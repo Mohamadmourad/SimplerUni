@@ -3,8 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:senior_project/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:senior_project/services/auth_service.dart';
-import 'dart:async';
-import 'package:shared_preferences_android/shared_preferences_android.dart';
+import 'package:senior_project/components/form_input.dart';
+import 'package:senior_project/components/auth_button.dart';
+import 'package:senior_project/components/app_title.dart';
+
 class OtpVerificationPage extends StatefulWidget {
   final String email;
   final String authToken;
@@ -20,70 +22,44 @@ class OtpVerificationPage extends StatefulWidget {
 }
 
 class _OtpVerificationPageState extends State<OtpVerificationPage> {
-  final List<TextEditingController> _otpControllers = List.generate(
+  List<TextEditingController> otpControllers = List.generate(
     6,
     (_) => TextEditingController(),
   );
-  final List<FocusNode> _focusNodes = List.generate(
-    6,
-    (_) => FocusNode(),
-  );
-  
-  bool _isLoading = false;
-  int _resendCountdown = 30;
-  Timer? _timer;
+  List<FocusNode> focusNodes = List.generate(6, (_) => FocusNode());
 
-  @override
-  void initState() {
-    super.initState();
-    _startResendTimer();
-  }
-
-  void _startResendTimer() {
-    setState(() {
-      _resendCountdown = 30;
-    });
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_resendCountdown > 0) {
-        setState(() {
-          _resendCountdown--;
-        });
-      } else {
-        timer.cancel();
-      }
-    });
-  }
+  bool isLoading = false;
+  String? errorMessage;
 
   @override
   void dispose() {
-    for (var controller in _otpControllers) {
+    for (var controller in otpControllers) {
       controller.dispose();
     }
-    for (var node in _focusNodes) {
+    for (var node in focusNodes) {
       node.dispose();
     }
-    _timer?.cancel();
     super.dispose();
   }
 
-  Future<void> _verifyOtp() async {
-    String otp = _otpControllers.map((controller) => controller.text).join();
-    
+  Future<void> verifyOtp() async {
+    String otp = otpControllers.map((controller) => controller.text).join();
+
     if (otp.length != 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid OTP')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter a valid OTP')));
       return;
     }
 
     setState(() {
-      _isLoading = true;
+      isLoading = true;
     });
 
     bool success = await AuthService.verifyOtp(widget.authToken, otp);
-    
+
     setState(() {
-      _isLoading = false;
+      isLoading = false;
     });
 
     if (success) {
@@ -98,119 +74,145 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
     }
   }
 
-  Future<void> _resendOtp() async {
-    if (_resendCountdown > 0) return;
+  Future<void> resendOtp() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
 
-    bool success = await AuthService.sendOtp(widget.email, widget.authToken);
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('OTP resent successfully!')),
-      );
-      _startResendTimer();
+    // Using the updated sendOtp function that returns a Map
+    final result = await AuthService.sendOtp(widget.email);
+
+    setState(() {
+      isLoading = false;
+    });
+
+    if (result['success']) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('OTP resent successfully!')));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to resend OTP. Try again later.')),
-      );
+      // Handle specific error cases
+      if (result['message'] == 'otpAlreadySent' &&
+          result['minutesLeft'] != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Please wait ${result['minutesLeft']} minutes before requesting another OTP',
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to resend OTP: ${result['message']}')),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('OTP Verification'),
-      ),
+      appBar: AppBar(title: const Text('OTP Verification')),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Icon(
-                Icons.verified_user_outlined,
-                size: 64,
-                color: AppColors.primaryColor,
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'Verification Code',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const AppTitle(text: 'SimplerUni'),
+                const Icon(
+                  Icons.verified_user_outlined,
+                  size: 64,
+                  color: AppColors.primaryColor,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'We have sent the verification code to\n${widget.email}',
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
+                const SizedBox(height: 24),
+                const Text(
+                  'Verification Code',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              
-              // OTP Input Fields
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: List.generate(
-                  6,
-                  (index) => SizedBox(
-                    width: 40,
-                    child: TextField(
-                      controller: _otpControllers[index],
-                      focusNode: _focusNodes[index],
-                      keyboardType: TextInputType.number,
-                      textAlign: TextAlign.center,
-                      maxLength: 1,
-                      style: const TextStyle(fontSize: 20),
-                      decoration: const InputDecoration(
-                        counterText: '',
-                        contentPadding: EdgeInsets.zero,
+                const SizedBox(height: 12),
+                Text(
+                  'We have sent the verification code to\n${widget.email}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 32),
+
+                // OTP Input Fields
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: List.generate(
+                    6,
+                    (index) => SizedBox(
+                      width: 40,
+                      child: TextField(
+                        controller: otpControllers[index],
+                        focusNode: focusNodes[index],
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        maxLength: 1,
+                        style: const TextStyle(fontSize: 20),
+                        decoration: const InputDecoration(
+                          counterText: '',
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        onChanged: (value) {
+                          if (value.isNotEmpty && index < 5) {
+                            focusNodes[index + 1].requestFocus();
+                          }
+                        },
                       ),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
-                      onChanged: (value) {
-                        if (value.isNotEmpty && index < 5) {
-                          _focusNodes[index + 1].requestFocus();
-                        }
-                      },
                     ),
                   ),
                 ),
-              ),
-              
-              const SizedBox(height: 32),
-              
-              // Verify Button
-              ElevatedButton(
-                onPressed: _isLoading ? null : _verifyOtp,
-                child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('VERIFY'),
-              ),
-              
-              const SizedBox(height: 24),
-              
-              // Resend OTP
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    _resendCountdown > 0
-                        ? 'Resend available in $_resendCountdown sec'
-                        : 'Didn\'t receive the code?',
-                    style: const TextStyle(color: AppColors.textSecondary),
+
+                const SizedBox(height: 32),
+
+                // Error message if any
+                if (errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: Text(
+                      errorMessage!,
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                  TextButton(
-                    onPressed: _resendOtp,
-                    child: const Text('Resend'),
-                  ),
-                ],
-              ),
-            ],
+
+                // Verify Button - using AuthButton component
+                AuthButton(
+                  text: 'VERIFY',
+                  isLoading: isLoading,
+                  onPressed: verifyOtp,
+                ),
+
+                const SizedBox(height: 24),
+
+                // Resend OTP
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Didn\'t receive the code?',
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
+                    TextButton(
+                      onPressed: resendOtp,
+                      child: const Text('Resend'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
