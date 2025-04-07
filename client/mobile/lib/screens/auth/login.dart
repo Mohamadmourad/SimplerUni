@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:senior_project/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
-import 'package:senior_project/services/auth_service.dart';
+import 'package:senior_project/functions/auth/login.dart';
 import 'package:senior_project/components/form_input.dart';
 import 'package:senior_project/components/auth_button.dart';
 import 'package:senior_project/components/app_title.dart';
@@ -27,7 +27,7 @@ class LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  Future<void> login() async {
+  Future<void> handleLogin() async {
     if (!formKey.currentState!.validate()) {
       return;
     }
@@ -37,10 +37,7 @@ class LoginPageState extends State<LoginPage> {
     });
 
     try {
-      final result = await AuthService.login(
-        emailController.text,
-        passwordController.text,
-      );
+      final result = await login(emailController.text, passwordController.text);
 
       if (result['success']) {
         final authToken = result['token'];
@@ -55,15 +52,11 @@ class LoginPageState extends State<LoginPage> {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(const SnackBar(content: Text('Login successful!')));
-
-          context.go(
-            '/otp-verify',
-            extra: {'email': emailController.text, 'authToken': authToken},
-          );
+          context.go('/home');
         }
       } else {
         if (result.containsKey('requiresEmailVerification') &&
-            result['requiresEmailVerification']) {
+            result['requiresEmailVerification'] == true) {
           final authToken = result['token'];
 
           ScaffoldMessenger.of(context).showSnackBar(
@@ -73,7 +66,7 @@ class LoginPageState extends State<LoginPage> {
           );
 
           context.go(
-            '/otp-verify',
+            '/verify-otp',
             extra: {'email': emailController.text, 'authToken': authToken},
           );
         } else if (result.containsKey('field')) {
@@ -81,16 +74,15 @@ class LoginPageState extends State<LoginPage> {
             context,
           ).showSnackBar(SnackBar(content: Text(result['message'])));
         } else {
-          // General error
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(result['message'] ?? 'Login failed')),
           );
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Login error: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Login failed. Please try again.')),
+      );
     }
 
     setState(() {
@@ -161,7 +153,7 @@ class LoginPageState extends State<LoginPage> {
                   AuthButton(
                     text: 'LOG IN',
                     isLoading: isLoading,
-                    onPressed: login,
+                    onPressed: handleLogin,
                   ),
                   const SizedBox(height: 16),
 
