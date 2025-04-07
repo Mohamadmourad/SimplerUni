@@ -14,7 +14,7 @@ module.exports.signup_post = async (req, res) => {
 
         if (user.rows.length > 0 && !user.rows[0].isemailverified) {
             const authToken = createToken(user.rows[0].userid, user.rows[0].universityid)
-            return res.status(400).json({
+            return res.status(401).json({
                 authToken,
                 errors: {
                     email: 'This email is already registered but not verified. Please verify your email.',

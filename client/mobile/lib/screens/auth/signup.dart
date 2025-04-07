@@ -91,7 +91,16 @@ class SignupPageState extends State<SignupPage> {
             '/otp-verify',
             extra: {'email': emailController.text, 'authToken': result["data"]["authToken"]},
           );
-      } else {
+      }
+      else if(result["statusCode"] == 401){
+        final error = result["error"];
+        Map<String, dynamic> decodedError = jsonDecode(error);
+          context.go(
+            '/otp-verify',
+            extra: {'email': emailController.text, 'authToken': decodedError["authToken"]},
+          );
+      }
+       else {
         final error = result["error"];
         Map<String, dynamic> decodedError = jsonDecode(error);
         setState(() {
