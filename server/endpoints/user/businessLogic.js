@@ -113,7 +113,6 @@ module.exports.sendOtp = async (req, res) => {
     try {
         const { emailReceiver } = req.body;
         const token = req.headers.authorization;
-        console.log("MEOW: " + token);
         const { userId, universityId } = verifyToken(token);
         const result = await db.query(`SELECT emailOtpExpire FROM users WHERE userId = $1`, [userId]);
         if (result.rowCount === 0) {

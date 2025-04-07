@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:senior_project/screens/auth/chat/chat.dart';
 import 'package:senior_project/screens/auth/complete_profile.dart';
 import 'package:senior_project/screens/auth/otp_verification_page.dart';
 import 'package:senior_project/screens/auth/signup.dart';
@@ -18,7 +19,7 @@ class MyApp extends StatelessWidget {
     final GoRouter router = GoRouter(
       initialLocation: '/',
       routes: [
-        GoRoute(path: '/', builder: (context, state) => const LoginPage()),
+        GoRoute(path: '/', builder: (context, state) => const Chat()),
         GoRoute(
           path: '/signup',
           builder: (context, state) => const SignupPage(),

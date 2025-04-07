@@ -13,6 +13,7 @@ const roleRoutes = require("./endpoints/role/routes");
 const adminRoutes = require("./endpoints/admin/routes");
 const newsRoutes = require("./endpoints/news/routes");
 const documentsRoutes = require("./endpoints/documents upload/routes");
+const chatRoutes = require("./endpoints/chat/routes");
 
 const { addSuperAdmin } = require('./endpoints/admin/businessLogic');
 const { connectWebSocket } = require('./webSocket');
@@ -24,7 +25,7 @@ const allowedOrigins = [
   'http://localhost:5000',
   'http://127.0.0.1:5000',
   'http://10.0.2.2:5000',
-  'http://localhost:55265'
+  'http://localhost:55982'
 ];
 
 const app = express();
@@ -71,3 +72,4 @@ app.use("/role", roleRoutes);
 app.use("/admin", adminRoutes);
 app.use("/news", newsRoutes);
 app.use("/document", documentsRoutes);
+app.use("/chat", chatRoutes);

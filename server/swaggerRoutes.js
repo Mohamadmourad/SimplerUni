@@ -1014,3 +1014,107 @@
  *         description: Server error while deleting role.
  */
 
+/**
+ * @swagger
+ * /chat/getUserChatrooms:
+ *   get:
+ *     summary: Retrieves the chatrooms of the authenticated user.
+ *     description: Returns a list of chatrooms for the user identified by the JWT token in the Authorization header. Requires a valid token (without the "Bearer" prefix).
+ *     tags: [Chat]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: JWT token to authenticate the user (without the "Bearer" prefix).
+ *         schema:
+ *           type: string
+ *           example: "your-jwt-token"
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user chatrooms.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   chatroomid:
+ *                     type: integer
+ *                     example: 1
+ *                   name:
+ *                     type: string
+ *                     example: "Study Group"
+ *                   created_at:
+ *                     type: string
+ *                     format: date-time
+ *                     example: "2025-04-07T10:00:00Z"
+ *       401:
+ *         description: Authorization header missing.
+ *       403:
+ *         description: Invalid token.
+ *       500:
+ *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /chat/sendMessage:
+ *   post:
+ *     summary: Sends a message to a chatroom.
+ *     description: Sends a message with a specific type and content to the specified chatroom, using the JWT token in the Authorization header to authenticate the user. If the user sent a message within the last 5 minutes, they will be rate-limited.
+ *     tags: [Chat]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: JWT token to authenticate the user (without the "Bearer" prefix).
+ *         schema:
+ *           type: string
+ *           example: "your-jwt-token"
+ *       - in: body
+ *         name: message
+ *         required: true
+ *         description: The message content to send.
+ *         schema:
+ *           type: object
+ *           properties:
+ *             type:
+ *               type: string
+ *               example: "text"
+ *             content:
+ *               type: string
+ *               example: "Hello, this is a message."
+ *             chatroomId:
+ *               type: UUID
+ *               example: 1
+ *     responses:
+ *       200:
+ *         description: Successfully sent the message.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Message sent successfully."
+ *       429:
+ *         description: Rate limit exceeded. You need to wait before sending another message.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "You can’t send a message yet. Time left: 4m 30s"
+ *                 minutes:
+ *                   type: integer
+ *                   example: 4
+ *                 seconds:
+ *                   type: integer
+ *                   example: 30
+ *       500:
+ *         description: Internal server error.
+ */

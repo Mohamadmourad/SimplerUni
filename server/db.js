@@ -81,8 +81,8 @@ const tables =
         );`
     },
     {
-        name:"mesages",
-        schema:`CREATE TABLE mesages (
+        name:"messages",
+        schema:`CREATE TABLE messages (
         messageId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
         type VARCHAR(40),
         content TEXT,
