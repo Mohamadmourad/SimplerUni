@@ -15,9 +15,9 @@ module.exports.signup_post = async (req, res) => {
         if (user.rows.length > 0 && !user.rows[0].isemailverified) {
             const authToken = createToken(user.rows[0].userid, user.rows[0].universityid)
             return res.status(400).json({
+                authToken,
                 errors: {
                     email: 'This email is already registered but not verified. Please verify your email.',
-                    authToken
                 },
             });
         }
@@ -35,8 +35,7 @@ module.exports.signup_post = async (req, res) => {
     }
     catch(e){
         const errors = handleErrors(e);
-        console.error(e);
-        res.status(400).json({ errors });
+        res.status(400).json(errors);
     }
 };
 
@@ -51,7 +50,7 @@ module.exports.login_post = async (req, res) => {
                 },
             });
         }
-        const isPasswordValid = compareHashedText(password, user.rows[0].password);
+        const isPasswordValid = await compareHashedText(password, user.rows[0].password);
         if (!isPasswordValid) {
             return res.status(400).json({
                 errors: {
@@ -61,15 +60,14 @@ module.exports.login_post = async (req, res) => {
         }
         const authToken = createToken(user.rows[0].userid, user.rows[0].universityid);
         if (!user.rows[0].isemailverified) {
-            return res.status(400).json({
+            return res.status(401).json({
+                authToken,
                 errors: {
                     email: 'Please verify your email before logging in.',
-                    authToken
                 },
             });
         }
         if(!user.rows[0].majorid && !user.rows[0].campusid){
-            
             return res.status(204).json(authToken);
         }
         res.status(200).json({
@@ -81,7 +79,7 @@ module.exports.login_post = async (req, res) => {
     } catch (e) {
         const errors = handleErrors(e);
         console.error(e);
-        res.status(400).json({ errors });
+        res.status(400).json( errors );
     }
 };
 
