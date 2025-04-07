@@ -1,17 +1,19 @@
 const {db} = require("../../db");
 const {DateTime} = require("luxon");
-const { hashText, createToken, handleErrors, compareHashedText, getUserIdFromToken } = require("./helper");
+const { hashText, createToken, handleErrors, compareHashedText, getUserIdFromToken, getEmailDomain, verifyToken } = require("./helper");
 const { sendEmail } = require("../helper");
 const { otpVerificationEmail } = require("../emailTemplates");
+const { addToChatroom } = require("../chat/businessLogic");
 
 module.exports.signup_post = async (req, res) => {
     let { email, password, username } = req.body;
+    
     password = await hashText(password);
     try{
         const user = await db.query('SELECT * FROM users WHERE email = $1', [email]);
 
         if (user.rows.length > 0 && !user.rows[0].isemailverified) {
-            const authToken = createToken(user.rows[0].userid);
+            const authToken = createToken(user.rows[0].userid, user.rows[0].universityid)
             return res.status(400).json({
                 errors: {
                     email: 'This email is already registered but not verified. Please verify your email.',
@@ -19,10 +21,12 @@ module.exports.signup_post = async (req, res) => {
                 },
             });
         }
-
-        const result = await db.query('INSERT INTO users(username, email, password, isEmailVerified) VALUES ($1,$2,$3,false) RETURNING *',[username,email,password]);
-        const authToken = createToken(result.rows[0].userid);
-
+        const domain = getEmailDomain(email);
+        const uniRequest = await db.query("SELECT * FROM universities WHERE studentdomain=$1 OR instructordomain=$1",[domain]);
+        if(uniRequest.rowCount === 0) res.status(400).json("your university is not supported");
+        const type = domain === uniRequest.rows[0].studentDomain;
+        const result = await db.query('INSERT INTO users(username, email, password, isEmailVerified,isStudent,universityid) VALUES ($1,$2,$3,false,$4,$5) RETURNING *',[username,email,password,type,uniRequest.rows[0].universityid]);
+        const authToken = createToken(result.rows[0].userid, result.rows[0].universityid)
         res.status(200).json({
             message: "user inserted successfully",
             authToken
@@ -35,13 +39,10 @@ module.exports.signup_post = async (req, res) => {
     }
 };
 
-
 module.exports.login_post = async (req, res) => {
     let { email, password } = req.body;
-
     try {
         const user = await db.query('SELECT * FROM users WHERE email = $1', [email]);
-
         if (user.rows.length === 0) {
             return res.status(400).json({
                 errors: {
@@ -49,7 +50,6 @@ module.exports.login_post = async (req, res) => {
                 },
             });
         }
-
         const isPasswordValid = compareHashedText(password, user.rows[0].password);
         if (!isPasswordValid) {
             return res.status(400).json({
@@ -58,9 +58,7 @@ module.exports.login_post = async (req, res) => {
                 },
             });
         }
-
-        const authToken = createToken(user.rows[0].userId);
-
+        const authToken = createToken(user.rows[0].userid, user.rows[0].universityid);
         if (!user.rows[0].isemailverified) {
             return res.status(400).json({
                 errors: {
@@ -69,7 +67,10 @@ module.exports.login_post = async (req, res) => {
                 },
             });
         }
-
+        if(!user.rows[0].majorid && !user.rows[0].campusid){
+            
+            return res.status(204).json(authToken);
+        }
         res.status(200).json({
             message: 'Login successful',
             authToken,
@@ -82,10 +83,36 @@ module.exports.login_post = async (req, res) => {
     }
 };
 
+module.exports.addAdditionalUserData = async (req, res)=>{
+    const {majorId, campusId, optionalData} = req.body;
+    const token = req.headers.authorization;
+    if (!token) {
+        return res.status(401).json({ error: "Authorization header missing" });
+    }
+    try{
+        const { userId, universityId } = verifyToken(token);
+        await db.query(`UPDATE users SET majorid = $1, campusid = $2 WHERE userid = $3`, [majorId, campusId, userId]);
+        const majorChatroom = await db.query(`SELECT chatroomid FROM majors WHERE majorid=$1`,[majorId]);
+        const campusChatroom = await db.query(`SELECT chatroomid FROM campusus WHERE campusid=$1`,[campusId]);
+        await db.query(`INSERT INTO chatroom_members(userid,chatroomid) VALUES($1,$2)`,[userId,majorChatroom.rows[0].chatroomid]);
+        await db.query(`INSERT INTO chatroom_members(userid,chatroomid) VALUES($1,$2)`,[userId,campusChatroom.rows[0].chatroomid]);
+        if(optionalData.bio){
+            await db.query(`UPDATE users SET bio = $1 WHERE userid = $2`, [optionalData.bio, userId]); 
+        }
+        return res.status(200).json("data added succesfully");
+    }
+    catch(e){
+        console.log(`error while adding additional data` + e);
+        return res.status(500).json("error while adding additional data");
+    }
+}
+
 module.exports.sendOtp = async (req, res) => {
     try {
-        const { emailReceiver, authToken } = req.body;
-        const userId = getUserIdFromToken(authToken);
+        const { emailReceiver } = req.body;
+        const token = req.headers.authorization;
+        console.log("MEOW: " + token);
+        const { userId, universityId } = verifyToken(token);
         const result = await db.query(`SELECT emailOtpExpire FROM users WHERE userId = $1`, [userId]);
         if (result.rowCount === 0) {
             return res.status(400).json({ message: "userNotFound" });
@@ -104,6 +131,7 @@ module.exports.sendOtp = async (req, res) => {
             }
         }
         const otp = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
+        console.log("OTP: " + otp);
         const subject = "Email Verification";
         const expireAt = now.plus({ minutes: 3 }).toISO();
         const htmlContent = otpVerificationEmail(otp);
@@ -119,8 +147,9 @@ module.exports.sendOtp = async (req, res) => {
 
 module.exports.verifyOtp = async (req, res) => {
     try {
-        const { authToken, enteredOtp } = req.body;
-        const userId = getUserIdFromToken(authToken);
+        const { enteredOtp } = req.body;
+        const token = req.headers.authorization;
+        const { userId, universityId } = verifyToken(token);
 
         const result = await db.query(`SELECT emailOtp, emailOtpExpire FROM users WHERE userId = $1`, [userId]);
         if (result.rowCount === 0) {

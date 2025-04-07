@@ -34,10 +34,11 @@ module.exports.uploadDocument = async (fileData, userId) => {
 };
 
 module.exports.uploadCampusesDocument = async(req,res)=>{
+  try {
   const filePath = req.file.path;
   const fileExt = req.file.originalname.split(".").pop();
 
-  try {
+  
     let data;
     
     if (fileExt === "csv") {

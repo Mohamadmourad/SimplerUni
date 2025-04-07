@@ -2,63 +2,67 @@ import 'package:flutter/material.dart';
 import 'package:senior_project/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:senior_project/services/auth_service.dart';
-import 'package:shared_preferences_android/shared_preferences_android.dart';
-
+import 'package:senior_project/components/form_input.dart';
+import 'package:senior_project/components/auth_button.dart';
+import 'package:senior_project/components/app_title.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
 
   @override
-  State<SignupPage> createState() => _SignupPageState();
+  State<SignupPage> createState() => SignupPageState();
 }
 
-class _SignupPageState extends State<SignupPage> {
-  final _formKey = GlobalKey<FormState>();
-  
-  bool _isLoading = false;
-  bool _isPasswordVisible = false;
-  bool _isConfirmPasswordVisible = false;
+class SignupPageState extends State<SignupPage> {
+  final formKey = GlobalKey<FormState>();
+  bool isLoading = false;
 
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
+  final usernameController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
     super.dispose();
   }
 
-  Future<void> _signUp() async {
-    if (!_formKey.currentState!.validate()) {
+  Future<void> signUp() async {
+    if (!formKey.currentState!.validate()) {
       return;
     }
 
     setState(() {
-      _isLoading = true;
+      isLoading = true;
     });
 
     try {
+      
       String? authToken = await AuthService.signUp(
-        _emailController.text,
-        _passwordController.text,
-        _emailController.text.split('@')[0],
+        emailController.text,
+        passwordController.text,
+        usernameController.text,
       );
-
+      
       if (authToken != null) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Sign up successful!')));
-        context.go('/otp-verify', extra: {
-        'email': _emailController.text,
-        'authToken': authToken,
-      });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User already exists')),
+
+        // Send OTP after successful signup
+        await AuthService.sendOtp(emailController.text);
+        
+        context.go(
+          '/otp-verify',
+          extra: {'email': emailController.text, 'authToken': authToken},
         );
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('User already exists')));
       }
     } catch (e) {
       ScaffoldMessenger.of(
@@ -67,7 +71,7 @@ class _SignupPageState extends State<SignupPage> {
     }
 
     setState(() {
-      _isLoading = false;
+      isLoading = false;
     });
   }
 
@@ -79,26 +83,17 @@ class _SignupPageState extends State<SignupPage> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
             child: Form(
-              key: _formKey,
+              key: formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
-                    'UniConnect',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 50,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primaryColor,
-                    ),
-                  ),
+                  const AppTitle(text: 'UniConnect'),
                   const Icon(
                     Icons.person_add,
                     size: 80,
                     color: AppColors.primaryColor,
                   ),
                   const SizedBox(height: 16),
-
                   const SizedBox(height: 8),
                   const Text(
                     'Create Account',
@@ -106,15 +101,29 @@ class _SignupPageState extends State<SignupPage> {
                     style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 32),
-
+                  //Username
+                  FormInput(
+                    controller: usernameController,
+                    labelText: 'Username',
+                    prefixIcon: Icons.person_outline,
+                    keyboardType: TextInputType.name,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your username';
+                      }
+                      if (value.length < 3) {
+                        return 'Username must be at least 3 characters';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
                   // Email
-                  TextFormField(
-                    controller: _emailController,
+                  FormInput(
+                    controller: emailController,
+                    labelText: 'Email',
+                    prefixIcon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      prefixIcon: Icon(Icons.email_outlined),
-                    ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your email';
@@ -128,25 +137,11 @@ class _SignupPageState extends State<SignupPage> {
                   const SizedBox(height: 16),
 
                   // Password
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: !_isPasswordVisible,
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _isPasswordVisible
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _isPasswordVisible = !_isPasswordVisible;
-                          });
-                        },
-                      ),
-                    ),
+                  FormInput(
+                    controller: passwordController,
+                    labelText: 'Password',
+                    prefixIcon: Icons.lock_outline,
+                    isPassword: true,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter a password';
@@ -160,31 +155,16 @@ class _SignupPageState extends State<SignupPage> {
                   const SizedBox(height: 16),
 
                   // Confirm Password
-                  TextFormField(
-                    controller: _confirmPasswordController,
-                    obscureText: !_isConfirmPasswordVisible,
-                    decoration: InputDecoration(
-                      labelText: 'Confirm Password',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _isConfirmPasswordVisible
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _isConfirmPasswordVisible =
-                                !_isConfirmPasswordVisible;
-                          });
-                        },
-                      ),
-                    ),
+                  FormInput(
+                    controller: confirmPasswordController,
+                    labelText: 'Confirm Password',
+                    prefixIcon: Icons.lock_outline,
+                    isPassword: true,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please confirm your password';
                       }
-                      if (value != _passwordController.text) {
+                      if (value != passwordController.text) {
                         return 'Passwords do not match';
                       }
                       return null;
@@ -193,14 +173,10 @@ class _SignupPageState extends State<SignupPage> {
                   const SizedBox(height: 24),
 
                   // Sign Up Button
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : _signUp,
-                    child:
-                        _isLoading
-                            ? const CircularProgressIndicator(
-                              color: Colors.white,
-                            )
-                            : const Text('SIGN UP'),
+                  AuthButton(
+                    text: 'SIGN UP',
+                    isLoading: isLoading,
+                    onPressed: signUp,
                   ),
                   const SizedBox(height: 16),
 

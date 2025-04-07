@@ -29,7 +29,7 @@ const io = new Server(server, {
 
 app.use(express.json());
 app.use(cors({
-  origin: 'http://localhost:3000', 
+  origin: '*', 
   credentials: true 
 }));
 app.use(cookieParser());
@@ -46,12 +46,12 @@ setupSwagger(app);
     await connectWebSocket(io);
     await createTables();
     await addSuperAdmin();
-    server.listen(PORT, () => {
+    app.listen(PORT, () => {
         console.log(`Server is running on Port: ${PORT}`);
     });
 })();
 
-app.use("/auth",userRoutes);
+app.use("/user",userRoutes);
 app.use("/university",universityRoutes);
 app.use("/role",roleRoutes);
 app.use("/admin",adminRoutes);

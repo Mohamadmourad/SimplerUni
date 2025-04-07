@@ -6,7 +6,7 @@ const { accountAcceptanceEmail, newUniversityRequestEmail } = require("../emailT
 const { createToken, verifyToken } = require("./helper");
 const { addRoleMethode, isAuthed } = require("../role/businessLogic");
 const bcrypt = require('bcrypt');
-const { createChatroom } = require("../chat/businessLogic");
+const { createChatroom, deleteChatroom } = require("../chat/businessLogic");
 
 module.exports.createUniversity = async (req, res)=>{
     let { universityName, universityEmail, username } = req.body;
@@ -23,14 +23,12 @@ module.exports.createUniversity = async (req, res)=>{
     const  universityId = result.rows[0].universityid;
     const roleId = await addRoleMethode("generalAdmin",universityId,["universityDashboard"]);
     await db.query('INSERT INTO web_admins(username, password, universityid, roleid) VALUES ($1,$2,$3,$4)',[ username, password, universityId, roleId]);
-    await createChatroom({
-      name : `${universityName} global chat`, 
-      universityId
-    });
+    await createChatroom( `${universityName} global chat`, universityId);
+    await createChatroom( `${universityName} Instructors`, universityId);
     const htmlContent = accountAcceptanceEmail(username, Originalpassword);
 
     await sendEmail(universityEmail, "simplerUni acceptance", htmlContent);
-
+    console.log(Originalpassword)
     return res.status(200).json({
         message:"university created succesfully",
         universityId
@@ -109,7 +107,8 @@ module.exports.addCampus = async (req, res)=>{
   try{
     const {adminId, universityId} = verifyToken(token);
     if(campus){
-      const result = await db.query('INSERT INTO campusus(name, universityid) VALUES ($1,$2) RETURNING *',[campus,universityId]);
+      const chatroomId = await createChatroom(campus, universityId);
+      const result = await db.query('INSERT INTO campusus(name, universityid,chatroomid) VALUES ($1,$2,$3) RETURNING *',[campus,universityId,chatroomId]);
       return res.status(200).json({
         message: "campus added succesfully",
         campusId : result.rows[0].campusid
@@ -117,9 +116,10 @@ module.exports.addCampus = async (req, res)=>{
     }
     else{
       for(let campus of campususGroup){
-        await db.query('INSERT INTO campusus(name, universityid) VALUES ($1,$2) RETURNING *',[campus,universityId]);
+        const chatroomId = await createChatroom(campus, universityId);
+        const result = await db.query('INSERT INTO campusus(name, universityid,chatroomid) VALUES ($1,$2,$3) RETURNING *',[campus,universityId,chatroomId]);
       }
-      return res.status(200).json({message: "campus added succesfully"});
+      return res.status(200).json("campus added succesfully");
     }
    }
    catch(e){
@@ -134,7 +134,9 @@ module.exports.addMajor = async (req, res)=>{
   try{
     const {adminId, universityId} = verifyToken(token);
     if(major){
-      const result = await db.query('INSERT INTO university_majors(name, universityid) VALUES ($1,$2) RETURNING *',[major,universityId]);
+      const chatroomId = await createChatroom(major, universityId);
+      console.log("second: ", chatroomId)
+      const result = await db.query('INSERT INTO majors(name, universityid, chatroomid) VALUES ($1,$2,$3) RETURNING *',[major, universityId, chatroomId]);
       return res.status(200).json({
         message: "major added succesfully",
         major : result.rows[0].majorid
@@ -142,7 +144,8 @@ module.exports.addMajor = async (req, res)=>{
     }
     else{
       for(let major of majors){
-        await db.query('INSERT INTO university_majors(name, universityid) VALUES ($1,$2) RETURNING *',[major,universityId]);
+        const chatroomId = await createChatroom(major, universityId);
+        const result = await db.query('INSERT INTO majors(name, universityid, chatroomid) VALUES ($1,$2,$3) RETURNING *',[major, universityId, chatroomId]);
       }
       return res.status(200).json({message: "majors added succesfully"});
     }
@@ -155,12 +158,13 @@ module.exports.addMajor = async (req, res)=>{
 module.exports.getAllCampsus = async (req, res)=>{
   try{
     const token = req.cookies.jwt;
+    if(!token)token = req.headers.authorization;
     const {adminId, universityId} = verifyToken(token);
 
     const result = await db.query("SELECT campusid,name FROM campusus WHERE universityid=$1",[universityId]);
     return res.status(200).json({
       message:"data retreive succsefull",
-      data: result.rows[0]
+      data: result.rows
     });
   }
   catch(e){
@@ -171,12 +175,13 @@ module.exports.getAllCampsus = async (req, res)=>{
 module.exports.getAllMajors = async (req, res)=>{
   try{
     const token = req.cookies.jwt;
+    if(!token)token = req.headers.authorization;
     const {adminId, universityId} = verifyToken(token);
-
+    console.log("university id: ", universityId);
     const result = await db.query("SELECT majorid,name FROM majors WHERE universityid=$1",[universityId]);
     return res.status(200).json({
       message:"data retreive succsefull",
-      data: result.rows[0]
+      data: result.rows
     });
   }
   catch(e){
@@ -197,6 +202,8 @@ module.exports.deleteCampus = async (req, res) => {
     if (result.rowCount === 0) {
       return res.status(404).json({ message: "Campus not found or not authorized" });
     }
+    const chatroomId = result.rows[0].chatroomid;
+    await deleteChatroom(chatroomId);
     return res.status(200).json({ message: "campus deleted successfully" });
   } catch (e) {
     console.log("error while deleting the campus: ", e);
@@ -216,6 +223,8 @@ module.exports.deleteMajor = async (req, res) => {
     if (result.rowCount === 0) {
       return res.status(404).json({ message: "Major not found or not authorized" });
     }
+    const chatroomId = result.rows[0].chatroomid;
+    await deleteChatroom(chatroomId);
     return res.status(200).json({ message: "major deleted successfully" });
   } catch (e) {
     console.log("error while deleting the major: ", e);

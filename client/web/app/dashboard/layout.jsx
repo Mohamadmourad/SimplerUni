@@ -56,7 +56,8 @@ export default function DashboardLayout({ children }) {
           setPermissions(response.data.permissions || []);
         }
       } catch (error) {
-        router.push("/auth/login"); 
+        router.push("/auth/login");
+        handleSignOut();
       }
     };
 

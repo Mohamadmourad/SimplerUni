@@ -15,10 +15,11 @@
 
 /**
  * @swagger
- * /auth/signup:
+ * /user/signup:
  *   post:
- *     summary: Register a new user
- *     tags: [Authentication]
+ *     summary: Signs up a new user.
+ *     description: Registers a new user with their email, password, and username. If the email is already registered, an error is returned.
+ *     tags: [User]
  *     requestBody:
  *       required: true
  *       content:
@@ -32,38 +33,74 @@
  *             properties:
  *               email:
  *                 type: string
- *                 example: user@example.com
+ *                 example: "user@example.com"
  *               password:
  *                 type: string
- *                 example: strongpassword123
+ *                 example: "password123"
  *               username:
  *                 type: string
- *                 example: user123
+ *                 example: "newuser"
  *     responses:
  *       200:
- *         description: User registered successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "User inserted successfully"
- *                 authToken:
- *                   type: string
+ *         description: User created successfully.
  *       400:
- *         description: Validation error
- *       500:
- *         description: Internal server error
+ *         description: Email already registered or other validation errors.
  */
 
 /**
  * @swagger
- * /auth/login:
+ * /user/addAdditionalUserData:
  *   post:
- *     summary: User login
- *     tags: [Authentication]
+ *     summary: Adds additional user data such as major, campus, and optional bio.
+ *     description: Updates user information with additional data, including major, campus, and optional bio. Requires a valid auth token in the Authorization header (without "Bearer" prefix).
+ *     tags: [User]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: JWT token to authenticate the user (without the "Bearer" prefix).
+ *         schema:
+ *           type: string
+ *           example: "your-jwt-token"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - majorId
+ *               - campusId
+ *             properties:
+ *               majorId:
+ *                 type: integer
+ *                 example: 101
+ *               campusId:
+ *                 type: integer
+ *                 example: 10
+ *               optionalData:
+ *                 type: object
+ *                 properties:
+ *                   bio:
+ *                     type: string
+ *                     example: "A passionate student of computer science."
+ *     responses:
+ *       200:
+ *         description: Additional user data added successfully.
+ *       400:
+ *         description: Authorization missing or invalid data.
+ *       500:
+ *         description: Error while adding additional data.
+ */
+
+
+/**
+ * @swagger
+ * /user/login:
+ *   post:
+ *     summary: Logs in a user.
+ *     description: Authenticates a user with email and password. Returns an auth token if successful.
+ *     tags: [User]
  *     requestBody:
  *       required: true
  *       content:
@@ -76,36 +113,26 @@
  *             properties:
  *               email:
  *                 type: string
- *                 example: user@example.com
+ *                 example: "user@example.com"
  *               password:
  *                 type: string
- *                 example: strongpassword123
+ *                 example: "password123"
  *     responses:
  *       200:
- *         description: Login successful
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Login successful"
- *                 authToken:
- *                   type: string
+ *         description: Login successful, returns auth token.
  *       400:
- *         description: Invalid credentials
- *       500:
- *         description: Internal server error
+ *         description: Invalid email or password.
+ *       204:
+ *         description: Required field (major/campus) missing.
  */
 
 /**
  * @swagger
- * /auth/sendOtp:
+ * /user/sendOtp:
  *   post:
- *     summary: Sends an OTP to the user's email.
- *     description: Generates an OTP, sets an expiration time, and emails it to the user.
- *     tags: [Authentication]
+ *     summary: Sends an OTP to the user's email for verification.
+ *     description: Sends a one-time password (OTP) to the user’s email for email verification.
+ *     tags: [User]
  *     requestBody:
  *       required: true
  *       content:
@@ -119,35 +146,25 @@
  *               emailReceiver:
  *                 type: string
  *                 example: "user@example.com"
- *                 description: The email to receive the OTP.
  *               authToken:
  *                 type: string
- *                 example: "your-jwt-token"
- *                 description: The user's authentication token.
+ *                 example: "auth-token-123"
  *     responses:
  *       200:
  *         description: OTP sent successfully.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "otpSent"
  *       400:
- *         description: User not found or OTP already sent.
+ *         description: OTP already sent or other errors.
  *       500:
  *         description: Internal server error.
  */
 
 /**
  * @swagger
- * /auth/verifyOtp:
+ * /user/verifyOtp:
  *   post:
  *     summary: Verifies the OTP entered by the user.
- *     description: Checks if the OTP is correct and not expired.
- *     tags: [Authentication]
+ *     description: Validates the OTP entered by the user to confirm their email verification.
+ *     tags: [User]
  *     requestBody:
  *       required: true
  *       content:
@@ -160,28 +177,19 @@
  *             properties:
  *               authToken:
  *                 type: string
- *                 example: "your-jwt-token"
- *                 description: The user's authentication token.
+ *                 example: "auth-token-123"
  *               enteredOtp:
- *                 type: integer
- *                 example: 12345
- *                 description: The OTP entered by the user.
+ *                 type: string
+ *                 example: "123456"
  *     responses:
  *       200:
  *         description: OTP verified successfully.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "otpVerified"
  *       400:
- *         description: OTP is expired, incorrect, or not generated.
+ *         description: Invalid OTP or OTP expired.
  *       500:
  *         description: Internal server error.
  */
+
 
 /**
  * @swagger
