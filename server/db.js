@@ -69,7 +69,7 @@ const tables =
         name:"chatrooms",
         schema:`CREATE TABLE chatrooms (
         chatroomId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-        name VARCHAR(50),
+        name TEXT,
         created_at TIMESTAMPTZ DEFAULT now()
         );`
     },

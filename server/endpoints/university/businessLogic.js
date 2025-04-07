@@ -23,8 +23,8 @@ module.exports.createUniversity = async (req, res)=>{
     const  universityId = result.rows[0].universityid;
     const roleId = await addRoleMethode("generalAdmin",universityId,["universityDashboard"]);
     await db.query('INSERT INTO web_admins(username, password, universityid, roleid) VALUES ($1,$2,$3,$4)',[ username, password, universityId, roleId]);
-    await createChatroom({name : `${universityName} global chat`, universityId});
-    await createChatroom({name : `${universityName} Instructors`, universityId});
+    await createChatroom( `${universityName} global chat`, universityId);
+    await createChatroom( `${universityName} Instructors`, universityId);
     const htmlContent = accountAcceptanceEmail(username, Originalpassword);
 
     await sendEmail(universityEmail, "simplerUni acceptance", htmlContent);

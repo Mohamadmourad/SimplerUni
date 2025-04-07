@@ -1,9 +1,9 @@
 const express = require('express');
-const cors = require('cors'); 
-const {db, createTables} = require('./db');
+const cors = require('cors');
+const { db, createTables } = require('./db');
 const setupSwagger = require('./swaggerConfig');
 const cookieParser = require('cookie-parser');
-const http = require('http');        
+const http = require('http');
 const { Server } = require("socket.io");
 require('dotenv').config();
 
@@ -18,20 +18,34 @@ const { addSuperAdmin } = require('./endpoints/admin/businessLogic');
 const { connectWebSocket } = require('./webSocket');
 
 const PORT = process.env.PORT;
+const allowedOrigins = [
+  'http://simplerUni.com',
+  'http://localhost:3000',
+  'http://localhost:5000',
+  'http://127.0.0.1:5000',
+  'http://10.0.2.2:5000',
+  'http://localhost:55265'
+];
+
 const app = express();
-const server = http.createServer(app); 
+const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-      origin: "http://localhost:3000",  
-      methods: ["GET", "POST"]
+    origin: "*"
   }
-}); 
+});
 
 app.use(express.json());
+
 app.use(cors({
-  origin: '*', 
-  credentials: true 
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true
 }));
+
 app.use(cookieParser());
 
 app.use((req, res, next) => {
@@ -42,18 +56,18 @@ app.use((req, res, next) => {
 setupSwagger(app);
 
 (async () => {
-    await db.connect() ? console.log("database connected") : console.log("failed to connect to db");
-    await connectWebSocket(io);
-    await createTables();
-    await addSuperAdmin();
-    app.listen(PORT, () => {
-        console.log(`Server is running on Port: ${PORT}`);
-    });
+  await db.connect();
+  await connectWebSocket(io);
+  await createTables();
+  await addSuperAdmin();
+  server.listen(PORT, () => {
+    console.log(`Server is running on Port: ${PORT}`);
+  });
 })();
 
-app.use("/user",userRoutes);
-app.use("/university",universityRoutes);
-app.use("/role",roleRoutes);
-app.use("/admin",adminRoutes);
-app.use("/news",newsRoutes);
-app.use("/document",documentsRoutes);
+app.use("/user", userRoutes);
+app.use("/university", universityRoutes);
+app.use("/role", roleRoutes);
+app.use("/admin", adminRoutes);
+app.use("/news", newsRoutes);
+app.use("/document", documentsRoutes);

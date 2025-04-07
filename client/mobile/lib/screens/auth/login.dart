@@ -37,32 +37,60 @@ class LoginPageState extends State<LoginPage> {
     });
 
     try {
-      String? authToken = await AuthService.login(
+      final result = await AuthService.login(
         emailController.text,
         passwordController.text,
       );
 
-      if (authToken != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login successful!')),
-        );
-        
-        // Send OTP after successful login
-        await AuthService.sendOtp(emailController.text, authToken);
-        
-        context.go('/otp-verify', extra: {
-          'email': emailController.text,
-          'authToken': authToken,
-        });
+      if (result['success']) {
+        final authToken = result['token'];
+
+        if (result.containsKey('requiresProfileCompletion') &&
+            result['requiresProfileCompletion']) {
+          context.go(
+            '/complete-profile',
+            extra: {'email': emailController.text, 'authToken': authToken},
+          );
+        } else {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Login successful!')));
+
+          context.go(
+            '/otp-verify',
+            extra: {'email': emailController.text, 'authToken': authToken},
+          );
+        }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invalid credentials. Please try again.')),
-        );
+        if (result.containsKey('requiresEmailVerification') &&
+            result['requiresEmailVerification']) {
+          final authToken = result['token'];
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please verify your email before logging in'),
+            ),
+          );
+
+          context.go(
+            '/otp-verify',
+            extra: {'email': emailController.text, 'authToken': authToken},
+          );
+        } else if (result.containsKey('field')) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(result['message'])));
+        } else {
+          // General error
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result['message'] ?? 'Login failed')),
+          );
+        }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Login error: $e')));
     }
 
     setState(() {
@@ -83,7 +111,11 @@ class LoginPageState extends State<LoginPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const AppTitle(text: 'SimplerUni'),
-                  const Icon(Icons.login, size: 80, color: AppColors.primaryColor),
+                  const Icon(
+                    Icons.login,
+                    size: 80,
+                    color: AppColors.primaryColor,
+                  ),
                   const SizedBox(height: 16),
                   const Text(
                     'Log In',
