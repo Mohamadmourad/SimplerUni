@@ -1,20 +1,5 @@
 /**
  * @swagger
- * tags:
- *   name: Mobile
- *   description: endpoints for mobile
- */
-
-
-/**
- * @swagger
- * tags:
- *   name: Authentication
- *   description: User authentication and account management
- */
-
-/**
- * @swagger
  * /user/signup:
  *   post:
  *     summary: Signs up a new user.
@@ -190,12 +175,43 @@
  *         description: Internal server error.
  */
 
-
 /**
  * @swagger
- * tags:
- *   name: Web
- *   description: endpoints for Web
+ * /user/getUser:
+ *   get:
+ *     summary: Retrieves the authenticated user's information.
+ *     description: Returns user data for the user identified by the JWT token in the Authorization header. Requires a valid token (without the "Bearer" prefix).
+ *     tags: [User]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: JWT token to authenticate the user (without the "Bearer" prefix).
+ *         schema:
+ *           type: string
+ *           example: "your-jwt-token"
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user data.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 userId:
+ *                   type: integer
+ *                   example: 1
+ *                 username:
+ *                   type: string
+ *                   example: "john_doe"
+ *                 email:
+ *                   type: string
+ *                   example: "john@example.com"
+ *                 # You can add other user fields here as needed
+ *       400:
+ *         description: User not found.
+ *       500:
+ *         description: Internal server error.
  */
 
 /**

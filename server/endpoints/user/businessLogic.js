@@ -29,7 +29,8 @@ module.exports.signup_post = async (req, res) => {
         const authToken = createToken(result.rows[0].userid, result.rows[0].universityid)
         res.status(200).json({
             message: "user inserted successfully",
-            authToken
+            authToken,
+            userData: result.rows[0]
         });
     }
     catch(e){
@@ -73,6 +74,7 @@ module.exports.login_post = async (req, res) => {
         res.status(200).json({
             message: 'Login successful',
             authToken,
+            userData: user.rows[0]
         });
 
     } catch (e) {
@@ -171,6 +173,22 @@ module.exports.verifyOtp = async (req, res) => {
         await db.query(`UPDATE users SET emailOtp = NULL, emailOtpExpire = NULL, isEmailVerified = true WHERE userId = $1`, [userId]);
 
         res.status(200).json({ message: "otpVerified" });
+    } catch (error) {
+        console.error("Error verifying OTP:", error);
+        res.status(500).json({ message: "internalServerError" });
+    }
+};
+
+module.exports.getUser = async (req, res) => {
+    try {
+        const token = req.headers.authorization;
+        const { userId, universityId } = verifyToken(token);
+
+        const result = await db.query(`SELECT * FROM users WHERE userId = $1`, [userId]);
+        if (result.rowCount === 0) {
+            return res.status(400).json({ message: "userNotFound" });
+        }
+        res.status(200).json(result.rows[0]);
     } catch (error) {
         console.error("Error verifying OTP:", error);
         res.status(500).json({ message: "internalServerError" });

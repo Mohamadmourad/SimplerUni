@@ -3,6 +3,8 @@ const userController = require('./businessLogic');
 
 const router = express.Router();
 
+router.get('/getUser', userController.getUser);
+
 router.post('/signup', userController.signup_post);
 router.post('/addAdditionalUserData',userController.addAdditionalUserData);
 router.post('/login', userController.login_post);
