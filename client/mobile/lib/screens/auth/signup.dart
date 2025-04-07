@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:senior_project/functions/auth/register.dart';
 import 'package:senior_project/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
-import 'package:senior_project/services/auth_service.dart';
 import 'package:senior_project/components/form_input.dart';
 import 'package:senior_project/components/auth_button.dart';
 import 'package:senior_project/components/app_title.dart';
@@ -24,6 +24,7 @@ class SignupPageState extends State<SignupPage> {
 
   @override
   void dispose() {
+    usernameController.dispose();
     emailController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
@@ -40,8 +41,8 @@ class SignupPageState extends State<SignupPage> {
     });
 
     try {
-      
-      String? authToken = await AuthService.signUp(
+      // Using the new signUp function directly
+      String? authToken = await sign_up(
         emailController.text,
         passwordController.text,
         usernameController.text,
@@ -51,14 +52,11 @@ class SignupPageState extends State<SignupPage> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Sign up successful!')));
-
-        // Send OTP after successful signup
-        await AuthService.sendOtp(emailController.text);
-        
         context.go(
-          '/otp-verify',
-          extra: {'email': emailController.text, 'authToken': authToken},
-        );
+            '/otp-verify',
+            extra: {'email': emailController.text, 'authToken': authToken},
+          );
+        
       } else {
         ScaffoldMessenger.of(
           context,

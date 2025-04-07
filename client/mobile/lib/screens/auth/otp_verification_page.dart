@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:senior_project/functions/auth/verify_otp.dart';
 import 'package:senior_project/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
-import 'package:senior_project/services/auth_service.dart';
-import 'package:senior_project/components/form_input.dart';
+import 'package:senior_project/functions/auth/send_otp.dart';
+
 import 'package:senior_project/components/auth_button.dart';
 import 'package:senior_project/components/app_title.dart';
 
@@ -56,7 +57,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
       isLoading = true;
     });
 
-    bool success = await AuthService.verifyOtp(widget.authToken, otp);
+    bool success = await verify_otp(otp);
 
     setState(() {
       isLoading = false;
@@ -80,8 +81,8 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
       errorMessage = null;
     });
 
-    // Using the updated sendOtp function that returns a Map
-    final result = await AuthService.sendOtp(widget.email);
+    // Using the new sendOtp function directly
+    final result = await sendOtp(widget.email);
 
     setState(() {
       isLoading = false;
