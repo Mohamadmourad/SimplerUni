@@ -1,5 +1,5 @@
 const {db} = require("../../db");
-const { verifyToken } = require("../university/helper");
+const { verifyToken } = require("../user/helper");
 
 module.exports.createChatroom = async (name, universityId)=>{
     try{
@@ -54,5 +54,33 @@ module.exports.addToChatroom = async (req, res)=>{
     catch(e){
         console.log("error while adding chatroom" + e);
         res.status(500).json("failed");
+    }
+}
+
+module.exports.sendMessage = async (type, content, chatroomId, token)=>{
+    try{
+       const { userId, universityId } = verifyToken(token);
+       const { rows } = await db.query(
+        `SELECT created_at FROM messages WHERE userId = $1 ORDER BY created_at DESC LIMIT 1`, [userId]
+    );
+
+    if (rows.length > 0) {
+        const lastMessageTime = new Date(rows[0].created_at);
+        const now = new Date();
+        const diffMs = now - lastMessageTime;
+
+        if (diffMs < 5 * 60 * 1000) {
+            const remaining = 5 * 60 * 1000 - diffMs;
+            const minutesLeft = Math.floor(remaining / 60000);
+            const secondsLeft = Math.floor((remaining % 60000) / 1000);
+
+            console.log(`You can’t send a message yet. Time left: ${minutesLeft}m ${secondsLeft}s`);
+        }
+    }
+       await db.query("INSERT INTO messages(type,content,chatroomId, userId) VALUES ($1,$2,$3,$4)",[type, content, chatroomId, userId]);
+       console.log("message insertion complete")
+    }
+    catch(e){
+        console.log("error while sending message " + e);
     }
 }

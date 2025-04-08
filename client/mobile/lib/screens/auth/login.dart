@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:senior_project/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
@@ -16,6 +18,9 @@ class LoginPage extends StatefulWidget {
 class LoginPageState extends State<LoginPage> {
   final formKey = GlobalKey<FormState>();
   bool isLoading = false;
+
+  String emailError = "";
+  String passwordError = "";
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -37,52 +42,51 @@ class LoginPageState extends State<LoginPage> {
     });
 
     try {
-      final result = await login(emailController.text, passwordController.text);
-
-      if (result['success']) {
-        final authToken = result['token'];
-
-        if (result.containsKey('requiresProfileCompletion') &&
-            result['requiresProfileCompletion']) {
-          context.go(
-            '/complete-profile',
-            extra: {'email': emailController.text, 'authToken': authToken},
-          );
-        } else {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Login successful!')));
-          context.go('/home');
-        }
-      } else {
-        if (result.containsKey('requiresEmailVerification') &&
-            result['requiresEmailVerification'] == true) {
-          final authToken = result['token'];
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Please verify your email before logging in'),
-            ),
-          );
-
-          context.go(
-            '/verify-otp',
-            extra: {'email': emailController.text, 'authToken': authToken},
-          );
-        } else if (result.containsKey('field')) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(result['message'])));
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(result['message'] ?? 'Login failed')),
-          );
-        }
+      String email = emailController.text;
+      String password = passwordController.text;
+      setState(() {
+      if (email.isEmpty) {
+      emailError = "Please enter your email";
+      return;
+      } 
+      else if (!email.contains('@')) {
+        emailError = "Please enter a valid email";
+        return;
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login failed. Please try again.')),
-      );
+      if (password.isEmpty) {
+        passwordError = "Please enter your password";
+        return;
+      } 
+    });
+      final result = await loginMethode(email, password);
+      print(result['statusCode']);
+      if (result['statusCode'] == 200) {
+        //TODO here
+      } 
+      else if(result['statusCode'] == 204){
+          context.go(
+            '/complete-profile'
+          );
+       } 
+       else if(result['statusCode'] == 401){
+        final error = result["error"];
+        Map<String, dynamic> decodedError = jsonDecode(error);
+          context.go(
+            '/otp-verify',
+            extra: {'email': emailController.text, 'authToken': decodedError["authToken"]},
+          );
+       } 
+       else{
+        final error = result["error"];
+        Map<String, dynamic> decodedError = jsonDecode(error);
+        setState(() {
+          if(decodedError["email"] != "")emailError = decodedError['errors']["email"];
+          if(decodedError["password"] != "")passwordError = decodedError['errors']["password"];
+        });
+       } 
+      }
+     catch (e) {
+      print(e);
     }
 
     setState(() {
@@ -115,49 +119,28 @@ class LoginPageState extends State<LoginPage> {
                     style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 32),
-
-                  // Email
                   FormInput(
                     controller: emailController,
                     labelText: 'Email',
                     prefixIcon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Please enter a valid email';
-                      }
-                      return null;
-                    },
+                    error: emailError
                   ),
                   const SizedBox(height: 16),
-
-                  // Password
                   FormInput(
                     controller: passwordController,
                     labelText: 'Password',
                     prefixIcon: Icons.lock_outline,
                     isPassword: true,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
-                      }
-                      return null;
-                    },
+                    error: passwordError
                   ),
                   const SizedBox(height: 24),
-
-                  // Login Button
                   AuthButton(
                     text: 'LOG IN',
                     isLoading: isLoading,
                     onPressed: handleLogin,
                   ),
                   const SizedBox(height: 16),
-
-                  // Don't have an account? Sign up
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:senior_project/screens/auth/chat/chat.dart';
 import 'package:senior_project/screens/auth/complete_profile.dart';
 import 'package:senior_project/screens/auth/otp_verification_page.dart';
 import 'package:senior_project/screens/auth/signup.dart';

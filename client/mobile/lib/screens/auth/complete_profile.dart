@@ -169,6 +169,7 @@ class _CompleteProfileState extends State<CompleteProfile> {
 
         // Major field
         FormInput(
+          error: "",
           controller: _majorController,
           labelText: 'Major',
           prefixIcon: Icons.book_outlined,
@@ -286,6 +287,7 @@ class _CompleteProfileState extends State<CompleteProfile> {
 
         // Bio field
         FormInput(
+          error: "",
           controller: _bioController,
           labelText: 'Bio (Optional)',
           prefixIcon: Icons.description_outlined,
