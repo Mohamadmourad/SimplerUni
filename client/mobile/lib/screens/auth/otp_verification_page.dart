@@ -9,20 +9,13 @@ import 'package:senior_project/components/auth_button.dart';
 import 'package:senior_project/components/app_title.dart';
 
 class OtpVerificationPage extends StatefulWidget {
-  
   final String email;
-  final String authToken;
 
-  const OtpVerificationPage({
-    super.key,
-    required this.email,
-    required this.authToken,
-  });
+  const OtpVerificationPage({super.key, required this.email});
 
   @override
   State<OtpVerificationPage> createState() => _OtpVerificationPageState();
 }
-
 
 class _OtpVerificationPageState extends State<OtpVerificationPage> {
   List<TextEditingController> otpControllers = List.generate(
@@ -44,40 +37,42 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
     }
     super.dispose();
   }
+
   @override
-void initState() {
-  super.initState();
-  initialSendOtp();
-}
+  void initState() {
+    super.initState();
+    initialSendOtp();
+  }
 
-Future<void> initialSendOtp() async {
-  setState(() {
-    isLoading = true;
-    errorMessage = null;
-  });
+  Future<void> initialSendOtp() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
 
-  final result = await sendOtp(widget.email);
+    final result = await sendOtp(widget.email);
 
-  setState(() {
-    isLoading = false;
-  });
+    setState(() {
+      isLoading = false;
+    });
 
-  if (!result['success']) {
-    if (result['message'] == 'otpAlreadySent' && result['minutesLeft'] != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'OTP already sent. Please wait ${result['minutesLeft']} minutes before requesting another one.',
+    if (!result['success']) {
+      if (result['message'] == 'otpAlreadySent' &&
+          result['minutesLeft'] != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'OTP already sent. Please wait ${result['minutesLeft']} minutes before requesting another one.',
+            ),
           ),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to send OTP: ${result['message']}')),
-      );
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to send OTP: ${result['message']}')),
+        );
+      }
     }
   }
-}
 
   Future<void> verifyOtp() async {
     String otp = otpControllers.map((controller) => controller.text).join();
@@ -103,7 +98,7 @@ Future<void> initialSendOtp() async {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('OTP verified successfully!')),
       );
-      context.go('/home'); // Navigate to home page after OTP verification
+      context.go('/complete-profile', extra: {'email': widget.email});
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Invalid OTP. Please try again.')),

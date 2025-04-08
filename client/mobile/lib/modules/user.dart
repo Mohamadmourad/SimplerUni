@@ -29,9 +29,23 @@ class User {
     this.createdAt,
   });
 
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      userId: json['userId'],
+      username: json['username'],
+      email: json['email'],
+      isEmailVerified: json['isEmailVerified'] ?? false,
+      isStudent: json['isStudent'] ?? false,
+      bio: json['bio'],
+      profilePicture: json['profilePicture'],
+      startingUniYear: json['startingUniYear'],
+      createdAt:
+          json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
+    );
+  }
+
   @override
   String toString() {
     return 'User(userId: $userId, username: $username, email: $email, isEmailVerified: $isEmailVerified, isStudent: $isStudent)';
   }
-
 }
