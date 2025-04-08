@@ -1,50 +1,43 @@
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:senior_project/functions/callApi.dart';
+import 'package:senior_project/modules/user.dart';
+import 'package:provider/provider.dart';
+import 'package:senior_project/providers/user_provider.dart';
+import 'package:flutter/material.dart';
 
 Future<Map<String, dynamic>> loginMethode(
   String email,
-  String password,
-) async {
+  String password, {
+  required BuildContext context,
+}) async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
 
   final requestBody = '{"email": "$email", "password": "$password"}';
 
   try {
-    final response = await makeApiCall(
-      'POST',
-      requestBody,
-      'user/login',
-      null, 
-    );
+    final response = await makeApiCall('POST', requestBody, 'user/login', null);
 
     if (response['statusCode'] == 200) {
       final data = response;
       await prefs.setString('authToken', data["authToken"]);
-      return {
-        "statusCode": 200,
-        "data": data,
-        "error": null,
-      };
+
+      if (data["user"] != null) {
+        final user = User.fromJson(data["user"]);
+        Provider.of<UserProvider>(context, listen: false).setUser(user);
+      }
+
+      return {"statusCode": 200, "data": data, "error": null};
     } else if (response['statusCode'] == 204) {
       final authToken = response['body'] ?? '';
       await prefs.setString('authToken', authToken);
-      return {
-        "statusCode": 204,
-        "data": null,
-        "error": null,
-      };
+      return {"statusCode": 204, "data": null, "error": null};
     } else if (response['statusCode'] == 400) {
-      return {
-        "statusCode": 400,
-        "data": null,
-        "error": response['error'],
-      };
+      return {"statusCode": 400, "data": null, "error": response['error']};
     }
     return {
       "statusCode": response['statusCode'],
       "data": null,
-      "error": response['error']
+      "error": response['error'],
     };
   } catch (e) {
     return {

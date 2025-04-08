@@ -4,12 +4,13 @@ import 'package:senior_project/components/auth_button.dart';
 import 'package:senior_project/theme/app_theme.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:typed_data';
 
 class CompleteProfile extends StatefulWidget {
   final String? email;
-  final String? authToken;
 
-  const CompleteProfile({super.key, this.email, this.authToken});
+  const CompleteProfile({super.key, this.email});
 
   @override
   State<CompleteProfile> createState() => _CompleteProfileState();
@@ -33,6 +34,8 @@ class _CompleteProfileState extends State<CompleteProfile> {
   // Optional fields controllers
   final _bioController = TextEditingController();
   File? _profileImage;
+  Uint8List? _webImage;
+  bool get hasProfileImage => _profileImage != null || _webImage != null;
 
   @override
   void dispose() {
@@ -43,12 +46,38 @@ class _CompleteProfileState extends State<CompleteProfile> {
 
   Future<void> _selectImage() async {
     final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
-    if (image != null) {
-      setState(() {
-        _profileImage = File(image.path);
-      });
+    try {
+      if (kIsWeb) {
+        // Web implementation
+        final XFile? image = await picker.pickImage(
+          source: ImageSource.gallery,
+          maxWidth: 1000,
+          maxHeight: 1000,
+        );
+
+        if (image != null) {
+          final Uint8List data = await image.readAsBytes();
+          setState(() {
+            _webImage = data;
+          });
+        }
+      } else {
+        // Native implementation (Android/iOS)
+        final XFile? image = await picker.pickImage(
+          source: ImageSource.gallery,
+        );
+
+        if (image != null) {
+          setState(() {
+            _profileImage = File(image.path);
+          });
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error picking image: ${e.toString()}')),
+      );
     }
   }
 
@@ -257,21 +286,24 @@ class _CompleteProfileState extends State<CompleteProfile> {
                     color: Colors.grey[200],
                     shape: BoxShape.circle,
                     image:
-                        _profileImage != null
+                        hasProfileImage
                             ? DecorationImage(
-                              image: FileImage(_profileImage!),
+                              image:
+                                  kIsWeb
+                                      ? MemoryImage(_webImage!) as ImageProvider
+                                      : FileImage(_profileImage!),
                               fit: BoxFit.cover,
                             )
                             : null,
                   ),
                   child:
-                      _profileImage == null
-                          ? const Icon(
+                      hasProfileImage
+                          ? null
+                          : const Icon(
                             Icons.add_a_photo,
                             size: 40,
                             color: AppColors.primaryColor,
-                          )
-                          : null,
+                          ),
                 ),
               ),
               const SizedBox(height: 8),
