@@ -37,7 +37,7 @@ class _CompleteProfileState extends State<CompleteProfile> {
   Uint8List? _webImage;
   bool get hasProfileImage => _profileImage != null || _webImage != null;
 
-  @override
+
   void dispose() {
     _majorController.dispose();
     _bioController.dispose();
