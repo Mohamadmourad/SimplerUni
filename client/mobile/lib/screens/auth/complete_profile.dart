@@ -1,347 +1,313 @@
 import 'package:flutter/material.dart';
-import 'package:senior_project/components/form_input.dart';
 import 'package:senior_project/components/auth_button.dart';
+import 'package:senior_project/functions/auth/complete_profile.dart';
 import 'package:senior_project/theme/app_theme.dart';
-import 'dart:io';
-import 'package:image_picker/image_picker.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'dart:typed_data';
+import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CompleteProfile extends StatefulWidget {
-  final String? email;
+  final String email;
 
-  const CompleteProfile({super.key, this.email});
+  const CompleteProfile({super.key, required this.email});
 
   @override
   State<CompleteProfile> createState() => _CompleteProfileState();
 }
 
 class _CompleteProfileState extends State<CompleteProfile> {
-  final _formKey = GlobalKey<FormState>();
-  bool _isLoading = false;
-  bool _isFirstStep = true;
+  final formKey = GlobalKey<FormState>();
+  bool isLoading = false;
+  bool isLoadingData = true;
+  String? errorMessage;
 
-  // Required fields controllers
-  final _majorController = TextEditingController();
-  String _selectedCampus = 'Main Campus';
-  final List<String> _campuses = [
-    'Main Campus',
-    'Downtown Campus',
-    'Medical Campus',
-    'Science Campus',
-  ];
+  List<Map<String, dynamic>> majors = [];
+  List<Map<String, dynamic>> campuses = [];
 
-  // Optional fields controllers
-  final _bioController = TextEditingController();
-  File? _profileImage;
-  Uint8List? _webImage;
-  bool get hasProfileImage => _profileImage != null || _webImage != null;
+  String? selectedMajorId;
+  String? selectedCampusId;
 
-
-  void dispose() {
-    _majorController.dispose();
-    _bioController.dispose();
-    super.dispose();
+  @override
+  void initState() {
+    super.initState();
+    loadData();
   }
 
-  Future<void> _selectImage() async {
-    final ImagePicker picker = ImagePicker();
+  Future<void> loadData() async {
+    setState(() {
+      isLoadingData = true;
+      errorMessage = null;
+    });
 
     try {
-      if (kIsWeb) {
-        // Web implementation
-        final XFile? image = await picker.pickImage(
-          source: ImageSource.gallery,
-          maxWidth: 1000,
-          maxHeight: 1000,
-        );
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final authToken = prefs.getString('authToken') ?? '';
 
-        if (image != null) {
-          final Uint8List data = await image.readAsBytes();
+      if (authToken.isEmpty) {
+        setState(() {
+          errorMessage = "No authentication token found. Please login again.";
+          isLoadingData = false;
+        });
+        return;
+      }
+
+      try {
+        final fetchedMajors = await fetchMajors();
+        final fetchedCampuses = await fetchCampuses();
+
+        if (mounted) {
           setState(() {
-            _webImage = data;
+            majors = fetchedMajors;
+            campuses = fetchedCampuses;
+
+            if (majors.isNotEmpty) {
+              selectedMajorId =
+                  majors[0]['majorid'] ?? majors[0]['id']?.toString();
+            }
+
+            if (campuses.isNotEmpty) {
+              selectedCampusId =
+                  campuses[0]['campusid'] ?? campuses[0]['id']?.toString();
+            }
+
+            isLoadingData = false;
           });
         }
-      } else {
-        // Native implementation (Android/iOS)
-        final XFile? image = await picker.pickImage(
-          source: ImageSource.gallery,
-        );
-
-        if (image != null) {
+      } catch (e) {
+        if (mounted) {
           setState(() {
-            _profileImage = File(image.path);
+            errorMessage = "Failed to load data: ${e.toString()}";
+            isLoadingData = false;
           });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to load data: ${e.toString()}')),
+          );
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error picking image: ${e.toString()}')),
-      );
+      if (mounted) {
+        setState(() {
+          errorMessage = "Failed to load data: ${e.toString()}";
+          isLoadingData = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load data: ${e.toString()}')),
+        );
+      }
     }
   }
 
-  Future<void> _submitProfile() async {
-    if (!_formKey.currentState!.validate()) {
+  void navigateToOptionalInfo() {
+    if (!formKey.currentState!.validate()) {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      // Prepare form data
-      final Map<String, dynamic> profileData = {
-        'major': _majorController.text,
-        'campus': _selectedCampus,
-        'bio': _bioController.text,
-      };
-
-      // Here you would handle image upload and API call to update profile
-      // For example:
-      // if (_profileImage != null) {
-      //   profileData['profileImage'] = await uploadImage(_profileImage!, widget.authToken!);
-      // }
-
-      // final response = await makeApiCall(
-      //   'POST',
-      //   jsonEncode(profileData),
-      //   'user/complete-profile',
-      //   widget.authToken,
-      // );
-
-      // Handle response here
-
-      // For demo purposes, we'll just simulate success
+    if (selectedMajorId == null || selectedCampusId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile completed successfully!')),
+        const SnackBar(content: Text('Please select a major and campus')),
       );
-
-      // Navigate to home
-      Navigator.of(context).pushReplacementNamed('/home');
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      return;
     }
-  }
 
-  void _nextStep() {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isFirstStep = false;
-      });
-    }
-  }
-
-  void _previousStep() {
-    setState(() {
-      _isFirstStep = true;
-    });
+    context.push(
+      '/optional-profile-info',
+      extra: {
+        'email': widget.email,
+        'majorId': selectedMajorId,
+        'campusId': selectedCampusId,
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _isFirstStep
-              ? 'Complete Profile - Required'
-              : 'Complete Profile - Optional',
-        ),
-        leading:
-            _isFirstStep
-                ? IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => Navigator.of(context).pop(),
-                )
-                : IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: _previousStep,
+    if (isLoadingData) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Complete Profile')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (errorMessage != null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Complete Profile')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  errorMessage!,
+                  style: const TextStyle(color: Colors.red),
+                  textAlign: TextAlign.center,
                 ),
-      ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => context.go('/login'),
+                  child: const Text('Return to Login'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Complete Profile')),
       body: SafeArea(
         child: Form(
-          key: _formKey,
+          key: formKey,
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
-            child: _isFirstStep ? _buildFirstStep() : _buildSecondStep(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Icon(
+                  Icons.school,
+                  size: 64,
+                  color: AppColors.primaryColor,
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'Complete Your Profile',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Welcome to SimplerUni, ${widget.email}!',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: AppColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 32),
+
+                if (errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: Text(
+                      errorMessage!,
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+
+                const Text(
+                  'Major*',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  decoration: const InputDecoration(
+                    prefixIcon: Icon(Icons.school),
+                    border: OutlineInputBorder(),
+                    filled: true,
+                  ),
+                  value: selectedMajorId,
+                  hint: const Text('Select your major'),
+                  items:
+                      majors.map((major) {
+                        String id =
+                            (major['majorid'] ?? major['id'])?.toString() ?? '';
+
+                        return DropdownMenuItem<String>(
+                          value: id,
+                          child: Text(
+                            major['majorname'] ?? major['name'] ?? '',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedMajorId = value;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Please select your major';
+                    }
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: 24),
+
+                const Text(
+                  'Campus*',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  decoration: const InputDecoration(
+                    prefixIcon: Icon(Icons.location_on),
+                    border: OutlineInputBorder(),
+                    filled: true,
+                  ),
+                  value: selectedCampusId,
+                  hint: const Text('Select your campus'),
+                  items:
+                      campuses.map((campus) {
+                        String id =
+                            (campus['campusid'] ?? campus['id'])?.toString() ??
+                            '';
+
+                        return DropdownMenuItem<String>(
+                          value: id,
+                          child: Text(
+                            campus['campusname'] ?? campus['name'] ?? '',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedCampusId = value;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Please select your campus';
+                    }
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: 40),
+
+                // Next Button
+                AuthButton(
+                  text: 'NEXT',
+                  isLoading: isLoading,
+                  onPressed: navigateToOptionalInfo,
+                ),
+
+                const SizedBox(height: 16),
+
+                const Text(
+                  'You\'ll be able to add optional information in the next step',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 14,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildFirstStep() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const Icon(Icons.school, size: 80, color: AppColors.primaryColor),
-        const SizedBox(height: 24),
-        const Text(
-          'Required Information',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'Please provide your academic information',
-          style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 32),
-
-        // Major field
-        FormInput(
-          error: "",
-          controller: _majorController,
-          labelText: 'Major',
-          prefixIcon: Icons.book_outlined,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter your major';
-            }
-            return null;
-          },
-        ),
-
-        const SizedBox(height: 24),
-
-        // Campus selection dropdown
-        DropdownButtonFormField<String>(
-          decoration: const InputDecoration(
-            labelText: 'Campus',
-            prefixIcon: Icon(Icons.location_on_outlined),
-            border: OutlineInputBorder(),
-            filled: true,
-            fillColor: Colors.white,
-          ),
-          value: _selectedCampus,
-          items:
-              _campuses.map((campus) {
-                return DropdownMenuItem<String>(
-                  value: campus,
-                  child: Text(campus),
-                );
-              }).toList(),
-          onChanged: (value) {
-            setState(() {
-              _selectedCampus = value!;
-            });
-          },
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please select your campus';
-            }
-            return null;
-          },
-        ),
-
-        const SizedBox(height: 40),
-
-        // Next button
-        AuthButton(text: 'NEXT', isLoading: _isLoading, onPressed: _nextStep),
-      ],
-    );
-  }
-
-  Widget _buildSecondStep() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const Icon(
-          Icons.person_outline,
-          size: 80,
-          color: AppColors.primaryColor,
-        ),
-        const SizedBox(height: 24),
-        const Text(
-          'Optional Information',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'Tell us more about yourself',
-          style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 32),
-
-        // Profile Image
-        Center(
-          child: Column(
-            children: [
-              GestureDetector(
-                onTap: _selectImage,
-                child: Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    shape: BoxShape.circle,
-                    image:
-                        hasProfileImage
-                            ? DecorationImage(
-                              image:
-                                  kIsWeb
-                                      ? MemoryImage(_webImage!) as ImageProvider
-                                      : FileImage(_profileImage!),
-                              fit: BoxFit.cover,
-                            )
-                            : null,
-                  ),
-                  child:
-                      hasProfileImage
-                          ? null
-                          : const Icon(
-                            Icons.add_a_photo,
-                            size: 40,
-                            color: AppColors.primaryColor,
-                          ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: _selectImage,
-                child: const Text('Choose Profile Picture'),
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 24),
-
-        // Bio field
-        FormInput(
-          error: "",
-          controller: _bioController,
-          labelText: 'Bio (Optional)',
-          prefixIcon: Icons.description_outlined,
-        ),
-
-        const SizedBox(height: 40),
-
-        // Submit button
-        AuthButton(
-          text: 'COMPLETE PROFILE',
-          isLoading: _isLoading,
-          onPressed: _submitProfile,
-        ),
-
-        const SizedBox(height: 16),
-
-        // Skip button
-        TextButton(
-          onPressed: _submitProfile,
-          child: const Text('SKIP AND CONTINUE'),
-        ),
-      ],
     );
   }
 }
