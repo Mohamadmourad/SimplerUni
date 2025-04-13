@@ -157,7 +157,7 @@ module.exports.addMajor = async (req, res)=>{
 
 module.exports.getAllCampsus = async (req, res)=>{
   try{
-    const token = req.cookies.jwt;
+    let token = req.cookies.jwt;
     if(!token)token = req.headers.authorization;
     const {adminId, universityId} = verifyToken(token);
 
@@ -174,7 +174,7 @@ module.exports.getAllCampsus = async (req, res)=>{
 
 module.exports.getAllMajors = async (req, res)=>{
   try{
-    const token = req.cookies.jwt;
+    let token = req.cookies.jwt;
     if(!token)token = req.headers.authorization;
     const {adminId, universityId} = verifyToken(token);
     console.log("university id: ", universityId);

@@ -58,11 +58,11 @@ class LoginPageState extends State<LoginPage> {
         }
       });
       final result = await loginMethode(email, password, context: context);
-      print(result['statusCode']);
+
       if (result['statusCode'] == 200) {
         context.go('/home');
-      } else if (result['statusCode'] == 204) {
-        context.go('/complete-profile', extra: {'email': emailController.text});
+      } else if (result['statusCode'] == 201) {
+        context.go('/complete-profile', extra: {'email': email});
       } else if (result['statusCode'] == 401) {
         final error = result["error"];
         Map<String, dynamic> decodedError = jsonDecode(error);
@@ -84,7 +84,9 @@ class LoginPageState extends State<LoginPage> {
         });
       }
     } catch (e) {
-      print(e);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Login error: ${e.toString()}')));
     }
 
     setState(() {

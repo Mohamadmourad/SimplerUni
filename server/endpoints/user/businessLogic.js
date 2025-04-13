@@ -68,7 +68,8 @@ module.exports.login_post = async (req, res) => {
             });
         }
         if(!user.rows[0].majorid && !user.rows[0].campusid){
-            return res.status(204).json(authToken);
+            
+            return res.status(201).json(authToken);
         }
         res.status(200).json({
             message: 'Login successful',

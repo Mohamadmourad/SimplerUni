@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:senior_project/providers/user_provider.dart';
 import 'package:senior_project/screens/auth/chat/chat.dart';
 import 'package:senior_project/screens/auth/complete_profile.dart';
+import 'package:senior_project/screens/auth/optional_profile_info.dart';
 import 'package:senior_project/screens/auth/otp_verification_page.dart';
 import 'package:senior_project/screens/auth/signup.dart';
 import 'package:senior_project/screens/auth/login.dart';
@@ -57,6 +58,18 @@ class MyApp extends StatelessWidget {
                   final Map<String, dynamic> args =
                       state.extra as Map<String, dynamic>;
                   return CompleteProfile(email: args['email']);
+                },
+              ),
+              GoRoute(
+                path: '/optional-profile-info',
+                builder: (context, state) {
+                  final Map<String, dynamic> params =
+                      state.extra as Map<String, dynamic>;
+                  return OptionalProfileInfo(
+                    email: params['email'] ?? '',
+                    majorId: params['majorId'] ?? '',
+                    campusId: params['campusId'] ?? '',
+                  );
                 },
               ),
               GoRoute(

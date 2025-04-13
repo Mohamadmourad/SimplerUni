@@ -1,7 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-Future<Map<String, dynamic>> makeApiCall(String type, String? requestBody, String? urlParam, String? authToken) async {
+Future<Map<String, dynamic>> makeApiCall(
+  String type,
+  String? requestBody,
+  String? urlParam,
+  String? authToken,
+) async {
   const String baseUrl = 'http://localhost:5000';
   Uri url = Uri.parse('$baseUrl/$urlParam');
 
@@ -19,14 +24,16 @@ Future<Map<String, dynamic>> makeApiCall(String type, String? requestBody, Strin
         response = await http.post(
           url,
           headers: headers,
-          body: requestBody != null ? jsonEncode(json.decode(requestBody)) : null,
+          body:
+              requestBody != null ? jsonEncode(json.decode(requestBody)) : null,
         );
         break;
       case 'UPDATE':
         response = await http.put(
           url,
           headers: headers,
-          body: requestBody != null ? jsonEncode(json.decode(requestBody)) : null,
+          body:
+              requestBody != null ? jsonEncode(json.decode(requestBody)) : null,
         );
         break;
       case 'DELETE':
@@ -44,18 +51,31 @@ Future<Map<String, dynamic>> makeApiCall(String type, String? requestBody, Strin
         'body': jsonDecode(response.body),
         'error': null,
       };
+    } else if (response.statusCode == 201) {
+      try {
+        // Try to parse as JSON first in case it's a JSON string
+        final decoded = jsonDecode(response.body);
+        return {
+          'statusCode': response.statusCode,
+          'body': decoded,
+          'error': null,
+        };
+      } catch (e) {
+        // If not JSON, return as plain text (likely just an auth token)
+        return {
+          'statusCode': response.statusCode,
+          'body': response.body,
+          'error': null,
+        };
+      }
     } else {
       return {
         'statusCode': response.statusCode,
-        'body': null,
+        'body': response.body.isNotEmpty ? response.body : null,
         'error': response.body,
       };
     }
   } catch (e) {
-    return {
-      'statusCode': 500,
-      'body': null,
-      'error': 'Request failed: $e',
-    };
+    return {'statusCode': 500, 'body': null, 'error': 'Request failed: $e'};
   }
 }
