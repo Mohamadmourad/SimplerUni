@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:senior_project/providers/user_provider.dart';
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});

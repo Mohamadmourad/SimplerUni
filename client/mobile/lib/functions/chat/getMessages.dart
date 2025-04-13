@@ -1,31 +1,34 @@
 import 'dart:convert';
+
 import 'package:senior_project/functions/callApi.dart';
 import 'package:senior_project/modules/message.dart';
 import 'package:senior_project/modules/user.dart';
 
 Future<List<Message>> getMessages(
-  String chatroomId
+  String chatroomId,
+  String? before
 ) async {
-  final requestBody = '{"chatroomId": "$chatroomId"}';
-
+  final Map<String, dynamic> requestBody = {
+    "chatroomId": chatroomId,
+  };
+  if (before != null) {
+    requestBody["before"] = before;
+  }
   try {
     final response = await makeApiCall(
       'POST',
-      requestBody,
+      jsonEncode(requestBody),
       'chat/getMessages',
       null, 
     );
     if (response['statusCode'] == 200) {
       List<Message> messagesList = [];
      final List<dynamic> data = response['body'];
-     print(data);
       for (var message in data) {
-        print(message);
         User user = User(
           userId: message['userid'],
           username: message['username'],
           email: message['email'],
-          password: message['password'],
           isEmailVerified: message['isemailverified'],
           isStudent: message['isstudent'],
           bio: message['bio'],
@@ -38,7 +41,8 @@ Future<List<Message>> getMessages(
           messageContent: message["content"],
           messageType: message["type"],
           user: user,
-          isSender: true
+          isSender: true,
+          sendedAt: message['created_at']
         );
         messagesList.add(msg);
       }

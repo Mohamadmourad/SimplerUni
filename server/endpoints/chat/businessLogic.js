@@ -86,8 +86,8 @@ module.exports.addToChatroom = async (req, res)=>{
 // }
 
 module.exports.getMessages = async (req, res)=>{
-  const { chatroomId, before, limit } = req.body;
-
+  const { chatroomId, before } = req.body;
+  console.log(before);
   try{
     const messages = await db.query(
         `
@@ -100,7 +100,7 @@ module.exports.getMessages = async (req, res)=>{
         ORDER BY m.created_at DESC
         LIMIT $3
         `,
-        [chatroomId, before || new Date(), limit || 20]
+        [chatroomId, before || new Date(), 10]
     );
     return res.status(200).json(messages.rows);
   }
@@ -110,25 +110,23 @@ module.exports.getMessages = async (req, res)=>{
   }
 }
 
-module.exports.sendMessage = async (req, res) => {
-    const { chatroomId, userId, content } = req.body;
-  
+module.exports.sendMessage = async (chatroomId, userId, content,type) => {
     if (!chatroomId || !userId || !content) {
-      return res.status(400).json({ error: 'Missing required fields.' });
+      return;
     }
     try {
       const result = await db.query(
         `
-        INSERT INTO messages (chatroomid, userid, content)
-        VALUES ($1, $2, $3)
+        INSERT INTO messages (chatroomid, userid, content,type)
+        VALUES ($1, $2, $3,$4)
         RETURNING *;
         `,
-        [chatroomId, userId, content]
+        [chatroomId, userId, content,type]
       );
-      return res.status(201).json(result.rows[0]);
+      return result.rows[0];
     } catch (err) {
       console.error('Error while sending message:', err);
-      return res.status(500).json({ error: 'Failed to send message.' });
+      return;
     }
   };
   

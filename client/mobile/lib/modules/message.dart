@@ -5,6 +5,7 @@ class Message{
   String? messageContent;
   String? messageType;
   bool? isSender;
+  String?sendedAt; 
   User? user;
 
   Message({
@@ -12,6 +13,12 @@ class Message{
     this.messageContent,
     this.messageType,
     this.isSender,
-    this.user
+    this.user,
+    this.sendedAt
     });
+
+  @override
+  String toString() {
+    return '$messageContent ||| $sendedAt';
+  }
 }

@@ -2,7 +2,6 @@ class User {
   String? userId;
   String? username;
   String? email;
-  String? password;
   bool? isEmailVerified;
   bool? isStudent;
   String? bio;
@@ -14,7 +13,6 @@ class User {
     this.userId,
     this.username,
     this.email,
-    this.password,
     this.isEmailVerified = false,
     this.isStudent = false,
     this.bio,
