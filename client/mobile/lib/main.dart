@@ -11,9 +11,22 @@ import 'package:senior_project/screens/auth/login.dart';
 import 'package:senior_project/screens/home/homepage.dart';
 import 'package:senior_project/theme/app_theme.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
+
+  // Create and initialize the UserProvider
+  final userProvider = UserProvider();
+  await userProvider.initializeUser();
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<UserProvider>.value(value: userProvider),
+        // Other providers...
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

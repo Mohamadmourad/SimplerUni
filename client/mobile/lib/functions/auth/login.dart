@@ -40,7 +40,6 @@ Future<Map<String, dynamic>> loginMethode(
         } else {
           tokenStr = authToken.toString();
         }
-        // Clean any quotes that might be in the token
         tokenStr = tokenStr.replaceAll('"', '');
         await prefs.setString('authToken', tokenStr);
       }
@@ -74,7 +73,6 @@ Future<Map<String, dynamic>> loginMethode(
       "error": response['error'],
     };
   } catch (e) {
-    // Return connection error in a safe format that won't be parsed as JSON
     return {
       "statusCode": 500,
       "data": null,
