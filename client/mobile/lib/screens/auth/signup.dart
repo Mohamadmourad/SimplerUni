@@ -51,62 +51,62 @@ class SignupPageState extends State<SignupPage> {
       String password = passwordController.text;
 
       setState(() {
-      if (username.isEmpty) {
-          usernameError = "Please enter your username";
-        return;
-      }
-     if (username.length < 3) {
+        if (username.isEmpty) {
           usernameError = "Please enter your username";
           return;
-       }
-      if (email.isEmpty) {
-      emailError = "Please enter your email";
-      return;
-      } 
-      else if (!email.contains('@')) {
-        emailError = "Please enter a valid email";
-        return;
-      }
-      if (password.isEmpty) {
-        passwordError = "Please enter your password";
-        return;
-      } 
-      else if (password.length < 6) {
-        passwordError = "Password must be at least 6 characters";
-        return;
-      }
-      else if (password != confirmPasswordController.text){
-        passwordError = "Passwords mismatch";
-        return;
-      }
-    });
+        }
+        if (username.length < 3) {
+          usernameError = "Username must be at least 3 characters";
+          return;
+        }
+        if (email.isEmpty) {
+          emailError = "Please enter your email";
+          return;
+        } else if (!email.contains('@')) {
+          emailError = "Please enter a valid email";
+          return;
+        }
+        if (password.isEmpty) {
+          passwordError = "Please enter your password";
+          return;
+        } else if (password.length < 6) {
+          passwordError = "Password must be at least 6 characters";
+          return;
+        } else if (password != confirmPasswordController.text) {
+          passwordError = "Passwords mismatch";
+          return;
+        }
+      });
 
-      final result = await sign_up(
-        email,
-        password,
-        username
-      );
+      final result = await sign_up(email, password, username, context: context);
+
       if (result["statusCode"] == 200) {
         context.go(
-            '/otp-verify',
-            extra: {'email': emailController.text, 'authToken': result["data"]["authToken"]},
-          );
-      }
-      else if(result["statusCode"] == 401){
+          '/otp-verify',
+          extra: {
+            'email': emailController.text,
+            'authToken': result["data"]["authToken"],
+          },
+        );
+      } else if (result["statusCode"] == 401) {
         final error = result["error"];
         Map<String, dynamic> decodedError = jsonDecode(error);
-          context.go(
-            '/otp-verify',
-            extra: {'email': emailController.text, 'authToken': decodedError["authToken"]},
-          );
-      }
-       else {
+        context.go(
+          '/otp-verify',
+          extra: {
+            'email': emailController.text,
+            'authToken': decodedError["authToken"],
+          },
+        );
+      } else {
         final error = result["error"];
         Map<String, dynamic> decodedError = jsonDecode(error);
         setState(() {
-          if(decodedError["email"] != "")emailError = decodedError["email"];
-          if(decodedError["username"] != "")usernameError = decodedError["username"];
-          if(decodedError["password"] != "")passwordError = decodedError["password"];
+          if (decodedError["email"] != "") emailError = decodedError["email"];
+          if (decodedError["username"] != "")
+            usernameError = decodedError["username"];
+          if (decodedError["password"] != "")
+            passwordError = decodedError["password"];
         });
       }
     } catch (e) {
@@ -150,7 +150,7 @@ class SignupPageState extends State<SignupPage> {
                     labelText: 'Username',
                     prefixIcon: Icons.person_outline,
                     keyboardType: TextInputType.name,
-                    error: usernameError
+                    error: usernameError,
                   ),
                   const SizedBox(height: 16),
                   // Email
@@ -174,7 +174,7 @@ class SignupPageState extends State<SignupPage> {
                     controller: confirmPasswordController,
                     labelText: 'Confirm Password',
                     prefixIcon: Icons.lock_outline,
-                    error: usernameError,
+                    error: passwordError,
                     isPassword: true,
                   ),
                   const SizedBox(height: 24),

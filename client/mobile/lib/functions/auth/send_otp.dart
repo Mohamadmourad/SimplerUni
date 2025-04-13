@@ -30,7 +30,6 @@ Future<Map<String, dynamic>> sendOtp(String email) async {
 
       Map<String, dynamic> errorData = {};
       try {
-        // Handle potential string or object response
         if (response['error'] is String) {
           try {
             errorData = jsonDecode(response['error']);

@@ -45,48 +45,48 @@ class LoginPageState extends State<LoginPage> {
       String email = emailController.text;
       String password = passwordController.text;
       setState(() {
-      if (email.isEmpty) {
-      emailError = "Please enter your email";
-      return;
-      } 
-      else if (!email.contains('@')) {
-        emailError = "Please enter a valid email";
-        return;
-      }
-      if (password.isEmpty) {
-        passwordError = "Please enter your password";
-        return;
-      } 
-    });
-      final result = await loginMethode(email, password);
-      print(result['statusCode']);
+        if (email.isEmpty) {
+          emailError = "Please enter your email";
+          return;
+        } else if (!email.contains('@')) {
+          emailError = "Please enter a valid email";
+          return;
+        }
+        if (password.isEmpty) {
+          passwordError = "Please enter your password";
+          return;
+        }
+      });
+      final result = await loginMethode(email, password, context: context);
+
       if (result['statusCode'] == 200) {
-        //TODO here
-      } 
-      else if(result['statusCode'] == 204){
-          context.go(
-            '/complete-profile'
-          );
-       } 
-       else if(result['statusCode'] == 401){
+        context.go('/home');
+      } else if (result['statusCode'] == 201) {
+        context.go('/complete-profile', extra: {'email': email});
+      } else if (result['statusCode'] == 401) {
         final error = result["error"];
         Map<String, dynamic> decodedError = jsonDecode(error);
-          context.go(
-            '/otp-verify',
-            extra: {'email': emailController.text, 'authToken': decodedError["authToken"]},
-          );
-       } 
-       else{
+        context.go(
+          '/otp-verify',
+          extra: {
+            'email': emailController.text,
+            'authToken': decodedError["authToken"],
+          },
+        );
+      } else {
         final error = result["error"];
         Map<String, dynamic> decodedError = jsonDecode(error);
         setState(() {
-          if(decodedError["email"] != "")emailError = decodedError['errors']["email"];
-          if(decodedError["password"] != "")passwordError = decodedError['errors']["password"];
+          if (decodedError["email"] != "")
+            emailError = decodedError['errors']["email"];
+          if (decodedError["password"] != "")
+            passwordError = decodedError['errors']["password"];
         });
-       } 
       }
-     catch (e) {
-      print(e);
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Login error: ${e.toString()}')));
     }
 
     setState(() {
@@ -124,7 +124,7 @@ class LoginPageState extends State<LoginPage> {
                     labelText: 'Email',
                     prefixIcon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
-                    error: emailError
+                    error: emailError,
                   ),
                   const SizedBox(height: 16),
                   FormInput(
@@ -132,7 +132,7 @@ class LoginPageState extends State<LoginPage> {
                     labelText: 'Password',
                     prefixIcon: Icons.lock_outline,
                     isPassword: true,
-                    error: passwordError
+                    error: passwordError,
                   ),
                   const SizedBox(height: 24),
                   AuthButton(
