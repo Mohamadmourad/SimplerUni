@@ -4,9 +4,6 @@ class User {
   String? email;
   String? password;
   bool? isEmailVerified;
-  int? emailOtp;
-  String? emailOtpExpire;
-  String? passwordResetToken;
   bool? isStudent;
   String? bio;
   String? profilePicture;
@@ -19,9 +16,6 @@ class User {
     this.email,
     this.password,
     this.isEmailVerified = false,
-    this.emailOtp,
-    this.emailOtpExpire,
-    this.passwordResetToken,
     this.isStudent = false,
     this.bio,
     this.profilePicture,
