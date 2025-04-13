@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:senior_project/components/auth_button.dart';
+import 'package:senior_project/components/custom_dropdown.dart';
 import 'package:senior_project/functions/auth/complete_profile.dart';
 import 'package:senior_project/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
@@ -200,28 +201,18 @@ class _CompleteProfileState extends State<CompleteProfile> {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.school),
-                    border: OutlineInputBorder(),
-                    filled: true,
-                  ),
+                CustomDropdown<String>(
                   value: selectedMajorId,
-                  hint: const Text('Select your major'),
+                  hint: 'Select your major',
+                  prefixIcon: Icons.school,
                   items:
                       majors.map((major) {
                         String id =
                             (major['majorid'] ?? major['id'])?.toString() ?? '';
-
                         return DropdownMenuItem<String>(
                           value: id,
                           child: Text(
                             major['majorname'] ?? major['name'] ?? '',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w500,
-                            ),
                           ),
                         );
                       }).toList(),
@@ -245,29 +236,19 @@ class _CompleteProfileState extends State<CompleteProfile> {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.location_on),
-                    border: OutlineInputBorder(),
-                    filled: true,
-                  ),
+                CustomDropdown<String>(
                   value: selectedCampusId,
-                  hint: const Text('Select your campus'),
+                  hint: 'Select your campus',
+                  prefixIcon: Icons.location_on,
                   items:
                       campuses.map((campus) {
                         String id =
                             (campus['campusid'] ?? campus['id'])?.toString() ??
                             '';
-
                         return DropdownMenuItem<String>(
                           value: id,
                           child: Text(
                             campus['campusname'] ?? campus['name'] ?? '',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w500,
-                            ),
                           ),
                         );
                       }).toList(),
@@ -286,7 +267,6 @@ class _CompleteProfileState extends State<CompleteProfile> {
 
                 const SizedBox(height: 40),
 
-                // Next Button
                 AuthButton(
                   text: 'NEXT',
                   isLoading: isLoading,
