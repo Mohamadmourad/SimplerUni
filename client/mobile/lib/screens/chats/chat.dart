@@ -1,8 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:senior_project/components/chat/messageBox.dart';
+import 'package:senior_project/components/chat/uploadDialog.dart';
 import 'package:senior_project/functions/chat/getMessages.dart';
 import 'package:senior_project/functions/chat/sendMessage.dart';
+import 'package:senior_project/functions/chat/uploadDocuments.dart';
 import 'package:senior_project/modules/message.dart';
 import 'package:senior_project/modules/user.dart';
 import 'package:senior_project/providers/user_provider.dart';
@@ -10,7 +14,13 @@ import 'package:senior_project/services/webSocket.dart';
 import 'package:senior_project/theme/app_theme.dart';
 
 class Chat extends StatefulWidget {
-  const Chat({super.key});
+  final String chatroomName;
+  final String chatroomId;
+  const Chat({
+    super.key,
+    required this.chatroomName,
+    required this.chatroomId
+  });
 
   @override
   State<Chat> createState() => _ChatState();
@@ -21,14 +31,13 @@ class _ChatState extends State<Chat> {
   final SocketService socketService = SocketService();
   bool isLoading = true;
   List<Message> messagesList = [];
-  String pageTitle = "chatroom";
 
     @override
   void initState(){
     super.initState();
     getData();
     socketService.connect(
-      currentChatroomId:"d9ced154-9438-4f1f-8077-a797f876462c",
+      currentChatroomId:widget.chatroomId,
       addNewMessage: addMessage
     );
   }
@@ -63,24 +72,24 @@ class _ChatState extends State<Chat> {
   void handleSubmit(){
     final message = messagecontroller.text.trim();
     if (message.isNotEmpty){
+    User user = Provider.of<UserProvider>(context, listen: false).currentUser!;
     messagecontroller.clear();
-    sendMessage(socketService, "text", message,"d9ced154-9438-4f1f-8077-a797f876462c");
+    sendMessage(socketService, "text", message,widget.chatroomId,user.userId);
     }
   }
-
   Future<void> getData() async{
-    var messages = await getMessages("d9ced154-9438-4f1f-8077-a797f876462c",null);
+    User user = Provider.of<UserProvider>(context, listen: false).currentUser!;
+    var messages = await getMessages(widget.chatroomId,user,null);
     setState(() {
       messagesList = messages;
       isLoading = false;
     });
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(pageTitle),
+        title: Text(widget.chatroomName),
         centerTitle: true,
       ),
       body: isLoading ? 
@@ -111,6 +120,30 @@ class _ChatState extends State<Chat> {
                       border: OutlineInputBorder(),
                     ),
                   ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.file_present),
+                  onPressed: () {
+                    UploadDialog.show(
+                      context,
+                      onUploadImage: () async {
+                      User user = Provider.of<UserProvider>(context, listen: false).currentUser!;
+                      await handleImageUpload((cdnUrl) {
+                        String url = jsonDecode(cdnUrl)['url'];
+                        sendMessage(socketService, "image", url,widget.chatroomId,user.userId);
+                      });
+                    },
+                    onUploadDocument: () async {
+                      User user = Provider.of<UserProvider>(context, listen: false).currentUser!;
+                      await handleDocumentUpload((cdnUrl) {
+                        String url = jsonDecode(cdnUrl)['url'];
+                        sendMessage(socketService, "document", url,widget.chatroomId,user.userId);
+                      });
+                    },
+
+                    );
+                  },
                 ),
                 const SizedBox(width: 8),
                 IconButton(

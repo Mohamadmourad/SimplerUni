@@ -6,6 +6,7 @@ import 'package:senior_project/modules/user.dart';
 
 Future<List<Message>> getMessages(
   String chatroomId,
+  User currentUser,
   String? before
 ) async {
   final Map<String, dynamic> requestBody = {
@@ -41,7 +42,7 @@ Future<List<Message>> getMessages(
           messageContent: message["content"],
           messageType: message["type"],
           user: user,
-          isSender: true,
+          isSender: message['userid'] == currentUser.userId,
           sendedAt: message['created_at']
         );
         messagesList.add(msg);

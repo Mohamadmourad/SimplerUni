@@ -8,7 +8,6 @@ Future<Map<String, dynamic>> sendOtp(String email) async {
   final token = prefs.getString('authToken');
 
   if (token == null) {
-    print('No auth token found.');
     return {'success': false, 'message': 'No auth token found'};
   }
 
@@ -23,11 +22,8 @@ Future<Map<String, dynamic>> sendOtp(String email) async {
     );
 
     if (response['statusCode'] == 200) {
-      print('OTP sent successfully.');
       return {'success': true, 'message': 'OTP sent successfully'};
     } else {
-      print('Error: ${response['statusCode']}, ${response['error']}');
-
       Map<String, dynamic> errorData = {};
       try {
         if (response['error'] is String) {
@@ -53,7 +49,6 @@ Future<Map<String, dynamic>> sendOtp(String email) async {
       };
     }
   } catch (e) {
-    print('Exception occurred: $e');
     return {'success': false, 'message': 'Network error: $e'};
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:senior_project/functions/chat/get_user_chatrooms.dart';
 import 'package:senior_project/modules/user.dart';
 import 'package:senior_project/theme/app_theme.dart';
@@ -23,7 +24,6 @@ class _ChatsPageState extends State<ChatsPage> {
     super.initState();
     loadChatrooms();
     User user = Provider.of<UserProvider>(context, listen: false).currentUser!;
-    print("user: ${user.username}, ${user.email}");
   }
 
   Future<void> loadChatrooms() async {
@@ -50,7 +50,7 @@ class _ChatsPageState extends State<ChatsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Chats'), elevation: 0),
+      appBar: AppBar(title: const Text('Chatrooms'), elevation: 0),
       body: buildBody(),
     );
   }
@@ -103,7 +103,7 @@ class _ChatsPageState extends State<ChatsPage> {
             ),
             const SizedBox(height: 24),
             const Text(
-              'No chats yet',
+              'No chatrooms yet',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
@@ -132,14 +132,6 @@ class _ChatsPageState extends State<ChatsPage> {
   }
 
   Widget buildChatroomItem(Chatroom chatroom) {
-    String formattedDate = '';
-    try {
-      final dateTime = DateTime.parse(chatroom.createdAt);
-      formattedDate = DateFormat('MMM d, yyyy').format(dateTime);
-    } catch (e) {
-      formattedDate = 'Unknown date';
-    }
-
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ListTile(
@@ -151,9 +143,8 @@ class _ChatsPageState extends State<ChatsPage> {
           ),
         ),
         title: Text(chatroom.name),
-        subtitle: Text('Created on: $formattedDate'),
         onTap: () {
-          // TODO: Navigate to chat detail screen
+          context.push('/chat/${chatroom.name}/${chatroom.chatroomId}');
         },
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
       ),
