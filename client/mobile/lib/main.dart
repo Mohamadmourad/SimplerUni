@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:senior_project/providers/user_provider.dart';
-import 'package:senior_project/screens/auth/chat/chat.dart';
+import 'package:senior_project/screens/chats/chat.dart';
 import 'package:senior_project/screens/auth/complete_profile.dart';
 import 'package:senior_project/screens/auth/optional_profile_info.dart';
 import 'package:senior_project/screens/auth/otp_verification_page.dart';
@@ -14,7 +14,6 @@ import 'package:senior_project/theme/app_theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Create and initialize the UserProvider
   final userProvider = UserProvider();
   await userProvider.initializeUser();
 
@@ -22,7 +21,6 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider<UserProvider>.value(value: userProvider),
-        // Other providers...
       ],
       child: const MyApp(),
     ),
@@ -89,9 +87,20 @@ class MyApp extends StatelessWidget {
                 path: '/home',
                 builder: (context, state) => const Homepage(),
               ),
+              GoRoute(
+              path: '/chat/:chatroomName/:chatroomId',
+              builder: (context, state) {
+                final String chatroomName = state.pathParameters['chatroomName']!;
+                final String chatroomId = state.pathParameters['chatroomId']!;
+                return Chat(
+                  chatroomName: chatroomName,
+                  chatroomId: chatroomId,
+                );
+              },
+            ),
+
             ],
           );
-
           return MaterialApp.router(
             routerConfig: router,
             theme: AppTheme.lightTheme,
