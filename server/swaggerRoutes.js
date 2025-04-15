@@ -1118,3 +1118,247 @@
  *       500:
  *         description: Internal server error.
  */
+
+/**
+ * @swagger
+ * /questions/getQuestions/{type}:
+ *   get:
+ *     summary: Get a list of questions by type.
+ *     description: Returns a list of questions based on the sort type (e.g., mostUpvotes, mostAnswers). Requires authentication.
+ *     tags: [Questions]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: JWT token (without the "Bearer" prefix).
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: type
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [latest, mostUpvotes, mostAnswers]
+ *         description: Type of sorting to apply.
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved questions.
+ *       401:
+ *         description: Authorization header missing.
+ *       403:
+ *         description: Invalid token.
+ *       500:
+ *         description: Internal server error.
+ */
+/**
+ * @swagger
+ * /questions/getAnswers/{questionId}:
+ *   get:
+ *     summary: Get all answers for a question.
+ *     description: Returns all answers associated with a specific question, including the answering user's username and profile picture.
+ *     tags: [Questions]
+ *     parameters:
+ *       - in: path
+ *         name: questionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the question to retrieve answers for.
+ *     responses:
+ *       200:
+ *         description: List of answers retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   answerId:
+ *                     type: string
+ *                   questionId:
+ *                     type: string
+ *                   userId:
+ *                     type: string
+ *                   content:
+ *                     type: string
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
+ *                   username:
+ *                     type: string
+ *                   profilePicture:
+ *                     type: string
+ *       400:
+ *         description: Missing questionId.
+ *       500:
+ *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /questions/addQuestion:
+ *   post:
+ *     summary: Add a new question.
+ *     description: Creates a new question with the provided title, content, and tags. Requires a valid JWT token in the Authorization header.
+ *     tags: [Questions]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: JWT token to authenticate the user (without the "Bearer" prefix).
+ *         schema:
+ *           type: string
+ *       - in: body
+ *         name: question
+ *         required: true
+ *         description: The question details.
+ *         schema:
+ *           type: object
+ *           properties:
+ *             title:
+ *               type: string
+ *             content:
+ *               type: string
+ *             tags:
+ *               type: string
+ *     responses:
+ *       201:
+ *         description: Question created successfully.
+ *       400:
+ *         description: Missing required fields.
+ *       401:
+ *         description: Authorization header missing.
+ *       403:
+ *         description: Invalid token.
+ *       500:
+ *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /questions/upvoteQuestion:
+ *   post:
+ *     summary: Upvote a question.
+ *     description: Upvotes a question by the authenticated user.
+ *     tags: [Questions]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: JWT token (without the "Bearer" prefix).
+ *       - in: body
+ *         name: upvote
+ *         required: true
+ *         schema:
+ *           type: object
+ *           properties:
+ *             questionId:
+ *               type: string
+ *         description: ID of the question to upvote.
+ *     responses:
+ *       201:
+ *         description: Upvote successful.
+ *       400:
+ *         description: Missing questionId.
+ *       401:
+ *         description: Authorization header missing.
+ *       403:
+ *         description: Invalid token.
+ *       500:
+ *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /questions/answerQuestion:
+ *   post:
+ *     summary: Answer a question.
+ *     description: Submits an answer to a question. Requires user authentication.
+ *     tags: [Questions]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: JWT token (without the "Bearer" prefix).
+ *       - in: body
+ *         name: answer
+ *         required: true
+ *         schema:
+ *           type: object
+ *           properties:
+ *             questionId:
+ *               type: string
+ *             content:
+ *               type: string
+ *     responses:
+ *       200:
+ *         description: Answer added successfully.
+ *       401:
+ *         description: Authorization header missing.
+ *       403:
+ *         description: Invalid token.
+ *       500:
+ *         description: Internal server error.
+ */
+/**
+ * @swagger
+ * /questions/deleteQuestion/{questionId}:
+ *   delete:
+ *     summary: Delete a question by ID.
+ *     description: Deletes the question identified by its ID.
+ *     tags: [Questions]
+ *     parameters:
+ *       - in: path
+ *         name: questionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the question to delete.
+ *     responses:
+ *       200:
+ *         description: Question deleted successfully.
+ *       404:
+ *         description: Question not found.
+ *       500:
+ *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /questions/removeUpvoteFromQuestion/{questionId}:
+ *   delete:
+ *     summary: Remove an upvote from a question.
+ *     description: Removes an upvote from a question by the authenticated user.
+ *     tags: [Questions]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: JWT token (without the "Bearer" prefix).
+ *       - in: path
+ *         name: questionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the question to remove the upvote from.
+ *     responses:
+ *       200:
+ *         description: Upvote removed successfully.
+ *       400:
+ *         description: Missing questionId.
+ *       401:
+ *         description: Authorization header missing.
+ *       403:
+ *         description: Invalid token.
+ *       404:
+ *         description: Upvote not found.
+ *       500:
+ *         description: Internal server error.
+ */

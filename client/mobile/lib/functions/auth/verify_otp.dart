@@ -6,7 +6,6 @@ Future<bool> verify_otp(String enteredOtp) async {
   final token = prefs.getString('authToken');
   
   if (token == null) {
-    print('No auth token found.');
     return false;
   }
   

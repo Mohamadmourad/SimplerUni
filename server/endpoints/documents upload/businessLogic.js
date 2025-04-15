@@ -2,6 +2,7 @@ const AWS = require("aws-sdk");
 const Papa = require("papaparse");
 const XLSX = require("xlsx");
 const fs = require("fs");
+const path = require("path");
 
 module.exports.uploadDocument = async (fileData, userId) => {
   const s3 = new AWS.S3({
@@ -90,3 +91,39 @@ module.exports.uploadMajorsDocument = async(req,res)=>{
   }
 }
 
+module.exports.uploadDocumentToS3 = async (req, res) => {
+  try {
+    const file = req.file;
+    const userId = req.user?.id || "anonymous"; 
+    if (!file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+    const s3 = new AWS.S3({
+      accessKeyId: process.env.AWS_ACESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACESS_KEY,
+      signatureVersion: "v4",
+    });
+    const fileContent = fs.readFileSync(file.path);
+    if (fileContent.length > 25 * 1024 * 1024) {
+      return res.status(400).json({ error: "File exceeds 25MB limit" });
+    }
+    const extension = path.extname(file.originalname).slice(1);
+    const key = `${userId}-${Date.now()}.${extension}`;
+    await s3
+      .putObject({
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: key,
+        Body: fileContent,
+        ContentType: file.mimetype,
+      })
+      .promise();
+
+    fs.unlinkSync(file.path);
+
+    const url = `https://${process.env.CLOUDFRONT_DOMAIN}/${key}`;
+    return res.status(200).json({ url });
+  } catch (err) {
+    console.error("Upload failed:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};

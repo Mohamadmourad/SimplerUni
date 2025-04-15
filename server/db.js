@@ -122,33 +122,6 @@ const tables =
         );`
     },
     {
-        name:"questions",
-        schema:`CREATE TABLE questions (
-        questionId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-        content VARCHAR(40),
-        tags VARCHAR(120),
-        userId UUID REFERENCES users(userId) ON DELETE CASCADE,
-        created_at TIMESTAMPTZ DEFAULT now()
-        );`
-    },
-    {
-        name:"question_answers",
-        schema:`CREATE TABLE question_answers (
-        answerId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-        content VARCHAR(40),
-        userId UUID REFERENCES users(userId) ON DELETE CASCADE,
-        questionId UUID REFERENCES questions(questionId) ON DELETE CASCADE,
-        created_at TIMESTAMPTZ DEFAULT now()
-        );`
-    },
-    {
-        name:"question_upvotes",
-        schema:`CREATE TABLE question_upvotes (
-        questionId UUID REFERENCES questions(questionId) ON DELETE CASCADE,
-        userId UUID REFERENCES users(userId) ON DELETE CASCADE
-        );`
-    },
-    {
         name:"universities",
         schema:`CREATE TABLE universities (
         universityId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -158,7 +131,6 @@ const tables =
         created_at TIMESTAMPTZ DEFAULT now()
         );
         ALTER TABLE users ADD COLUMN universityId UUID REFERENCES universities(universityId) ON DELETE SET NULL;
-        ALTER TABLE questions ADD COLUMN universityId UUID REFERENCES universities(universityId) ON DELETE SET NULL;
         ALTER TABLE quizes ADD COLUMN universityId UUID REFERENCES universities(universityId) ON DELETE SET NULL;
         ALTER TABLE clubs ADD COLUMN universityId UUID REFERENCES universities(universityId) ON DELETE SET NULL;
         ALTER TABLE chatrooms ADD COLUMN universityId UUID REFERENCES universities(universityId) ON DELETE SET NULL;
@@ -237,6 +209,35 @@ const tables =
         additional_information TEXT,
         status varchar(30),
         created_at TIMESTAMPTZ DEFAULT now()
+        );`
+    },
+    {
+        name:"questions",
+        schema:`CREATE TABLE questions (
+        questionId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+        title TEXT,
+        content TEXT,
+        tags TEXT,
+        userId UUID REFERENCES users(userId) ON DELETE CASCADE,
+        universityId UUID REFERENCES universities(universityId) ON DELETE CASCADE,
+        created_at TIMESTAMPTZ DEFAULT now()
+        );`
+    },
+    {
+        name:"question_answers",
+        schema:`CREATE TABLE question_answers (
+        answerId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+        content TEXT,
+        userId UUID REFERENCES users(userId) ON DELETE CASCADE,
+        questionId UUID REFERENCES questions(questionId) ON DELETE CASCADE,
+        created_at TIMESTAMPTZ DEFAULT now()
+        );`
+    },
+    {
+        name:"question_upvotes",
+        schema:`CREATE TABLE question_upvotes (
+        questionId UUID REFERENCES questions(questionId) ON DELETE CASCADE,
+        userId UUID REFERENCES users(userId) ON DELETE CASCADE
         );`
     },
 ]

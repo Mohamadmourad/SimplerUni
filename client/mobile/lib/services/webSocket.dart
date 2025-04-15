@@ -1,33 +1,41 @@
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class SocketService {
-  late IO.Socket _socket;
+  late IO.Socket socket;
 
-  void connect() {
-    _socket = IO.io('http://localhost:5000', {
+  void connect(
+    {
+    required String currentChatroomId,
+    required Function(dynamic) addNewMessage,
+  }
+  ) {
+    socket = IO.io('http://localhost:5000', {
       'transports': ['websocket'],
       'autoConnect': false,
     });
 
-    _socket.connect();
+    socket.connect();
 
-    _socket.onConnect((_) {
+    socket.onConnect((e) {
       print('Connected to server');
-      _socket.emit('join', 'flutter_user');
+      socket.emit('join', e);
     });
 
-    _socket.on('message', (data) {
+    socket.on('message', (data) {
       print('Message from server: $data');
+       if (data['chatroomId'] == currentChatroomId) {
+          addNewMessage(data); 
+        }
     });
 
-    _socket.onDisconnect((_) => print('Disconnected from server'));
+    socket.onDisconnect((d) => print('Disconnected from server'));
   }
 
-  void sendMessage(String message) {
-    _socket.emit('message', message);
+  void sendMessage(var message) {
+    socket.emit('message', message);
   }
 
   void disconnect() {
-    _socket.disconnect();
+    socket.disconnect();
   }
 }
