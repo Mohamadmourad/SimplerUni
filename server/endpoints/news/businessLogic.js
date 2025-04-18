@@ -2,6 +2,7 @@ const {db} = require("../../db");
 const { uploadDocument } = require("../documents upload/businessLogic");
 const { isAuthed } = require("../role/businessLogic");
 const { verifyToken } = require("../university/helper");
+const { verifyToken: verifyUserToken } = require("../user/helper");
 
 module.exports.createNews = async (req, res) => {
     const { title ,content, imageBase64 } = req.body;
@@ -62,4 +63,15 @@ module.exports.createNews = async (req, res) => {
     }
   };
   
+module.exports.getNewsForMobile = async (req, res)=>{
+  const token = req.headers.authorization;
+  try {
+    const { userId, universityId } = verifyUserToken(token);
+     const result = await db.query("SELECT * FROM news WHERE universityid = $1",[universityId]);
+     return res.status(200).json(result.rows);
+   } catch (e) {
+     console.log(e);
+     return res.status(500).json({ message: "Error while retrieving news" });
+   }
+}
   
