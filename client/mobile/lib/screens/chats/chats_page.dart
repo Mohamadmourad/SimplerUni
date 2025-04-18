@@ -5,16 +5,15 @@ import 'package:senior_project/modules/user.dart';
 import 'package:senior_project/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:senior_project/providers/user_provider.dart';
-import 'package:intl/intl.dart';
 
 class ChatsPage extends StatefulWidget {
   const ChatsPage({super.key});
 
   @override
-  State<ChatsPage> createState() => _ChatsPageState();
+  State<ChatsPage> createState() => ChatsPageState();
 }
 
-class _ChatsPageState extends State<ChatsPage> {
+class ChatsPageState extends State<ChatsPage> {
   List<Chatroom> chatrooms = [];
   bool isLoading = true;
   String? errorMessage;
@@ -23,7 +22,18 @@ class _ChatsPageState extends State<ChatsPage> {
   void initState() {
     super.initState();
     loadChatrooms();
-    User user = Provider.of<UserProvider>(context, listen: false).currentUser!;
+
+    // Safely access user without non-null assertion
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final User? user = userProvider.currentUser;
+
+      if (user != null) {
+        print("Chat page loaded for user: ${user.username}");
+      } else {
+        print("Chat page loaded but no user is logged in");
+      }
+    });
   }
 
   Future<void> loadChatrooms() async {
