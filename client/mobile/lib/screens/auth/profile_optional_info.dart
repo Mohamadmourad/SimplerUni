@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:senior_project/components/auth_button.dart';
+import 'package:senior_project/functions/chat/uploadDocuments.dart';
 import 'package:senior_project/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:io';
-import 'package:image_picker/image_picker.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'dart:typed_data';
+import 'dart:convert';
 import 'package:senior_project/functions/auth/complete_profile.dart';
 
 class ProfileOptionalInfo extends StatefulWidget {
@@ -22,14 +20,9 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
   String? errorMessage;
   String? selectedMajorId;
   String? selectedCampusId;
-
-  // Bio
   final bioController = TextEditingController();
-
-  // Profile image
-  File? profileImage;
-  Uint8List? webImage;
-  bool get hasProfileImage => profileImage != null || webImage != null;
+  String? uploadedImageUrl;
+  bool get hasProfileImage => uploadedImageUrl != null;
 
   @override
   void initState() {
@@ -46,7 +39,6 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
       });
 
       if (selectedMajorId == null || selectedCampusId == null) {
-        // If required data is missing, go back to the first page
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Please complete the required information first'),
@@ -68,38 +60,16 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
   }
 
   Future<void> selectImage() async {
-    final ImagePicker picker = ImagePicker();
-
     try {
-      if (kIsWeb) {
-        // Web implementation
-        final XFile? image = await picker.pickImage(
-          source: ImageSource.gallery,
-          maxWidth: 1000,
-          maxHeight: 1000,
-        );
-
-        if (image != null) {
-          final Uint8List data = await image.readAsBytes();
-          setState(() {
-            webImage = data;
-          });
-        }
-      } else {
-        // Native implementation (Android/iOS)
-        final XFile? image = await picker.pickImage(
-          source: ImageSource.gallery,
-        );
-
-        if (image != null) {
-          setState(() {
-            profileImage = File(image.path);
-          });
-        }
-      }
+      await handleImageUpload((cdnUrl) {
+        final String url = jsonDecode(cdnUrl)['url'];
+        setState(() {
+          uploadedImageUrl = url;
+        });
+      });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error picking image: ${e.toString()}')),
+        SnackBar(content: Text('Error uploading image: ${e.toString()}')),
       );
     }
   }
@@ -124,13 +94,14 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
     });
 
     try {
-      // Optional data
       Map<String, dynamic> optionalData = {};
       if (bioController.text.isNotEmpty) {
         optionalData['bio'] = bioController.text;
       }
+      if (uploadedImageUrl != null) {
+        optionalData['profileImageUrl'] = uploadedImageUrl;
+      }
 
-      // Call the API
       final result = await completeUserProfile(
         selectedMajorId!,
         selectedCampusId!,
@@ -138,28 +109,25 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
       );
 
       if (result['success']) {
-        // Show success message
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(result['message'])));
-
-        // Navigate to home
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'])),
+        );
         context.go('/home');
       } else {
         setState(() {
           errorMessage = result['message'];
         });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(result['message'])));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'])),
+        );
       }
     } catch (e) {
       setState(() {
         errorMessage = e.toString();
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
     } finally {
       setState(() {
         isLoading = false;
@@ -206,8 +174,6 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),
-
-                // Error message if any
                 if (errorMessage != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16.0),
@@ -217,8 +183,6 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
                       textAlign: TextAlign.center,
                     ),
                   ),
-
-                // Profile Image Selection
                 Center(
                   child: Column(
                     children: [
@@ -230,26 +194,20 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
                           decoration: BoxDecoration(
                             color: Colors.grey[200],
                             shape: BoxShape.circle,
-                            image:
-                                hasProfileImage
-                                    ? DecorationImage(
-                                      image:
-                                          kIsWeb
-                                              ? MemoryImage(webImage!)
-                                                  as ImageProvider
-                                              : FileImage(profileImage!),
-                                      fit: BoxFit.cover,
-                                    )
-                                    : null,
+                            image: hasProfileImage
+                                ? DecorationImage(
+                                    image: NetworkImage(uploadedImageUrl!),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null,
                           ),
-                          child:
-                              hasProfileImage
-                                  ? null
-                                  : const Icon(
-                                    Icons.add_a_photo,
-                                    size: 40,
-                                    color: AppColors.primaryColor,
-                                  ),
+                          child: hasProfileImage
+                              ? null
+                              : const Icon(
+                                  Icons.add_a_photo,
+                                  size: 40,
+                                  color: AppColors.primaryColor,
+                                ),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -260,10 +218,7 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 24),
-
-                // Bio Field
                 const Text(
                   'Bio',
                   style: TextStyle(fontWeight: FontWeight.bold),
@@ -279,22 +234,15 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
                   ),
                   maxLines: 3,
                 ),
-
                 const SizedBox(height: 40),
-
-                // Submit Button
                 AuthButton(
                   text: 'COMPLETE PROFILE',
                   isLoading: isLoading,
                   onPressed: submitProfile,
                 ),
-
                 const SizedBox(height: 16),
-
-                // Skip button
                 TextButton(
-                  onPressed:
-                      submitProfile, // Same handler, as it will submit with just empty optionals
+                  onPressed: submitProfile,
                   child: const Text('SKIP FOR NOW'),
                 ),
               ],
