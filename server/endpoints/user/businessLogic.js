@@ -1,6 +1,7 @@
 const {db} = require("../../db");
 const {DateTime} = require("luxon");
 const { hashText, createToken, handleErrors, compareHashedText, getUserIdFromToken, getEmailDomain, verifyToken } = require("./helper");
+const { verifyToken: universityVerifyToken } = require("../university/helper")
 const { sendEmail } = require("../helper");
 const { otpVerificationEmail } = require("../emailTemplates");
 const { addToChatroom } = require("../chat/businessLogic");
@@ -11,6 +12,14 @@ module.exports.signup_post = async (req, res) => {
     password = await hashText(password);
     try{
         const user = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+
+        if(user.rows.isBanned){
+            return res.status(400).json({
+                errors:{
+                    email:"this account is banned"
+                }
+            })
+        }
 
         if (user.rows.length > 0 && !user.rows[0].isemailverified) {
             const authToken = createToken(user.rows[0].userid, user.rows[0].universityid)
@@ -24,8 +33,8 @@ module.exports.signup_post = async (req, res) => {
         const domain = getEmailDomain(email);
         const uniRequest = await db.query("SELECT * FROM universities WHERE studentdomain=$1 OR instructordomain=$1",[domain]);
         if(uniRequest.rowCount === 0) res.status(400).json("your university is not supported");
-        const type = domain === uniRequest.rows[0].studentDomain;
-        const result = await db.query('INSERT INTO users(username, email, password, isEmailVerified,isStudent,universityid) VALUES ($1,$2,$3,false,$4,$5) RETURNING *',[username,email,password,type,uniRequest.rows[0].universityid]);
+        const type = domain == uniRequest.rows[0].studentdomain;
+        const result = await db.query('INSERT INTO users(username, email, password, isEmailVerified,isStudent,universityid,isBanned) VALUES ($1,$2,$3,false,$4,$5,$6) RETURNING *',[username,email,password,type,uniRequest.rows[0].universityid,false]);
         const authToken = createToken(result.rows[0].userid, result.rows[0].universityid)
         res.status(200).json({
             message: "user inserted successfully",
@@ -49,6 +58,13 @@ module.exports.login_post = async (req, res) => {
                     email: 'That email is not registered.',
                 },
             });
+        }
+        if(user.rows.isBanned){
+            return res.status(400).json({
+                errors:{
+                    email:"this account is banned"
+                }
+            })
         }
         const isPasswordValid = await compareHashedText(password, user.rows[0].password);
         if (!isPasswordValid) {
@@ -195,3 +211,73 @@ module.exports.getUser = async (req, res) => {
         res.status(500).json({ message: "internalServerError" });
     }
 };
+
+module.exports.getAllUniversityUsers = async (req,res)=>{
+    const token = req.cookies.jwt;
+      try {
+        const {adminId, universityId} = universityVerifyToken(token);
+        const request = await db.query(`SELECT * FROM users WHERE universityid=$1 ORDER BY created_at DESC`,[universityId]);
+        return res.status(200).json(request.rows);
+      }
+      catch(e){
+        console.log(e);
+        return res.status(500).json("Internal server error");
+      }
+}
+
+module.exports.banUser = async (req, res) => {
+    const token = req.cookies.jwt;
+    const { userid } = req.body;
+  
+    if (!userid) return res.status(400).json("Missing userid");
+  
+    try {
+      await db.query(
+        `UPDATE users SET isbanned = true WHERE userid = $1`,
+        [userid]
+      );
+  
+      return res.status(200).json("User has been banned successfully");
+    } catch (e) {
+      console.error(e);
+      return res.status(500).json("Internal server error");
+    }
+  };
+
+  
+  module.exports.unbanUser = async (req, res) => {
+    const token = req.cookies.jwt;
+    const { userid } = req.body;
+  
+    if (!userid) return res.status(400).json("Missing userid");
+  
+    try {
+      await db.query(
+        `UPDATE users SET isbanned = false WHERE userid = $1`,
+        [userid]
+      );
+  
+      return res.status(200).json("User has been unbanned successfully");
+    } catch (e) {
+      console.error(e);
+      return res.status(500).json("Internal server error");
+    }
+  };
+  
+
+  module.exports.deleteUser = async (req, res) => {
+    const token = req.cookies.jwt;
+    const { userId } = req.params;
+    if (!userId) return res.status(400).json("Missing userid");
+  
+    try {
+      const { adminId, universityId } = universityVerifyToken(token);
+      await db.query(`DELETE FROM users WHERE userid = $1`, [userId]);
+  
+      return res.status(200).json("User has been deleted successfully");
+    } catch (e) {
+      console.error(e);
+      return res.status(500).json("Internal server error");
+    }
+  };
+  

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useRouter } from 'next/navigation';
 
 export default function DomainsPage() {
   const [studentDomain, setStudentDomain] = useState("");
@@ -10,6 +11,7 @@ export default function DomainsPage() {
   const [error, setError] = useState("");
   const [canAddStudent, setCanAddStudent] = useState(false);
   const [canAddInstructor, setCanAddInstructor] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchUniversityData = async () => {
@@ -37,6 +39,15 @@ export default function DomainsPage() {
     };
 
     fetchUniversityData();
+    // const verify = async () => {
+    //      try{
+    //       const result = await checkAuth("domainsPage");
+    //       console.log(result);
+    //       result == false ? router.push("/") : null;
+    //     }
+    //       catch(e){router.push("/")}
+    //     };
+    //     verify();
   }, []);
 
   const handleAddDomain = async (type) => {

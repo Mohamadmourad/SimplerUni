@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useRouter } from 'next/navigation';
+import { checkAuth } from "@/app/functions/checkAuth";
 
 const Admins = () => {
   const [admins, setAdmins] = useState([]);
@@ -15,15 +17,13 @@ const Admins = () => {
   const [editingAdmin, setEditingAdmin] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentAdminId, setCurrentAdminId] = useState(null);
-  
-  // Function to get the current admin's ID
+  const router = useRouter();
+
   const fetchCurrentAdmin = async () => {
     try {
       const response = await axios.get("http://localhost:5000/admin/getAdmin", { 
         withCredentials: true 
       });
-      console.log("Current admin data:", response.data);
-      console.log("Current admin ID:", response.data.adminid);
       if (response.data) {
         setCurrentAdminId(response.data.adminid);
       }
@@ -33,11 +33,9 @@ const Admins = () => {
     }
   };
   
-  // Function to refresh the admin list after changes
   const fetchAdmins = async () => {
     try {
       const result = await axios.get("http://localhost:5000/admin/getAllAdmins", { withCredentials: true });
-      console.log("Fetched admins:", result.data);
       if (Array.isArray(result.data)) {
         const temp = result.data.map(admin => ({
           id: admin.adminid,
@@ -60,7 +58,6 @@ const Admins = () => {
   const fetchRoles = async () => {
     try {
       const result = await axios.get("http://localhost:5000/role/getRoles", { withCredentials: true });
-      console.log("Fetched roles:", result.data);
       if (Array.isArray(result.data)) {
         const temp = result.data.map(role => ({
           id: role.roleid,
@@ -78,11 +75,9 @@ const Admins = () => {
   };
 
   useEffect(() => {
-    // Initialize data
     const initializeData = async () => {
       setLoading(true);
       try {
-        // Fetch current admin first to get ID
         await fetchCurrentAdmin();
         await fetchAdmins();
         await fetchRoles();
@@ -95,6 +90,14 @@ const Admins = () => {
     };
     
     initializeData();
+    const verify = async () => {
+     try{
+      const result = await checkAuth("adminsPage");
+      result == false ? router.push("/") : null;
+    }
+      catch(e){router.push("/")}
+    };
+    verify();
   }, []);
 
   const clearFormFields = () => {
@@ -106,7 +109,7 @@ const Admins = () => {
   };
 
   const handleAddAdmin = async (e) => {
-    e.preventDefault(); // Prevent form submission default behavior
+    e.preventDefault(); 
     
     if (!firstName.trim() || !lastName.trim() || !username.trim() || !password.trim() || !roleId) {
       setError("All fields are required");
@@ -117,18 +120,14 @@ const Admins = () => {
     setLoading(true);
     
     try {
-      console.log("Adding admin with data:", { firstName, lastName, username, password, roleId });
-      
       await axios.post(
         "http://localhost:5000/admin/addAdmin", 
         { firstName, lastName, username, password, roleId }, 
         { withCredentials: true }
       );
       
-      // Refresh the admin list after adding
       await fetchAdmins();
-      
-      // Clear form fields
+
       clearFormFields();
       
     } catch (err) {
@@ -140,7 +139,6 @@ const Admins = () => {
   };
 
   const handleDeleteAdmin = async (adminId) => {
-    // Prevent deleting own account
     if (adminId === currentAdminId) {
       setError("You cannot delete your own account.");
       return;
@@ -152,15 +150,12 @@ const Admins = () => {
     setLoading(true);
     
     try {
-      console.log("Deleting admin with ID:", adminId);
-      
       await axios.delete(
         `http://localhost:5000/admin/deleteAdmin`,
         { data: { adminToDeleteId: adminId } }, 
         { withCredentials: true }
       );
       
-      // Refresh the admin list after deleting
       await fetchAdmins();
       
     } catch (err) {
@@ -172,13 +167,11 @@ const Admins = () => {
   };
 
   const openEditModal = (admin) => {
-    // Prevent editing own account
     if (admin.adminid === currentAdminId) {
       setError("You cannot edit your own account.");
       return;
     }
     
-    // Make a copy of the admin object to avoid direct state modification
     setEditingAdmin({...admin});
     setIsEditModalOpen(true);
   };
@@ -198,8 +191,6 @@ const Admins = () => {
     setLoading(true);
     
     try {
-      console.log("Updating admin with data:", editingAdmin);
-      console.log("meow: "+editingAdmin.roleId)
       await axios.put(
         "http://localhost:5000/admin/updateAdmin", 
         {
@@ -212,10 +203,8 @@ const Admins = () => {
         { withCredentials: true }
       );
       
-      // Refresh the admin list after updating
       await fetchAdmins();
       
-      // Close the modal
       setIsEditModalOpen(false);
       setEditingAdmin(null);
       
@@ -317,7 +306,6 @@ const Admins = () => {
                   isCurrentUser(admin.id) ? 'border-l-4 border-purple-500' : ''
                 }`}
               >
-                {console.log(admin)} 
                 <div className="mb-2 md:mb-0">
                   <div className="flex items-center">
                     <p className="text-white font-medium">{admin.firstName} {admin.lastName}</p>

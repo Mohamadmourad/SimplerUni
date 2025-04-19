@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
+import { useRouter } from 'next/navigation';
+import { checkAuth } from "@/app/functions/checkAuth";
 
 const AddCampuses = () => {
   const [campuses, setCampuses] = useState([]);
@@ -14,9 +16,18 @@ const AddCampuses = () => {
   const [uploadedCampuses, setUploadedCampuses] = useState([]);
   const [selectedCampuses, setSelectedCampuses] = useState([]);
   const [showPreview, setShowPreview] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     fetchCampuses();
+    const verify = async () => {
+         try{
+          const result = await checkAuth("campususPage");
+          result == false ? router.push("/") : null;
+        }
+          catch(e){router.push("/")}
+        };
+        verify();
   }, []);
 
   const fetchCampuses = async () => {
