@@ -5,41 +5,44 @@ import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:mime/mime.dart';
+import 'dart:convert'; // for base64Encode
+
 
   Future<String?> uploadFileToServerCrossPlatform({
-    required Uint8List fileBytes,
-    required String fileName,
-    required String fieldName,
-  }) async {
-    try {
-      final uri = Uri.parse('http://localhost:5000/document/uploadDocumentMobile');
+  required Uint8List fileBytes,
+  required String fileName,
+  required String fieldName,
+}) async {
+  try {
+    final uri = Uri.parse('http://localhost:5000/document/uploadDocumentMobile');
 
-      final request = http.MultipartRequest('POST', uri);
+    final mimeType = lookupMimeType(fileName) ?? 'application/octet-stream';
+    final base64File = base64Encode(fileBytes);
 
-      final mimeType = lookupMimeType(fileName) ?? 'application/octet-stream';
-      final mediaTypeParts = mimeType.split('/');
+    final body = jsonEncode({
+      'fileName': fileName,
+      'fieldName': fieldName,
+      'fileData': base64File,
+      'mimeType': mimeType,
+    });
 
-      request.files.add(http.MultipartFile.fromBytes(
-        fieldName,
-        fileBytes,
-        filename: fileName,
-        contentType: MediaType(mediaTypeParts[0], mediaTypeParts[1]),
-      ));
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: body,
+    );
 
-      final response = await request.send();
-      final responseBody = await response.stream.bytesToString();
-
-      if (response.statusCode == 200) {
-        return responseBody; 
-      } else {
-        print('Upload failed: ${response.statusCode}');
-        return null;
-      }
-    } catch (e) {
-      print('Upload exception: $e');
+    if (response.statusCode == 200) {
+      return response.body;
+    } else {
+      print('Upload failed: ${response.statusCode} - ${response.body}');
       return null;
     }
+  } catch (e) {
+    print('Upload exception: $e');
+    return null;
   }
+}
 
   Future<void> handleImageUpload(Function(String url) onComplete) async {
     final picker = ImagePicker();

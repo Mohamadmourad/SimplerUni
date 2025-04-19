@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:senior_project/modules/message.dart';
 import 'package:senior_project/theme/app_theme.dart';
-import 'package:http/http.dart' as http;
-
-
+import 'package:url_launcher/url_launcher.dart';
 
 class Messagebox extends StatelessWidget {
   final Message message;
@@ -13,16 +11,31 @@ class Messagebox extends StatelessWidget {
   void onImageTap(BuildContext context) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (context) => AlertDialog(
         content: Image.network(message.messageContent!),
       ),
     );
   }
 
+  void downloadFile(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      print("Could not launch $url");
+    }
+  }
+
+  String getFileExtension(String url) {
+    final parts = url.split('.');
+    return parts.isNotEmpty ? parts.last.split('?').first : 'unknown';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Align(
-      alignment: message.isSender! ? Alignment.centerRight : Alignment.centerLeft,
+      alignment:
+          message.isSender! ? Alignment.centerRight : Alignment.centerLeft,
       child: Column(
         crossAxisAlignment:
             message.isSender! ? CrossAxisAlignment.end : CrossAxisAlignment.start,
@@ -44,7 +57,7 @@ class Messagebox extends StatelessWidget {
               elevation: 8,
               color: message.isSender!
                   ? AppColors.primaryColor
-                  : Color(0xFF2E2E2E),
+                  : const Color(0xFF2E2E2E),
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Text(
@@ -71,26 +84,54 @@ class Messagebox extends StatelessWidget {
             )
           else if (message.messageType == "document")
             Container(
-              width: 250,
+              width: 280,
               margin: const EdgeInsets.all(8),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: Colors.grey.shade200,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
-                children: const [
-                  Icon(Icons.insert_drive_file, color: Colors.black87),
-                  SizedBox(width: 8),
+                children: [
+                  const Icon(Icons.insert_drive_file, color: Colors.black87),
+                  const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
-                      "Document",
-                      style: TextStyle(color: Colors.black87),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Document",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "Type: ${getFileExtension(message.messageContent!)}",
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black54,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: () => downloadFile(message.messageContent!),
+                    icon: const Icon(Icons.download, color: Colors.white),
+                    style: IconButton.styleFrom(
+                      backgroundColor: AppColors.primaryColor,
+                      padding: const EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
                 ],
               ),
-            )
+            ),
         ],
       ),
     );
