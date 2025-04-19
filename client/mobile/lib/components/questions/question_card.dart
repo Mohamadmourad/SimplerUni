@@ -1,0 +1,177 @@
+import 'package:flutter/material.dart';
+import 'package:senior_project/modules/question.dart';
+import 'package:senior_project/theme/app_theme.dart';
+import 'package:senior_project/utils/time_utils.dart';
+
+class QuestionCard extends StatelessWidget {
+  final Question question;
+  final Function(Question) onUpvote;
+  final Function(Question) onViewDetails;
+
+  const QuestionCard({
+    Key? key,
+    required this.question,
+    required this.onUpvote,
+    required this.onViewDetails,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => onViewDetails(question),
+      child: Card(
+        margin: const EdgeInsets.all(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: AppColors.primaryColor,
+                    backgroundImage:
+                        question.profilePicture != null
+                            ? NetworkImage(question.profilePicture!)
+                            : null,
+                    child:
+                        question.profilePicture == null
+                            ? Text(
+                              question.username.isNotEmpty
+                                  ? question.username[0].toUpperCase()
+                                  : '?',
+                              style: const TextStyle(color: Colors.white),
+                            )
+                            : null,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          question.username,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        Text(
+                          TimeAgoUtil.format(question.createdAt),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                question.title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(question.content, style: const TextStyle(fontSize: 16)),
+              const SizedBox(height: 16),
+
+              if (question.tags.isNotEmpty)
+                SizedBox(
+                  height: 32,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children:
+                        question.tags
+                            .map(
+                              (tag) => Container(
+                                margin: const EdgeInsets.only(right: 8),
+                                child: Chip(
+                                  label: Text(
+                                    tag,
+                                    style: const TextStyle(fontSize: 10),
+                                  ),
+                                  padding: const EdgeInsets.all(4),
+                                  labelPadding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                  ),
+                                  backgroundColor: AppColors.cardColor,
+                                  materialTapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
+                              ),
+                            )
+                            .toList(),
+                  ),
+                ),
+
+              const SizedBox(height: 12),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardColor,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.question_answer, size: 16),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${question.answerCount} answers',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  Row(
+                    children: [
+                      Text(
+                        '${question.upvoteCount}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.arrow_upward,
+                          color:
+                              question.hasUpvoted
+                                  ? AppColors.primaryColor
+                                  : null,
+                          size: 20,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 36,
+                          minHeight: 36,
+                        ),
+                        padding: EdgeInsets.zero,
+                        onPressed: () => onUpvote(question),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
