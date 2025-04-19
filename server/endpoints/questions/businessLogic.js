@@ -177,7 +177,7 @@ module.exports.getAnswersForQuestion = async (req, res) => {
             qa.*,
             u.username,
             u.profilePicture,
-            u.isstudent,
+            u.isstudent
         FROM question_answers qa
         LEFT JOIN users u ON u.userId = qa.userId
         WHERE qa.questionId = $1

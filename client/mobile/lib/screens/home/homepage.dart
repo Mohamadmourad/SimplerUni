@@ -5,19 +5,21 @@ import '../chats/chats_page.dart';
 import '../clubs/clubs_page.dart';
 import '../news/news_page.dart';
 import '../profile/profile_page.dart';
+import '../questions/questions_page.dart';
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
 
   @override
-  State<Homepage> createState() => _HomepageState();
+  State<Homepage> createState() => HomepageState();
 }
 
-class _HomepageState extends State<Homepage> {
-  int _selectedIndex = 0;
+class HomepageState extends State<Homepage> {
+  int selectedIndex = 0;
 
-  static final List<Widget> _pages = [
+  static final List<Widget> pages = [
     const ChatsPage(),
+    const QuestionsPage(),
     const ClubsPage(),
     const NewsPage(),
     const ProfilePage(),
@@ -26,7 +28,7 @@ class _HomepageState extends State<Homepage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_selectedIndex],
+      body: pages[selectedIndex],
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: AppColors.cardColor,
@@ -49,14 +51,15 @@ class _HomepageState extends State<Homepage> {
               color: AppColors.textSecondary,
               tabs: const [
                 GButton(icon: Icons.chat_bubble_outline, text: 'Chats'),
+                GButton(icon: Icons.question_answer_outlined, text: 'Q/A'),
                 GButton(icon: Icons.groups_outlined, text: 'Clubs'),
                 GButton(icon: Icons.newspaper_outlined, text: 'News'),
                 GButton(icon: Icons.person_outline, text: 'Profile'),
               ],
-              selectedIndex: _selectedIndex,
+              selectedIndex: selectedIndex,
               onTabChange: (index) {
                 setState(() {
-                  _selectedIndex = index;
+                  selectedIndex = index;
                 });
               },
             ),
