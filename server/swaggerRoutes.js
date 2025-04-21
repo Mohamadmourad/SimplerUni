@@ -1362,3 +1362,252 @@
  *       500:
  *         description: Internal server error.
  */
+
+/**
+ * @swagger
+ * /clubs/underReviewClubs:
+ *   get:
+ *     summary: Get all under review clubs.
+ *     description: Returns all clubs that are under review and belong to the authenticated university.
+ *     tags: [Clubs]
+ *     parameters:
+ *       - in: cookie
+ *         name: jwt
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: JWT token for admin authentication.
+ *     responses:
+ *       200:
+ *         description: List of under review clubs.
+ *       500:
+ *         description: Failed to fetch under review clubs.
+ */
+
+/**
+ * @swagger
+ * /clubs/acceptedClubs:
+ *   get:
+ *     summary: Get all accepted clubs.
+ *     description: Returns all accepted clubs for the authenticated university.
+ *     tags: [Clubs]
+ *     parameters:
+ *       - in: cookie
+ *         name: jwt
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: JWT token for admin authentication.
+ *     responses:
+ *       200:
+ *         description: List of accepted clubs.
+ *       500:
+ *         description: Failed to fetch accepted clubs.
+ */
+
+/**
+ * @swagger
+ * /clubs/getClubsUserNotIn:
+ *   get:
+ *     summary: Get clubs the user is not a member of.
+ *     description: Returns a list of clubs that the user is not currently part of.
+ *     tags: [Clubs]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: JWT token for user authentication.
+ *     responses:
+ *       200:
+ *         description: List of clubs user is not in.
+ *       500:
+ *         description: Failed to fetch clubs.
+ */
+
+/**
+ * @swagger
+ * /clubs/getClubsUserIsIn:
+ *   get:
+ *     summary: Get clubs the user is a member of.
+ *     description: Returns all clubs the user is currently a member of.
+ *     tags: [Clubs]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: JWT token for user authentication.
+ *     responses:
+ *       200:
+ *         description: List of clubs user is in.
+ *       500:
+ *         description: Failed to fetch clubs.
+ */
+
+/**
+ * @swagger
+ * /clubs/makeClubRequest:
+ *   post:
+ *     summary: Request to create a club.
+ *     description: Allows a user to send a request to create a club. Requires user authentication.
+ *     tags: [Clubs]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: JWT token (without the "Bearer" prefix).
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       description: Club details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Club request submitted successfully.
+ *       401:
+ *         description: Authorization header missing.
+ *       500:
+ *         description: Creating club failed.
+ */
+
+/**
+ * @swagger
+ * /clubs/acceptClubRequest:
+ *   post:
+ *     summary: Accept a club creation request.
+ *     description: Allows an admin to accept a club creation request and finalize the club setup.
+ *     tags: [Clubs]
+ *     parameters:
+ *       - in: cookie
+ *         name: jwt
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: JWT token for admin authentication.
+ *     requestBody:
+ *       description: Club data to update
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               clubId:
+ *                 type: integer
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               room:
+ *                 type: string
+ *               adminId:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Club updated successfully.
+ *       400:
+ *         description: Club ID is required.
+ *       500:
+ *         description: Updating club failed.
+ */
+
+/**
+ * @swagger
+ * /clubs/requestJoinClub:
+ *   post:
+ *     summary: Request to join a club.
+ *     description: Allows a user to request membership in a specific club.
+ *     tags: [Clubs]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: JWT token for user authentication.
+ *     requestBody:
+ *       description: Club membership request data
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               chatroomId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Join request sent successfully.
+ *       401:
+ *         description: Authorization header missing.
+ *       500:
+ *         description: Creating club failed.
+ */
+
+/**
+ * @swagger
+ * /clubs/acceptJoinRequest:
+ *   post:
+ *     summary: Accept a club join request.
+ *     description: Allows an admin to accept a user’s request to join a club.
+ *     tags: [Clubs]
+ *     requestBody:
+ *       description: Membership acceptance info
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *               chatroomId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Join request accepted successfully.
+ *       400:
+ *         description: Missing userId or chatroomId.
+ *       500:
+ *         description: Accepting join request failed.
+ */
+
+/**
+ * @swagger
+ * /clubs/rejectJoinRequest:
+ *   post:
+ *     summary: Reject a club join request.
+ *     description: Allows an admin to reject a user’s request to join a club.
+ *     tags: [Clubs]
+ *     requestBody:
+ *       description: Membership rejection info
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *               chatroomId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Join request rejected successfully.
+ *       400:
+ *         description: Missing userId or chatroomId.
+ *       500:
+ *         description: Rejecting join request failed.
+ */

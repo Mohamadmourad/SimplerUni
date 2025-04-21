@@ -13,7 +13,7 @@ module.exports.signup_post = async (req, res) => {
     try{
         const user = await db.query('SELECT * FROM users WHERE email = $1', [email]);
 
-        if(user.rows.isBanned){
+        if(user.rows.length > 0 && user.rows[0].isBanned){
             return res.status(400).json({
                 errors:{
                     email:"this account is banned"

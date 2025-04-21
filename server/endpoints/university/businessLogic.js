@@ -135,7 +135,6 @@ module.exports.addMajor = async (req, res)=>{
     const {adminId, universityId} = verifyToken(token);
     if(major){
       const chatroomId = await createChatroom(major, universityId);
-      console.log("second: ", chatroomId)
       const result = await db.query('INSERT INTO majors(name, universityid, chatroomid) VALUES ($1,$2,$3) RETURNING *',[major, universityId, chatroomId]);
       return res.status(200).json({
         message: "major added succesfully",
