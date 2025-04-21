@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.post("/addRole", rolesController.addRole);
 
-router.get("/checkPermission", rolesController.checkPermission);
+router.post("/checkPermission", rolesController.checkPermission);
 router.get("/getRoles", rolesController.getRoles);
 
 router.put("/updateRolePermissions", rolesController.updateRolePermissions);

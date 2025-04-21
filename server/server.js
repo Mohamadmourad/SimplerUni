@@ -26,7 +26,7 @@ const allowedOrigins = [
   'http://localhost:5000',
   'http://127.0.0.1:5000',
   'http://10.0.2.2:5000',
-  'http://localhost:52096'
+  'http://localhost:51077'
 ];
 
 const app = express();
@@ -37,7 +37,7 @@ const io = new Server(server, {
   }
 });
 
-app.use(express.json());
+app.use(express.json({ limit: '30mb' }));
 
 app.use(cors({
   origin: (origin, callback) => {

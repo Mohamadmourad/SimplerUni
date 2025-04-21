@@ -59,6 +59,7 @@ const tables =
         emailOtpExpire VARCHAR(30),
         passwordResetToken VARCHAR(255),
         isStudent BOOLEAN,
+        isBanned BOOLEAN,
         bio VARCHAR(255),
         profilePicture VARCHAR(255),
         startingUniYear VARCHAR(50),

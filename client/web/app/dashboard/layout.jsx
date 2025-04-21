@@ -30,6 +30,7 @@ export default function DashboardLayout({ children }) {
 
   const navigationItems = [
     { name: "Home", icon: Home, path: "/dashboard", permission: null }, 
+    { name: "Manage Users", icon: Users, path: "/dashboard/usersManagement", permission: "usersManagementPage" },
     { name: "Analytics", icon: CalculatorIcon, path: "/dashboard/analytics", permission: "analyticsPage" },
     { name: "Majors", icon: FilePlus, path: "/dashboard/majors", permission: "majorsPage" },
     { name: "Campuses", icon: Building, path: "/dashboard/campuses", permission: "campusesPage" },

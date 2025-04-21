@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
+import { checkAuth } from "@/app/functions/checkAuth";
+import { useRouter } from "next/navigation";
 
 const AddMajors = () => {
   const [majors, setMajors] = useState([]);
@@ -14,9 +16,18 @@ const AddMajors = () => {
   const [uploadedMajors, setUploadedMajors] = useState([]);
   const [selectedMajors, setSelectedMajors] = useState([]);
   const [showPreview, setShowPreview] = useState(false);
+   const router = useRouter();
 
   useEffect(() => {
     fetchMajors();
+    const verify = async () => {
+         try{
+          const result = await checkAuth("majorsPage");
+          result == false ? router.push("/") : null;
+        }
+          catch(e){router.push("/")}
+        };
+        verify();
   }, []);
 
   const fetchMajors = async () => {
