@@ -52,6 +52,7 @@ module.exports.getQuestions = async (req, res) => {
             q.*,
             u.username,
             u.profilePicture,
+            u.userId,
             COUNT(DISTINCT qu.userId) AS upvoteCount,
             COUNT(DISTINCT qa.answerId) AS answerCount,
             CASE 
