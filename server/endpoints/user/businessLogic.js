@@ -281,3 +281,29 @@ module.exports.banUser = async (req, res) => {
     }
   };
   
+
+module.exports.getUserAccountInfo = async (req, res)=>{
+    try {
+        const { profileUserId } = req.params;
+
+        const result = await db.query(`
+            SELECT
+             u.userId,
+             u.username,
+             u.email,
+             u.isStudent,
+             u.bio,
+             u.profilePicture,
+             u.created_at,
+             c.name as campusName,
+             m.name as majorName,
+             un.name as universityName 
+             FROM users as u JOIN campusus as c ON u.campusId = c.campusId JOIN majors as m ON u.majorId = m.majorId JOIN universities as un ON u.universityId = un.universityId WHERE u.userId=$1`
+             ,[profileUserId]);
+
+        res.status(200).json(result.rows[0]);
+    } catch (error) {
+        console.error("Error getting profile info :", error);
+        res.status(500).json({ message: "internalServerError" });
+    }
+}
