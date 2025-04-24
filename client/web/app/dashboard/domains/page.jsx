@@ -16,7 +16,7 @@ export default function DomainsPage() {
   useEffect(() => {
     const fetchUniversityData = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/university/getUniversity", { withCredentials: true });
+        const response = await axios.get(NEXT_PUBLIC_END_POINT + "/university/getUniversity", { withCredentials: true });
         const university = response.data;
 
         const domainList = [];
@@ -56,7 +56,7 @@ export default function DomainsPage() {
 
     try {
       if (type === "Student" && studentDomain.trim()) {
-        await axios.post("http://localhost:5000/university/addStudentDomain", {
+        await axios.post(NEXT_PUBLIC_END_POINT + "/university/addStudentDomain", {
           studentDomain: studentDomain.trim(),
         }, { withCredentials: true });
 
@@ -64,7 +64,7 @@ export default function DomainsPage() {
         setStudentDomain("");
         setCanAddStudent(false);
       } else if (type === "Instructor" && instructorDomain.trim()) {
-        await axios.post("http://localhost:5000/university/addIntructorDomain", {
+        await axios.post(NEXT_PUBLIC_END_POINT + "/university/addIntructorDomain", {
           instructorDomain: instructorDomain.trim(),
         }, { withCredentials: true });
 
@@ -84,11 +84,11 @@ export default function DomainsPage() {
 
     try {
       if (type === "Student") {
-        await axios.delete("http://localhost:5000/university/removeStudentDomain", {
+        await axios.delete(NEXT_PUBLIC_END_POINT + "/university/removeStudentDomain", {
           data: { studentDomain: domain },
         }, { withCredentials: true });
       } else if (type === "Instructor") {
-        await axios.delete("http://localhost:5000/university/removeIntructorDomain", {
+        await axios.delete(NEXT_PUBLIC_END_POINT + "/university/removeIntructorDomain", {
           data: { instructorDomain: domain },
         }, { withCredentials: true });
       }

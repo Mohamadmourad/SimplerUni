@@ -30,7 +30,7 @@ const News = () => {
 
   const fetchNews = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/news/getAllNews", {
+      const response = await axios.get(NEXT_PUBLIC_END_POINT + "/news/getAllNews", {
         withCredentials: true
       });
       setNews(response.data); 
@@ -67,7 +67,7 @@ const News = () => {
 
     try {
       await axios.post(
-        "http://localhost:5000/news/createNews",
+        NEXT_PUBLIC_END_POINT + "/news/createNews",
         {
           title,
           content,
