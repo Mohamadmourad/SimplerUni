@@ -17,8 +17,8 @@ const UniversityAccessPage = () => {
   const fetchUniversities = async () => {
     try {
       const [pendingRes, acceptedRes] = await Promise.all([
-        axios.get("http://localhost:5000/university/getPendingUniversityAcessList", { withCredentials: true }),
-        axios.get("http://localhost:5000/university/getAcceptedUniversityAcessList", { withCredentials: true })
+        axios.get(NEXT_PUBLIC_END_POINT + "/university/getPendingUniversityAcessList", { withCredentials: true }),
+        axios.get(NEXT_PUBLIC_END_POINT + "/university/getAcceptedUniversityAcessList", { withCredentials: true })
       ]);
 
       setPendingUniversities(pendingRes.data);

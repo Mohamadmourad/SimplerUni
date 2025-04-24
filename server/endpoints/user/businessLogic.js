@@ -8,12 +8,12 @@ const { addToChatroom } = require("../chat/businessLogic");
 
 module.exports.signup_post = async (req, res) => {
     let { email, password, username } = req.body;
-    
+    console.log("email", email);
     password = await hashText(password);
     try{
         const user = await db.query('SELECT * FROM users WHERE email = $1', [email]);
-
-        if(user.rows.isBanned){
+        
+        if(user.rows.length > 0 && user.rows.isBanned){
             return res.status(400).json({
                 errors:{
                     email:"this account is banned"
@@ -43,6 +43,7 @@ module.exports.signup_post = async (req, res) => {
         });
     }
     catch(e){
+        
         const errors = handleErrors(e);
         res.status(400).json(errors);
     }
@@ -116,6 +117,7 @@ module.exports.addAdditionalUserData = async (req, res)=>{
         if(optionalData.bio){
             await db.query(`UPDATE users SET bio = $1 WHERE userid = $2`, [optionalData.bio, userId]); 
         }
+        
         return res.status(200).json("data added succesfully");
     }
     catch(e){

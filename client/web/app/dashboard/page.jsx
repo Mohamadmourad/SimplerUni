@@ -11,7 +11,7 @@ export default function DashboardHome() {
   useEffect(() => {
     const fetchAdmin = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/admin/getAdmin", { withCredentials: true });
+        const response = await axios.get(NEXT_PUBLIC_END_POINT + "/admin/getAdmin", { withCredentials: true });
         console.log("API Response:", response.data);
         setAdmin(response.data);
       } catch (err) {

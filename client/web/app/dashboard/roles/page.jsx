@@ -26,7 +26,7 @@ const Roles = () => {
 
   useEffect(() => {
     const getRolesData = async () => {
-      const result = await axios.get("http://localhost:5000/role/getRoles", { withCredentials: true });
+      const result = await axios.get(NEXT_PUBLIC_END_POINT + "/role/getRoles", { withCredentials: true });
       const rolesArray = result.data;
       const temp = [];
       for (let role of rolesArray) {
@@ -58,7 +58,7 @@ const Roles = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/role/addRole",
+        NEXT_PUBLIC_END_POINT + "/role/addRole",
         { roleName: roleName.trim(), permissions: selectedPermissions },
         { withCredentials: true }
       );
