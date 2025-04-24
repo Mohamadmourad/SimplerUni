@@ -16,7 +16,7 @@ export default function AdminLogin() {
   useEffect(()=>{
     const check = async()=>{
       try{
-        await axios.get(NEXT_PUBLIC_END_POINT + "/university/checkLogin",{ withCredentials: true });
+        await axios.get(process.env.NEXT_PUBLIC_END_POINT + "/university/checkLogin",{ withCredentials: true });
         router.push("/dashboard")
       }
       catch(e){
@@ -31,8 +31,8 @@ export default function AdminLogin() {
     try{
     setisClickable(false);
     setError("");
-    console.log(process.env.NEXT_PUBLIC_END_POINT + "/university/login")
-    await axios.post(process.env.NEXT_PUBLIC_END_POINT + "/university/login",{
+    console.log(process.env.process.env.NEXT_PUBLIC_END_POINT + "/university/login")
+    await axios.post(process.env.process.env.NEXT_PUBLIC_END_POINT + "/university/login",{
       username,
       password
     },{ withCredentials: true });
