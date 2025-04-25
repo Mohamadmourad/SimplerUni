@@ -1,5 +1,3 @@
-// components/UserList.jsx
-
 import React from 'react';
 import UserCard from './userCard';
 import { AlertTriangle } from 'lucide-react';
