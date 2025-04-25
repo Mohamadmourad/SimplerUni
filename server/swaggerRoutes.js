@@ -1,20 +1,5 @@
 /**
  * @swagger
- * tags:
- *   name: Mobile
- *   description: endpoints for mobile
- */
-
-
-/**
- * @swagger
- * tags:
- *   name: Authentication
- *   description: User authentication and account management
- */
-
-/**
- * @swagger
  * /user/signup:
  *   post:
  *     summary: Signs up a new user.
@@ -190,12 +175,43 @@
  *         description: Internal server error.
  */
 
-
 /**
  * @swagger
- * tags:
- *   name: Web
- *   description: endpoints for Web
+ * /user/getUser:
+ *   get:
+ *     summary: Retrieves the authenticated user's information.
+ *     description: Returns user data for the user identified by the JWT token in the Authorization header. Requires a valid token (without the "Bearer" prefix).
+ *     tags: [User]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: JWT token to authenticate the user (without the "Bearer" prefix).
+ *         schema:
+ *           type: string
+ *           example: "your-jwt-token"
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user data.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 userId:
+ *                   type: integer
+ *                   example: 1
+ *                 username:
+ *                   type: string
+ *                   example: "john_doe"
+ *                 email:
+ *                   type: string
+ *                   example: "john@example.com"
+ *                 # You can add other user fields here as needed
+ *       400:
+ *         description: User not found.
+ *       500:
+ *         description: Internal server error.
  */
 
 /**
@@ -998,3 +1014,600 @@
  *         description: Server error while deleting role.
  */
 
+/**
+ * @swagger
+ * /chat/getUserChatrooms:
+ *   get:
+ *     summary: Retrieves the chatrooms of the authenticated user.
+ *     description: Returns a list of chatrooms for the user identified by the JWT token in the Authorization header. Requires a valid token (without the "Bearer" prefix).
+ *     tags: [Chat]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: JWT token to authenticate the user (without the "Bearer" prefix).
+ *         schema:
+ *           type: string
+ *           example: "your-jwt-token"
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user chatrooms.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   chatroomid:
+ *                     type: integer
+ *                     example: 1
+ *                   name:
+ *                     type: string
+ *                     example: "Study Group"
+ *                   created_at:
+ *                     type: string
+ *                     format: date-time
+ *                     example: "2025-04-07T10:00:00Z"
+ *       401:
+ *         description: Authorization header missing.
+ *       403:
+ *         description: Invalid token.
+ *       500:
+ *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /chat/sendMessage:
+ *   post:
+ *     summary: Sends a message to a chatroom.
+ *     description: Sends a message with a specific type and content to the specified chatroom, using the JWT token in the Authorization header to authenticate the user. If the user sent a message within the last 5 minutes, they will be rate-limited.
+ *     tags: [Chat]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: JWT token to authenticate the user (without the "Bearer" prefix).
+ *         schema:
+ *           type: string
+ *           example: "your-jwt-token"
+ *       - in: body
+ *         name: message
+ *         required: true
+ *         description: The message content to send.
+ *         schema:
+ *           type: object
+ *           properties:
+ *             type:
+ *               type: string
+ *               example: "text"
+ *             content:
+ *               type: string
+ *               example: "Hello, this is a message."
+ *             chatroomId:
+ *               type: UUID
+ *               example: 1
+ *     responses:
+ *       200:
+ *         description: Successfully sent the message.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Message sent successfully."
+ *       429:
+ *         description: Rate limit exceeded. You need to wait before sending another message.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "You can’t send a message yet. Time left: 4m 30s"
+ *                 minutes:
+ *                   type: integer
+ *                   example: 4
+ *                 seconds:
+ *                   type: integer
+ *                   example: 30
+ *       500:
+ *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /questions/getQuestions/{type}:
+ *   get:
+ *     summary: Get a list of questions by type.
+ *     description: Returns a list of questions based on the sort type (e.g., mostUpvotes, mostAnswers). Requires authentication.
+ *     tags: [Questions]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: JWT token (without the "Bearer" prefix).
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: type
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [latest, mostUpvotes, mostAnswers]
+ *         description: Type of sorting to apply.
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved questions.
+ *       401:
+ *         description: Authorization header missing.
+ *       403:
+ *         description: Invalid token.
+ *       500:
+ *         description: Internal server error.
+ */
+/**
+ * @swagger
+ * /questions/getAnswers/{questionId}:
+ *   get:
+ *     summary: Get all answers for a question.
+ *     description: Returns all answers associated with a specific question, including the answering user's username and profile picture.
+ *     tags: [Questions]
+ *     parameters:
+ *       - in: path
+ *         name: questionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the question to retrieve answers for.
+ *     responses:
+ *       200:
+ *         description: List of answers retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   answerId:
+ *                     type: string
+ *                   questionId:
+ *                     type: string
+ *                   userId:
+ *                     type: string
+ *                   content:
+ *                     type: string
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
+ *                   username:
+ *                     type: string
+ *                   profilePicture:
+ *                     type: string
+ *       400:
+ *         description: Missing questionId.
+ *       500:
+ *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /questions/addQuestion:
+ *   post:
+ *     summary: Add a new question.
+ *     description: Creates a new question with the provided title, content, and tags. Requires a valid JWT token in the Authorization header.
+ *     tags: [Questions]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: JWT token to authenticate the user (without the "Bearer" prefix).
+ *         schema:
+ *           type: string
+ *       - in: body
+ *         name: question
+ *         required: true
+ *         description: The question details.
+ *         schema:
+ *           type: object
+ *           properties:
+ *             title:
+ *               type: string
+ *             content:
+ *               type: string
+ *             tags:
+ *               type: string
+ *     responses:
+ *       201:
+ *         description: Question created successfully.
+ *       400:
+ *         description: Missing required fields.
+ *       401:
+ *         description: Authorization header missing.
+ *       403:
+ *         description: Invalid token.
+ *       500:
+ *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /questions/upvoteQuestion:
+ *   post:
+ *     summary: Upvote a question.
+ *     description: Upvotes a question by the authenticated user.
+ *     tags: [Questions]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: JWT token (without the "Bearer" prefix).
+ *       - in: body
+ *         name: upvote
+ *         required: true
+ *         schema:
+ *           type: object
+ *           properties:
+ *             questionId:
+ *               type: string
+ *         description: ID of the question to upvote.
+ *     responses:
+ *       201:
+ *         description: Upvote successful.
+ *       400:
+ *         description: Missing questionId.
+ *       401:
+ *         description: Authorization header missing.
+ *       403:
+ *         description: Invalid token.
+ *       500:
+ *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /questions/answerQuestion:
+ *   post:
+ *     summary: Answer a question.
+ *     description: Submits an answer to a question. Requires user authentication.
+ *     tags: [Questions]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: JWT token (without the "Bearer" prefix).
+ *       - in: body
+ *         name: answer
+ *         required: true
+ *         schema:
+ *           type: object
+ *           properties:
+ *             questionId:
+ *               type: string
+ *             content:
+ *               type: string
+ *     responses:
+ *       200:
+ *         description: Answer added successfully.
+ *       401:
+ *         description: Authorization header missing.
+ *       403:
+ *         description: Invalid token.
+ *       500:
+ *         description: Internal server error.
+ */
+/**
+ * @swagger
+ * /questions/deleteQuestion/{questionId}:
+ *   delete:
+ *     summary: Delete a question by ID.
+ *     description: Deletes the question identified by its ID.
+ *     tags: [Questions]
+ *     parameters:
+ *       - in: path
+ *         name: questionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the question to delete.
+ *     responses:
+ *       200:
+ *         description: Question deleted successfully.
+ *       404:
+ *         description: Question not found.
+ *       500:
+ *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /questions/removeUpvoteFromQuestion/{questionId}:
+ *   delete:
+ *     summary: Remove an upvote from a question.
+ *     description: Removes an upvote from a question by the authenticated user.
+ *     tags: [Questions]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: JWT token (without the "Bearer" prefix).
+ *       - in: path
+ *         name: questionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the question to remove the upvote from.
+ *     responses:
+ *       200:
+ *         description: Upvote removed successfully.
+ *       400:
+ *         description: Missing questionId.
+ *       401:
+ *         description: Authorization header missing.
+ *       403:
+ *         description: Invalid token.
+ *       404:
+ *         description: Upvote not found.
+ *       500:
+ *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /clubs/underReviewClubs:
+ *   get:
+ *     summary: Get all under review clubs.
+ *     description: Returns all clubs that are under review and belong to the authenticated university.
+ *     tags: [Clubs]
+ *     parameters:
+ *       - in: cookie
+ *         name: jwt
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: JWT token for admin authentication.
+ *     responses:
+ *       200:
+ *         description: List of under review clubs.
+ *       500:
+ *         description: Failed to fetch under review clubs.
+ */
+
+/**
+ * @swagger
+ * /clubs/acceptedClubs:
+ *   get:
+ *     summary: Get all accepted clubs.
+ *     description: Returns all accepted clubs for the authenticated university.
+ *     tags: [Clubs]
+ *     parameters:
+ *       - in: cookie
+ *         name: jwt
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: JWT token for admin authentication.
+ *     responses:
+ *       200:
+ *         description: List of accepted clubs.
+ *       500:
+ *         description: Failed to fetch accepted clubs.
+ */
+
+/**
+ * @swagger
+ * /clubs/getClubsUserNotIn:
+ *   get:
+ *     summary: Get clubs the user is not a member of.
+ *     description: Returns a list of clubs that the user is not currently part of.
+ *     tags: [Clubs]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: JWT token for user authentication.
+ *     responses:
+ *       200:
+ *         description: List of clubs user is not in.
+ *       500:
+ *         description: Failed to fetch clubs.
+ */
+
+/**
+ * @swagger
+ * /clubs/getClubsUserIsIn:
+ *   get:
+ *     summary: Get clubs the user is a member of.
+ *     description: Returns all clubs the user is currently a member of.
+ *     tags: [Clubs]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: JWT token for user authentication.
+ *     responses:
+ *       200:
+ *         description: List of clubs user is in.
+ *       500:
+ *         description: Failed to fetch clubs.
+ */
+
+/**
+ * @swagger
+ * /clubs/makeClubRequest:
+ *   post:
+ *     summary: Request to create a club.
+ *     description: Allows a user to send a request to create a club. Requires user authentication.
+ *     tags: [Clubs]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: JWT token (without the "Bearer" prefix).
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       description: Club details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Club request submitted successfully.
+ *       401:
+ *         description: Authorization header missing.
+ *       500:
+ *         description: Creating club failed.
+ */
+
+/**
+ * @swagger
+ * /clubs/acceptClubRequest:
+ *   post:
+ *     summary: Accept a club creation request.
+ *     description: Allows an admin to accept a club creation request and finalize the club setup.
+ *     tags: [Clubs]
+ *     parameters:
+ *       - in: cookie
+ *         name: jwt
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: JWT token for admin authentication.
+ *     requestBody:
+ *       description: Club data to update
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               clubId:
+ *                 type: integer
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               room:
+ *                 type: string
+ *               adminId:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Club updated successfully.
+ *       400:
+ *         description: Club ID is required.
+ *       500:
+ *         description: Updating club failed.
+ */
+
+/**
+ * @swagger
+ * /clubs/requestJoinClub:
+ *   post:
+ *     summary: Request to join a club.
+ *     description: Allows a user to request membership in a specific club.
+ *     tags: [Clubs]
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: JWT token for user authentication.
+ *     requestBody:
+ *       description: Club membership request data
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               chatroomId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Join request sent successfully.
+ *       401:
+ *         description: Authorization header missing.
+ *       500:
+ *         description: Creating club failed.
+ */
+
+/**
+ * @swagger
+ * /clubs/acceptJoinRequest:
+ *   post:
+ *     summary: Accept a club join request.
+ *     description: Allows an admin to accept a user’s request to join a club.
+ *     tags: [Clubs]
+ *     requestBody:
+ *       description: Membership acceptance info
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *               chatroomId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Join request accepted successfully.
+ *       400:
+ *         description: Missing userId or chatroomId.
+ *       500:
+ *         description: Accepting join request failed.
+ */
+
+/**
+ * @swagger
+ * /clubs/rejectJoinRequest:
+ *   post:
+ *     summary: Reject a club join request.
+ *     description: Allows an admin to reject a user’s request to join a club.
+ *     tags: [Clubs]
+ *     requestBody:
+ *       description: Membership rejection info
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *               chatroomId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Join request rejected successfully.
+ *       400:
+ *         description: Missing userId or chatroomId.
+ *       500:
+ *         description: Rejecting join request failed.
+ */

@@ -4,14 +4,14 @@ class AppColors {
   // Primary colors
   static const Color primaryColor = Color(0xFF6D27D9); // Foreground color
   static const Color backgroundColor = Color(0xFF000611); // Background color
-  
+
   // Secondary colors
   static const Color accentColor = Color(0xFF9D4EDD);
   static const Color textPrimary = Colors.white;
   static const Color textSecondary = Color(0xFFB8B8B8);
   static const Color cardColor = Color(0xFF0A1128);
   static const Color dividerColor = Color(0xFF2E2E2E);
-  
+
   // Status colors
   static const Color successColor = Color(0xFF4CAF50);
   static const Color errorColor = Color(0xFFE53935);
@@ -70,7 +70,10 @@ class AppTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.errorColor, width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -84,9 +87,7 @@ class AppTheme {
         ),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: AppColors.primaryColor,
-        ),
+        style: TextButton.styleFrom(foregroundColor: AppColors.primaryColor),
       ),
       dividerTheme: const DividerThemeData(
         color: AppColors.dividerColor,

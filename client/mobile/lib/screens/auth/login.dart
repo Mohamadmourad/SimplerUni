@@ -1,10 +1,14 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:senior_project/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
-import 'package:senior_project/services/auth_service.dart';
+import 'package:senior_project/functions/auth/login.dart';
 import 'package:senior_project/components/form_input.dart';
 import 'package:senior_project/components/auth_button.dart';
 import 'package:senior_project/components/app_title.dart';
+import 'package:senior_project/providers/user_provider.dart';
+import 'package:provider/provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -17,6 +21,9 @@ class LoginPageState extends State<LoginPage> {
   final formKey = GlobalKey<FormState>();
   bool isLoading = false;
 
+  String emailError = "";
+  String passwordError = "";
+
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
@@ -27,7 +34,7 @@ class LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  Future<void> login() async {
+  Future<void> handleLogin() async {
     if (!formKey.currentState!.validate()) {
       return;
     }
@@ -37,60 +44,55 @@ class LoginPageState extends State<LoginPage> {
     });
 
     try {
-      final result = await AuthService.login(
-        emailController.text,
-        passwordController.text,
-      );
-
-      if (result['success']) {
-        final authToken = result['token'];
-
-        if (result.containsKey('requiresProfileCompletion') &&
-            result['requiresProfileCompletion']) {
-          context.go(
-            '/complete-profile',
-            extra: {'email': emailController.text, 'authToken': authToken},
-          );
-        } else {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Login successful!')));
-
-          context.go(
-            '/otp-verify',
-            extra: {'email': emailController.text, 'authToken': authToken},
-          );
+      String email = emailController.text;
+      String password = passwordController.text;
+      setState(() {
+        if (email.isEmpty) {
+          emailError = "Please enter your email";
+          return;
+        } else if (!email.contains('@')) {
+          emailError = "Please enter a valid email";
+          return;
         }
+        if (password.isEmpty) {
+          passwordError = "Please enter your password";
+          return;
+        }
+      });
+      final result = await loginMethode(email, password, context: context);
+
+      if (result['statusCode'] == 200) {
+        // Update user provider after successful login
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        await userProvider.fetchUserFromAPI(); // Fetch and update user data
+
+        context.go('/home');
+      } else if (result['statusCode'] == 201) {
+        context.go('/complete-profile', extra: {'email': email});
+      } else if (result['statusCode'] == 401) {
+        final error = result["error"];
+        Map<String, dynamic> decodedError = jsonDecode(error);
+        context.go(
+          '/otp-verify',
+          extra: {
+            'email': emailController.text,
+            'authToken': decodedError["authToken"],
+          },
+        );
       } else {
-        if (result.containsKey('requiresEmailVerification') &&
-            result['requiresEmailVerification']) {
-          final authToken = result['token'];
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Please verify your email before logging in'),
-            ),
-          );
-
-          context.go(
-            '/otp-verify',
-            extra: {'email': emailController.text, 'authToken': authToken},
-          );
-        } else if (result.containsKey('field')) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(result['message'])));
-        } else {
-          // General error
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(result['message'] ?? 'Login failed')),
-          );
-        }
+        final error = result["error"];
+        Map<String, dynamic> decodedError = jsonDecode(error);
+        setState(() {
+          if (decodedError["email"] != "")
+            emailError = decodedError['errors']["email"];
+          if (decodedError["password"] != "")
+            passwordError = decodedError['errors']["password"];
+        });
       }
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Login error: $e')));
+      ).showSnackBar(SnackBar(content: Text('Login error: ${e.toString()}')));
     }
 
     setState(() {
@@ -123,49 +125,28 @@ class LoginPageState extends State<LoginPage> {
                     style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 32),
-
-                  // Email
                   FormInput(
                     controller: emailController,
                     labelText: 'Email',
                     prefixIcon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Please enter a valid email';
-                      }
-                      return null;
-                    },
+                    error: emailError,
                   ),
                   const SizedBox(height: 16),
-
-                  // Password
                   FormInput(
                     controller: passwordController,
                     labelText: 'Password',
                     prefixIcon: Icons.lock_outline,
                     isPassword: true,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
-                      }
-                      return null;
-                    },
+                    error: passwordError,
                   ),
                   const SizedBox(height: 24),
-
-                  // Login Button
                   AuthButton(
                     text: 'LOG IN',
                     isLoading: isLoading,
-                    onPressed: login,
+                    onPressed: handleLogin,
                   ),
                   const SizedBox(height: 16),
-
-                  // Don't have an account? Sign up
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

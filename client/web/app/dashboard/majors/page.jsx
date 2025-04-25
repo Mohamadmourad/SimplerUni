@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
+import { checkAuth } from "@/app/functions/checkAuth";
+import { useRouter } from "next/navigation";
 
 const AddMajors = () => {
   const [majors, setMajors] = useState([]);
@@ -14,14 +16,23 @@ const AddMajors = () => {
   const [uploadedMajors, setUploadedMajors] = useState([]);
   const [selectedMajors, setSelectedMajors] = useState([]);
   const [showPreview, setShowPreview] = useState(false);
+   const router = useRouter();
 
   useEffect(() => {
     fetchMajors();
+    const verify = async () => {
+         try{
+          const result = await checkAuth("majorsPage");
+          result == false ? router.push("/") : null;
+        }
+          catch(e){router.push("/")}
+        };
+        verify();
   }, []);
 
   const fetchMajors = async () => {
     try {
-      const result = await axios.get("http://localhost:5000/university/getAllMajors", { withCredentials: true });
+      const result = await axios.get(NEXT_PUBLIC_END_POINT + "/university/getAllMajors", { withCredentials: true });
       console.log("API Response:", result.data.data);
       setMajors(Array.isArray(result.data.data) ? result.data.data : []);
     } catch (err) {
@@ -39,7 +50,7 @@ const AddMajors = () => {
     setLoading(true);
     try {
       await axios.post(
-        "http://localhost:5000/university/addMajor", 
+        NEXT_PUBLIC_END_POINT + "/university/addMajor", 
         { major: name.trim() }, 
         { withCredentials: true }
       );
@@ -196,7 +207,7 @@ const AddMajors = () => {
       
       // Make sure we're sending the array of major names, not indices
       await axios.post(
-        "http://localhost:5000/university/addMajor", 
+        NEXT_PUBLIC_END_POINT + "/university/addMajor", 
         { majors: majorsToAdd }, 
         { withCredentials: true }
       );

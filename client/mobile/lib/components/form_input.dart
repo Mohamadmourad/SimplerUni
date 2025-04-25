@@ -7,6 +7,7 @@ class FormInput extends StatefulWidget {
   final bool isPassword;
   final TextInputType keyboardType;
   final String? Function(String?)? validator;
+  final String error;
 
   const FormInput({
     super.key,
@@ -15,6 +16,7 @@ class FormInput extends StatefulWidget {
     required this.prefixIcon,
     this.isPassword = false,
     this.keyboardType = TextInputType.text,
+    required this.error,
     this.validator,
   });
 
@@ -27,7 +29,10 @@ class FormInputState extends State<FormInput> {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextFormField(
       controller: widget.controller,
       keyboardType: widget.keyboardType,
       obscureText: widget.isPassword && !isPasswordVisible,
@@ -46,8 +51,14 @@ class FormInputState extends State<FormInput> {
                 },
               )
             : null,
-      ),
-      validator: widget.validator,
+      )
+    ),
+    if (widget.error.isNotEmpty)
+    Text(
+      widget.error,
+      style: TextStyle(color: Colors.red),
+    ),
+      ],
     );
   }
 }

@@ -30,6 +30,7 @@ export default function DashboardLayout({ children }) {
 
   const navigationItems = [
     { name: "Home", icon: Home, path: "/dashboard", permission: null }, 
+    { name: "Manage Users", icon: Users, path: "/dashboard/usersManagement", permission: "usersManagementPage" },
     { name: "Analytics", icon: CalculatorIcon, path: "/dashboard/analytics", permission: "analyticsPage" },
     { name: "Majors", icon: FilePlus, path: "/dashboard/majors", permission: "majorsPage" },
     { name: "Campuses", icon: Building, path: "/dashboard/campuses", permission: "campusesPage" },
@@ -49,7 +50,7 @@ export default function DashboardLayout({ children }) {
   useEffect(() => {
     const fetchPermissions = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/admin/getAdmin", {
+        const response = await axios.get(NEXT_PUBLIC_END_POINT + "/admin/getAdmin", {
           withCredentials: true, 
         });
         if (response.data.permissions.length > 0) {
@@ -67,7 +68,7 @@ export default function DashboardLayout({ children }) {
   useEffect(() => {}, [permissions]);
 
   const handleSignOut = async() => {
-    await axios.post("http://localhost:5000/university/logout", {},{withCredentials: true})
+    await axios.post(NEXT_PUBLIC_END_POINT + "/university/logout", {},{withCredentials: true})
     router.push("/auth/login");
   };
 

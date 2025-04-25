@@ -2,13 +2,15 @@ const AWS = require("aws-sdk");
 const Papa = require("papaparse");
 const XLSX = require("xlsx");
 const fs = require("fs");
+const path = require("path");
+
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACESS_KEY,
+  signatureVersion: "v4",
+});
 
 module.exports.uploadDocument = async (fileData, userId) => {
-  const s3 = new AWS.S3({
-    accessKeyId: process.env.AWS_ACESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACESS_KEY,
-    signatureVersion: "v4",
-  });
   const regex = /^data:(image\/[a-zA-Z]*);base64,(.*)$/;
   const match = fileData.match(regex);
   if (!match) {
@@ -90,3 +92,30 @@ module.exports.uploadMajorsDocument = async(req,res)=>{
   }
 }
 
+exports.uploadDocumentToS3 = async (req, res) => {
+  try {
+    const { fileName, fileData, mimeType, fieldName } = req.body;
+
+    const buffer = Buffer.from(fileData, 'base64');
+    if (buffer.length > 25 * 1024 * 1024) {
+      return res.status(400).json({ error: 'File size exceeds limit' });
+    }
+
+    const extension = fileName.split('.').pop();
+    const key = `${req.userId || 'anon'}-${Date.now()}.${extension}`;
+    console.log(key);
+
+    await s3.putObject({
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: key,
+      Body: buffer,
+      ContentType: mimeType
+    }).promise();
+
+    const url = `https://${process.env.CLOUDFRONT_DOMAIN}/${key}`;
+    return res.status(200).json({ url });
+  } catch (error) {
+    console.error('S3 Upload error:', error);
+    res.status(500).json({ error: 'Failed to upload' });
+  }
+};

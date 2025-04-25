@@ -4,6 +4,8 @@ import axios from "axios";
 import { Image as ImageIcon } from 'lucide-react';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { checkAuth } from "@/app/functions/checkAuth";
+import { useRouter } from "next/navigation";
 
 const News = () => {
   const titleRef = useRef(null);
@@ -12,14 +14,23 @@ const News = () => {
   const [preview, setPreview] = useState("");
   const [loading, setLoading] = useState(false);
   const [news, setNews] = useState([]);
+  const router = useRouter();
 
   useEffect(() => {
     fetchNews();
+    const verify = async () => {
+             try{
+              const result = await checkAuth("newsPage");
+              result == false ? router.push("/") : null;
+            }
+              catch(e){router.push("/")}
+            };
+            verify();
   }, []);
 
   const fetchNews = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/news/getAllNews", {
+      const response = await axios.get(NEXT_PUBLIC_END_POINT + "/news/getAllNews", {
         withCredentials: true
       });
       setNews(response.data); 
@@ -56,7 +67,7 @@ const News = () => {
 
     try {
       await axios.post(
-        "http://localhost:5000/news/createNews",
+        NEXT_PUBLIC_END_POINT + "/news/createNews",
         {
           title,
           content,

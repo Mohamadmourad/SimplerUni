@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
+import { useRouter } from 'next/navigation';
+import { checkAuth } from "@/app/functions/checkAuth";
 
 const AddCampuses = () => {
   const [campuses, setCampuses] = useState([]);
@@ -14,14 +16,23 @@ const AddCampuses = () => {
   const [uploadedCampuses, setUploadedCampuses] = useState([]);
   const [selectedCampuses, setSelectedCampuses] = useState([]);
   const [showPreview, setShowPreview] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     fetchCampuses();
+    const verify = async () => {
+         try{
+          const result = await checkAuth("campususPage");
+          result == false ? router.push("/") : null;
+        }
+          catch(e){router.push("/")}
+        };
+        verify();
   }, []);
 
   const fetchCampuses = async () => {
     try {
-      const result = await axios.get("http://localhost:5000/university/getAllCampsus", { withCredentials: true });
+      const result = await axios.get(NEXT_PUBLIC_END_POINT + "/university/getAllCampsus", { withCredentials: true });
       console.log("API Response:", result.data.data);
       setCampuses(Array.isArray(result.data.data) ? result.data.data : []);
     } catch (err) {
@@ -40,7 +51,7 @@ const AddCampuses = () => {
     setLoading(true);
     try {
       await axios.post(
-        "http://localhost:5000/university/addCampus",
+        NEXT_PUBLIC_END_POINT + "/university/addCampus",
         { campus: name.trim() },
         { withCredentials: true }
       );
@@ -199,7 +210,7 @@ const AddCampuses = () => {
       
       // Make sure we're sending the array with the correct property name: campusGroup
       await axios.post(
-        "http://localhost:5000/university/addCampus", 
+        NEXT_PUBLIC_END_POINT + "/university/addCampus", 
         { campususGroup: campusesToAdd }, 
         { withCredentials: true }
       );

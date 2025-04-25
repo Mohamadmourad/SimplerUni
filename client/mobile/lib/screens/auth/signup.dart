@@ -1,7 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:senior_project/functions/auth/register.dart';
 import 'package:senior_project/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
-import 'package:senior_project/services/auth_service.dart';
 import 'package:senior_project/components/form_input.dart';
 import 'package:senior_project/components/auth_button.dart';
 import 'package:senior_project/components/app_title.dart';
@@ -16,6 +18,9 @@ class SignupPage extends StatefulWidget {
 class SignupPageState extends State<SignupPage> {
   final formKey = GlobalKey<FormState>();
   bool isLoading = false;
+  String usernameError = "";
+  String emailError = "";
+  String passwordError = "";
 
   final usernameController = TextEditingController();
   final emailController = TextEditingController();
@@ -24,6 +29,7 @@ class SignupPageState extends State<SignupPage> {
 
   @override
   void dispose() {
+    usernameController.dispose();
     emailController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
@@ -40,34 +46,71 @@ class SignupPageState extends State<SignupPage> {
     });
 
     try {
-      
-      String? authToken = await AuthService.signUp(
-        emailController.text,
-        passwordController.text,
-        usernameController.text,
-      );
-      
-      if (authToken != null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Sign up successful!')));
+      String username = usernameController.text;
+      String email = emailController.text;
+      String password = passwordController.text;
 
-        // Send OTP after successful signup
-        await AuthService.sendOtp(emailController.text);
-        
+      setState(() {
+        if (username.isEmpty) {
+          usernameError = "Please enter your username";
+          return;
+        }
+        if (username.length < 3) {
+          usernameError = "Username must be at least 3 characters";
+          return;
+        }
+        if (email.isEmpty) {
+          emailError = "Please enter your email";
+          return;
+        } else if (!email.contains('@')) {
+          emailError = "Please enter a valid email";
+          return;
+        }
+        if (password.isEmpty) {
+          passwordError = "Please enter your password";
+          return;
+        } else if (password.length < 6) {
+          passwordError = "Password must be at least 6 characters";
+          return;
+        } else if (password != confirmPasswordController.text) {
+          passwordError = "Passwords mismatch";
+          return;
+        }
+      });
+
+      final result = await sign_up(email, password, username, context: context);
+
+      if (result["statusCode"] == 200) {
         context.go(
           '/otp-verify',
-          extra: {'email': emailController.text, 'authToken': authToken},
+          extra: {
+            'email': emailController.text,
+            'authToken': result["data"]["authToken"],
+          },
+        );
+      } else if (result["statusCode"] == 401) {
+        final error = result["error"];
+        Map<String, dynamic> decodedError = jsonDecode(error);
+        context.go(
+          '/otp-verify',
+          extra: {
+            'email': emailController.text,
+            'authToken': decodedError["authToken"],
+          },
         );
       } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('User already exists')));
+        final error = result["error"];
+        Map<String, dynamic> decodedError = jsonDecode(error);
+        setState(() {
+          if (decodedError["email"] != "") emailError = decodedError["email"];
+          if (decodedError["username"] != "")
+            usernameError = decodedError["username"];
+          if (decodedError["password"] != "")
+            passwordError = decodedError["password"];
+        });
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Network Error: $e')));
+      print(e);
     }
 
     setState(() {
@@ -107,15 +150,7 @@ class SignupPageState extends State<SignupPage> {
                     labelText: 'Username',
                     prefixIcon: Icons.person_outline,
                     keyboardType: TextInputType.name,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your username';
-                      }
-                      if (value.length < 3) {
-                        return 'Username must be at least 3 characters';
-                      }
-                      return null;
-                    },
+                    error: usernameError,
                   ),
                   const SizedBox(height: 16),
                   // Email
@@ -124,62 +159,31 @@ class SignupPageState extends State<SignupPage> {
                     labelText: 'Email',
                     prefixIcon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Please enter a valid email';
-                      }
-                      return null;
-                    },
+                    error: emailError,
                   ),
                   const SizedBox(height: 16),
-
-                  // Password
                   FormInput(
                     controller: passwordController,
                     labelText: 'Password',
                     prefixIcon: Icons.lock_outline,
+                    error: passwordError,
                     isPassword: true,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a password';
-                      }
-                      if (value.length < 6) {
-                        return 'Password must be at least 6 characters';
-                      }
-                      return null;
-                    },
                   ),
                   const SizedBox(height: 16),
-
-                  // Confirm Password
                   FormInput(
                     controller: confirmPasswordController,
                     labelText: 'Confirm Password',
                     prefixIcon: Icons.lock_outline,
+                    error: passwordError,
                     isPassword: true,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please confirm your password';
-                      }
-                      if (value != passwordController.text) {
-                        return 'Passwords do not match';
-                      }
-                      return null;
-                    },
                   ),
                   const SizedBox(height: 24),
-
-                  // Sign Up Button
                   AuthButton(
                     text: 'SIGN UP',
                     isLoading: isLoading,
                     onPressed: signUp,
                   ),
                   const SizedBox(height: 16),
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

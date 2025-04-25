@@ -32,10 +32,11 @@ module.exports.checkPermission = async (req, res)=>{
     const permissionsRequest = await db.query(`
       SELECT p.name FROM web_admins AS a JOIN roles AS r ON a.roleid = r.roleid JOIN role_permissions AS p ON r.roleid = p.roleid WHERE a.adminid = $1`, [adminId]);
     const permissions = permissionsRequest.rows;
-    const isAllowed = permissions.some(p => p.name === permission);
-    if(isAllowed)
-      return res.status(200).json({message: "Authorized"});
-    return res.status(401).json({message: "Unauthorized"});
+    const isAllowed = permissions.some(p => p.name === permission || p.name === "universityDashboard");
+    if(isAllowed){
+      return res.status(200).json(true);
+    }
+    return res.status(401).json(false);
   }
   catch(e){
     console.log("Unauthorized action");

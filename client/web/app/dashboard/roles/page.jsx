@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { checkAuth } from "@/app/functions/checkAuth";
+import { useRouter } from "next/navigation";
 
 const predefinedPermissions = [
   "rolesPage",
@@ -8,7 +10,8 @@ const predefinedPermissions = [
   "domainsPage",
   "majorsPage",
   "campususPage",
-  "analyticsPage"
+  "analyticsPage",
+  "usersManagementPage"
 ];
 
 const Roles = () => {
@@ -19,10 +22,11 @@ const Roles = () => {
   const [error, setError] = useState("");
   const [editingRole, setEditingRole] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const getRolesData = async () => {
-      const result = await axios.get("http://localhost:5000/role/getRoles", { withCredentials: true });
+      const result = await axios.get(NEXT_PUBLIC_END_POINT + "/role/getRoles", { withCredentials: true });
       const rolesArray = result.data;
       const temp = [];
       for (let role of rolesArray) {
@@ -36,6 +40,15 @@ const Roles = () => {
       setRoles(temp);
     }
     getRolesData();
+
+    const verify = async () => {
+      try{
+       const result = await checkAuth("rolesPage");
+       result == false ? router.push("/") : null;
+     }
+       catch(e){router.push("/")}
+     };
+     verify();
   }, []);
 
   const handleAddRole = async () => {
@@ -45,7 +58,7 @@ const Roles = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/role/addRole",
+        NEXT_PUBLIC_END_POINT + "/role/addRole",
         { roleName: roleName.trim(), permissions: selectedPermissions },
         { withCredentials: true }
       );

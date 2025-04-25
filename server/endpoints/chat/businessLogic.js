@@ -1,5 +1,5 @@
 const {db} = require("../../db");
-const { verifyToken } = require("../university/helper");
+const { verifyToken } = require("../user/helper");
 
 module.exports.createChatroom = async (name, universityId)=>{
     try{
@@ -56,3 +56,77 @@ module.exports.addToChatroom = async (req, res)=>{
         res.status(500).json("failed");
     }
 }
+
+// module.exports.sendMessage = async (type, content, chatroomId, token)=>{
+//     try{
+//        const { userId, universityId } = verifyToken(token);
+//        const { rows } = await db.query(
+//         `SELECT created_at FROM messages WHERE userId = $1 ORDER BY created_at DESC LIMIT 1`, [userId]
+//     );
+
+//     if (rows.length > 0) {
+//         const lastMessageTime = new Date(rows[0].created_at);
+//         const now = new Date();
+//         const diffMs = now - lastMessageTime;
+
+//         if (diffMs < 5 * 60 * 1000) {
+//             const remaining = 5 * 60 * 1000 - diffMs;
+//             const minutesLeft = Math.floor(remaining / 60000);
+//             const secondsLeft = Math.floor((remaining % 60000) / 1000);
+
+//             console.log(`You can’t send a message yet. Time left: ${minutesLeft}m ${secondsLeft}s`);
+//         }
+//     }
+//        await db.query("INSERT INTO messages(type,content,chatroomId, userId) VALUES ($1,$2,$3,$4)",[type, content, chatroomId, userId]);
+//        console.log("message insertion complete")
+//     }
+//     catch(e){
+//         console.log("error while sending message " + e);
+//     }
+// }
+
+module.exports.getMessages = async (req, res)=>{
+  const { chatroomId, before } = req.body;
+  console.log(before);
+  try{
+    const messages = await db.query(
+        `
+        SELECT * FROM messages as m JOIN chatrooms as c
+        ON m.chatroomid = c.chatroomid 
+        JOIN users as u
+        ON u.userid = m.userid
+        WHERE c.chatroomid = $1
+        AND m.created_at < $2
+        ORDER BY m.created_at DESC
+        LIMIT $3
+        `,
+        [chatroomId, before || new Date(), 10]
+    );
+    return res.status(200).json(messages.rows);
+  }
+  catch(e){
+    console.log("error while getting messages", e);
+    return res.status(500).json("failed");
+  }
+}
+
+module.exports.sendMessage = async (chatroomId, userId, content,type) => {
+    if (!chatroomId || !userId || !content) {
+      return;
+    }
+    try {
+      const result = await db.query(
+        `
+        INSERT INTO messages (chatroomid, userid, content,type)
+        VALUES ($1, $2, $3,$4)
+        RETURNING *;
+        `,
+        [chatroomId, userId, content,type]
+      );
+      return result.rows[0];
+    } catch (err) {
+      console.error('Error while sending message:', err);
+      return;
+    }
+  };
+  
