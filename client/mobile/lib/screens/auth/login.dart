@@ -7,6 +7,8 @@ import 'package:senior_project/functions/auth/login.dart';
 import 'package:senior_project/components/form_input.dart';
 import 'package:senior_project/components/auth_button.dart';
 import 'package:senior_project/components/app_title.dart';
+import 'package:senior_project/providers/user_provider.dart';
+import 'package:provider/provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -60,6 +62,10 @@ class LoginPageState extends State<LoginPage> {
       final result = await loginMethode(email, password, context: context);
 
       if (result['statusCode'] == 200) {
+        // Update user provider after successful login
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        await userProvider.fetchUserFromAPI(); // Fetch and update user data
+
         context.go('/home');
       } else if (result['statusCode'] == 201) {
         context.go('/complete-profile', extra: {'email': email});

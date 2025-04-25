@@ -17,7 +17,7 @@ export default function RequestAccess() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try{
-      await axios.post("http://localhost:5000/university/universityRequest",{
+      await axios.post(NEXT_PUBLIC_END_POINT + "/university/universityRequest",{
         name: university,
         email,
         phoneNumber: phone, 

@@ -30,7 +30,7 @@ Future<User?> fetchCurrentUserData() async {
         print("Unexpected response type: ${responseBody.runtimeType}");
         return null;
       }
-      print("MEOWWWWWWWWWWW: $userData");
+
       User user = User(
         userId: userData['userid']?.toString(),
         username: userData['username'],

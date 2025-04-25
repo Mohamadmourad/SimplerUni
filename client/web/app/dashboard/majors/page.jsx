@@ -32,7 +32,7 @@ const AddMajors = () => {
 
   const fetchMajors = async () => {
     try {
-      const result = await axios.get("http://localhost:5000/university/getAllMajors", { withCredentials: true });
+      const result = await axios.get(NEXT_PUBLIC_END_POINT + "/university/getAllMajors", { withCredentials: true });
       console.log("API Response:", result.data.data);
       setMajors(Array.isArray(result.data.data) ? result.data.data : []);
     } catch (err) {
@@ -50,7 +50,7 @@ const AddMajors = () => {
     setLoading(true);
     try {
       await axios.post(
-        "http://localhost:5000/university/addMajor", 
+        NEXT_PUBLIC_END_POINT + "/university/addMajor", 
         { major: name.trim() }, 
         { withCredentials: true }
       );
@@ -207,7 +207,7 @@ const AddMajors = () => {
       
       // Make sure we're sending the array of major names, not indices
       await axios.post(
-        "http://localhost:5000/university/addMajor", 
+        NEXT_PUBLIC_END_POINT + "/university/addMajor", 
         { majors: majorsToAdd }, 
         { withCredentials: true }
       );

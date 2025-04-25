@@ -16,7 +16,7 @@ export default function AdminLogin() {
   useEffect(()=>{
     const check = async()=>{
       try{
-        await axios.get("http://localhost:5000/university/checkLogin",{ withCredentials: true });
+        await axios.get(NEXT_PUBLIC_END_POINT + "/university/checkLogin",{ withCredentials: true });
         router.push("/dashboard")
       }
       catch(e){
