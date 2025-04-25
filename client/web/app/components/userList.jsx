@@ -1,7 +1,5 @@
-// components/UserList.jsx
-
 import React from 'react';
-import UserCard from './UserCard';
+import UserCard from './userCard';
 import { AlertTriangle } from 'lucide-react';
 
 const UserList = ({ users, loading, onDelete, onToggleBan }) => {
