@@ -7,6 +7,7 @@ Future<Map<String, dynamic>> completeUserProfile(
   String campusId, {
   required Map<String, dynamic> optionalData,
 }) async {
+  print(optionalData);
   try {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final String? authToken = prefs.getString('authToken');

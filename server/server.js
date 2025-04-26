@@ -15,6 +15,7 @@ const newsRoutes = require("./endpoints/news/routes");
 const documentsRoutes = require("./endpoints/documents upload/routes");
 const chatRoutes = require("./endpoints/chat/routes");
 const questionRoutes = require("./endpoints/questions/routes");
+const clubRoutes = require("./endpoints/club/routes");
 
 const { addSuperAdmin } = require('./endpoints/admin/businessLogic');
 const { connectWebSocket } = require('./webSocket');
@@ -75,3 +76,4 @@ app.use("/news", newsRoutes);
 app.use("/document", documentsRoutes);
 app.use("/chat", chatRoutes);
 app.use("/questions",questionRoutes);
+app.use("/clubs",clubRoutes);

@@ -93,25 +93,6 @@ const tables =
         );`
     },
     {
-        name:"clubs",
-        schema:`CREATE TABLE clubs (
-        clubId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-        name VARCHAR(40),
-        description TEXT,
-        room VARCHAR(20),
-        status VARCHAR(30),
-        adminId UUID REFERENCES users(userId) ON DELETE CASCADE,
-        created_at TIMESTAMPTZ DEFAULT now()
-        );`
-    },
-    {
-        name:"club_members",
-        schema:`CREATE TABLE club_members (
-        clubId UUID REFERENCES clubs(clubId) ON DELETE CASCADE,
-        userId UUID REFERENCES users(userId) ON DELETE CASCADE
-        );`
-    },
-    {
         name:"quizes",
         schema:`CREATE TABLE quizes (
         quizId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -239,6 +220,28 @@ const tables =
         schema:`CREATE TABLE question_upvotes (
         questionId UUID REFERENCES questions(questionId) ON DELETE CASCADE,
         userId UUID REFERENCES users(userId) ON DELETE CASCADE
+        );`
+    },
+    {
+        name:"clubs",
+        schema:`CREATE TABLE clubs (
+        clubId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+        name TEXT,
+        description TEXT,
+        room TEXT,
+        status TEXT,
+        adminId UUID REFERENCES users(userId),
+        chatroomId UUID REFERENCES chatrooms(chatroomId) ON DELETE CASCADE,
+        universityId UUID REFERENCES universities(universityId) ON DELETE CASCADE,
+        created_at TIMESTAMPTZ DEFAULT now()
+        );`
+    },
+    {
+        name:"club_members",
+        schema:`CREATE TABLE club_members (
+        clubId UUID REFERENCES clubs(clubId) ON DELETE CASCADE,
+        userId UUID REFERENCES users(userId) ON DELETE CASCADE,
+        status TEXT
         );`
     },
 ]

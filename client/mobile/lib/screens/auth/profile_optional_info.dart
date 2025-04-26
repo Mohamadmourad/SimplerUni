@@ -60,9 +60,11 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
   }
 
   Future<void> selectImage() async {
+    print("imageUploaded");
     try {
       await handleImageUpload((cdnUrl) {
         final String url = jsonDecode(cdnUrl)['url'];
+        print(url);
         setState(() {
           uploadedImageUrl = url;
         });
@@ -99,7 +101,7 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
         optionalData['bio'] = bioController.text;
       }
       if (uploadedImageUrl != null) {
-        optionalData['profileImageUrl'] = uploadedImageUrl;
+        optionalData['profilePicture'] = uploadedImageUrl;
       }
 
       final result = await completeUserProfile(
