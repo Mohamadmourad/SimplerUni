@@ -82,7 +82,15 @@ class QuestionsPageState extends State<QuestionsPage> {
         elevation: 0,
         actions: [
           IconButton(
+            icon: const Icon(Icons.add),
+            tooltip: 'Add Question',
+            onPressed: () {
+              showNewQuestionDialog(context);
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.filter_list),
+            tooltip: 'Filter Questions',
             onPressed: () {
               showModalBottomSheet(
                 context: context,
@@ -118,13 +126,6 @@ class QuestionsPageState extends State<QuestionsPage> {
                 onViewDetails: viewQuestionDetails,
                 onRefresh: refreshQuestions,
               ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showNewQuestionDialog(context);
-        },
-        backgroundColor: AppColors.primaryColor,
-        child: const Icon(Icons.add),
-      ),
     );
   }
 

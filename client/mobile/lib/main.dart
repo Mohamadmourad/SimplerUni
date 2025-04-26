@@ -9,6 +9,7 @@ import 'package:senior_project/screens/auth/otp_verification_page.dart';
 import 'package:senior_project/screens/auth/signup.dart';
 import 'package:senior_project/screens/auth/login.dart';
 import 'package:senior_project/screens/home/homepage.dart';
+import 'package:senior_project/screens/profile/profile_page.dart';
 import 'package:senior_project/theme/app_theme.dart';
 
 void main() async {
@@ -97,6 +98,14 @@ class MyApp extends StatelessWidget {
                     chatroomName: chatroomName,
                     chatroomId: chatroomId,
                   );
+                },
+              ),
+              // Add profile route for viewing other users' profiles
+              GoRoute(
+                path: '/profile/:userId',
+                builder: (context, state) {
+                  final userId = state.pathParameters['userId'];
+                  return ProfilePage(fromBottomNav: false, userId: userId);
                 },
               ),
             ],

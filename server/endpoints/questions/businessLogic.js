@@ -65,7 +65,7 @@ module.exports.getQuestions = async (req, res) => {
         LEFT JOIN question_upvotes uv ON uv.questionId = q.questionId AND uv.userId = $2
         LEFT JOIN question_answers qa ON qa.questionId = q.questionId
         WHERE q.universityId = $1
-        GROUP BY q.questionId, u.username, u.profilePicture, uv.userId
+        GROUP BY u.userid, q.questionId, u.username, u.profilePicture, uv.userId
         ${orderByClause};
         `;
 
@@ -178,11 +178,12 @@ module.exports.getAnswersForQuestion = async (req, res) => {
             qa.*,
             u.username,
             u.profilePicture,
-            u.isstudent
+            u.isstudent,
+            u.userid
         FROM question_answers qa
         LEFT JOIN users u ON u.userId = qa.userId
         WHERE qa.questionId = $1
-        ORDER BY qa.created_at ASC;
+        ORDER BY qa.created_at DESC;
       `,[questionId]);
       return res.status(200).json(result.rows);
     } catch (err) {

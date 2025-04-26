@@ -62,9 +62,8 @@ class LoginPageState extends State<LoginPage> {
       final result = await loginMethode(email, password, context: context);
 
       if (result['statusCode'] == 200) {
-        // Update user provider after successful login
         final userProvider = Provider.of<UserProvider>(context, listen: false);
-        await userProvider.fetchUserFromAPI(); // Fetch and update user data
+        await userProvider.fetchUserFromAPI(); 
 
         context.go('/home');
       } else if (result['statusCode'] == 201) {
