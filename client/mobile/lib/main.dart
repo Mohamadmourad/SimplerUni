@@ -4,11 +4,12 @@ import 'package:provider/provider.dart';
 import 'package:senior_project/providers/user_provider.dart';
 import 'package:senior_project/screens/chats/chat.dart';
 import 'package:senior_project/screens/auth/complete_profile.dart';
-import 'package:senior_project/screens/auth/optional_profile_info.dart';
+import 'package:senior_project/screens/auth/profile_optional_info.dart';
 import 'package:senior_project/screens/auth/otp_verification_page.dart';
 import 'package:senior_project/screens/auth/signup.dart';
 import 'package:senior_project/screens/auth/login.dart';
 import 'package:senior_project/screens/home/homepage.dart';
+import 'package:senior_project/screens/profile/profile_page.dart';
 import 'package:senior_project/theme/app_theme.dart';
 
 void main() async {
@@ -75,8 +76,8 @@ class MyApp extends StatelessWidget {
                 path: '/optional-profile-info',
                 builder: (context, state) {
                   final Map<String, dynamic> params =
-                      state.extra as Map<String, dynamic>;
-                  return OptionalProfileInfo(
+                      state.extra as Map<String, dynamic>? ?? {};
+                  return ProfileOptionalInfo(
                     email: params['email'] ?? '',
                     majorId: params['majorId'] ?? '',
                     campusId: params['campusId'] ?? '',
@@ -88,17 +89,25 @@ class MyApp extends StatelessWidget {
                 builder: (context, state) => const Homepage(),
               ),
               GoRoute(
-              path: '/chat/:chatroomName/:chatroomId',
-              builder: (context, state) {
-                final String chatroomName = state.pathParameters['chatroomName']!;
-                final String chatroomId = state.pathParameters['chatroomId']!;
-                return Chat(
-                  chatroomName: chatroomName,
-                  chatroomId: chatroomId,
-                );
-              },
-            ),
-
+                path: '/chat/:chatroomName/:chatroomId',
+                builder: (context, state) {
+                  final String chatroomName =
+                      state.pathParameters['chatroomName']!;
+                  final String chatroomId = state.pathParameters['chatroomId']!;
+                  return Chat(
+                    chatroomName: chatroomName,
+                    chatroomId: chatroomId,
+                  );
+                },
+              ),
+              // Add profile route for viewing other users' profiles
+              GoRoute(
+                path: '/profile/:userId',
+                builder: (context, state) {
+                  final userId = state.pathParameters['userId'];
+                  return ProfilePage(fromBottomNav: false, userId: userId);
+                },
+              ),
             ],
           );
           return MaterialApp.router(

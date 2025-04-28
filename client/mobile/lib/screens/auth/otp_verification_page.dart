@@ -112,7 +112,6 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
       errorMessage = null;
     });
 
-    // Using the new sendOtp function directly
     final result = await sendOtp(widget.email);
 
     setState(() {

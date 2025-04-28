@@ -12,8 +12,8 @@ module.exports.signup_post = async (req, res) => {
     password = await hashText(password);
     try{
         const user = await db.query('SELECT * FROM users WHERE email = $1', [email]);
-        
-        if(user.rows.length > 0 && user.rows.isBanned){
+
+        if(user.rows.length > 0 && user.rows[0].isBanned){
             return res.status(400).json({
                 errors:{
                     email:"this account is banned"
@@ -103,6 +103,7 @@ module.exports.login_post = async (req, res) => {
 
 module.exports.addAdditionalUserData = async (req, res)=>{
     const {majorId, campusId, optionalData} = req.body;
+    console.log(optionalData);
     const token = req.headers.authorization;
     if (!token) {
         return res.status(401).json({ error: "Authorization header missing" });
@@ -117,7 +118,10 @@ module.exports.addAdditionalUserData = async (req, res)=>{
         if(optionalData.bio){
             await db.query(`UPDATE users SET bio = $1 WHERE userid = $2`, [optionalData.bio, userId]); 
         }
-        
+        if(optionalData.profileImageUrl) {
+            
+            await db.query(`UPDATE users SET profilepicture = $1 WHERE userid = $2`, [optionalData.profileImageUrl, userId]);
+        }
         return res.status(200).json("data added succesfully");
     }
     catch(e){
@@ -283,3 +287,29 @@ module.exports.banUser = async (req, res) => {
     }
   };
   
+
+module.exports.getUserAccountInfo = async (req, res)=>{
+    try {
+        const { profileUserId } = req.params;
+
+        const result = await db.query(`
+            SELECT
+             u.userId,
+             u.username,
+             u.email,
+             u.isStudent,
+             u.bio,
+             u.profilePicture,
+             u.created_at,
+             c.name as campusName,
+             m.name as majorName,
+             un.name as universityName 
+             FROM users as u JOIN campusus as c ON u.campusId = c.campusId JOIN majors as m ON u.majorId = m.majorId JOIN universities as un ON u.universityId = un.universityId WHERE u.userId=$1`
+             ,[profileUserId]);
+
+        res.status(200).json(result.rows[0]);
+    } catch (error) {
+        console.error("Error getting profile info :", error);
+        res.status(500).json({ message: "internalServerError" });
+    }
+}

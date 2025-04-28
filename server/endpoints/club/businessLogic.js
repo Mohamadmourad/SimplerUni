@@ -1,0 +1,191 @@
+const {db} = require("../../db");
+const { createChatroom } = require("../chat/businessLogic");
+const { verifyToken } = require("../university/helper");
+const { verifyToken: mobileTokenVerify } = require("../user/helper");
+
+module.exports.acceptClubRequest = async (req, res) => {
+    const token = req.cookies.jwt;
+    const { clubId, name, description, room, adminId } = req.body;
+
+    if (!clubId) {
+        return res.status(400).json({ error: "Club ID is required" });
+    }
+
+    try {
+        const { universityId } = verifyToken(token);
+        const chatroomId = await createChatroom(name, universityId);
+        await db.query(
+            `UPDATE clubs SET name = $1, description = $2, room = $3, adminId = $4, chatroomId = $5, status = $6
+             WHERE clubId = $7`,
+            [name, description, room, adminId, chatroomId, "accepted", clubId]
+        );
+
+        res.status(200).json({ message: "Club updated successfully" });
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json("Updating club failed");
+    }
+};
+
+module.exports.makeClubRequest = async (req, res)=>{ 
+    const token = req.headers.authorization;
+    if (!token) {
+        return res.status(401).json({ error: "Authorization header missing" });
+    }
+    const {name, description} = req.body;
+     try {
+       const { universityId } = mobileTokenVerify(token);
+       await db.query(`INSERT INTO clubs (name, description,status,universityId) VALUES($1,$2,$3,$4)`,[name, description, "underReview", universityId]);
+       return res.status(200).json("creating added succefully");
+     }
+     catch(e){
+       console.log(e);
+       return res.status(500).json("creating club failed");
+     }
+}
+
+module.exports.getUnderReviewClubs = async (req, res) => {
+    const token = req.cookies.jwt;
+
+    try {
+        const { universityId } = verifyToken(token);
+        const { rows } = await db.query(
+            `SELECT * FROM clubs WHERE status = $1 AND universityId = $2`,
+            ["underReview", universityId]
+        );
+
+        res.status(200).json(rows);
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json("Failed to fetch under review clubs");
+    }
+};
+
+module.exports.getAcceptedClubs = async (req, res) => {
+    const token = req.cookies.jwt;
+
+    try {
+        const { universityId } = verifyToken(token);
+        const { rows } = await db.query(
+            `SELECT * FROM clubs WHERE status = $1 AND universityId = $2`,
+            ["accepted", universityId]
+        );
+
+        res.status(200).json(rows);
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json("Failed to fetch accepted clubs");
+    }
+};
+
+module.exports.requestJoinClub = async (req, res)=>{
+    const token = req.headers.authorization;
+    if (!token) {
+        return res.status(401).json({ error: "Authorization header missing" });
+    }
+    const { chatroomId } = req.body;
+     try {
+       const { userId, universityId } = mobileTokenVerify(token);
+       await db.query(`INSERT INTO club_members (userId, chatroomId,status) VALUES($1,$2,$3)`,[userId, chatroomId, "underReview"]);
+       return res.status(200).json("request sended succefully");
+     }
+     catch(e){
+       console.log(e);
+       return res.status(500).json("creating club failed");
+     }
+}
+
+module.exports.acceptJoinRequest = async (req, res) => {
+    const { userId, chatroomId } = req.body;
+
+    if (!userId || !chatroomId) {
+        return res.status(400).json({ error: "Missing userId or chatroomId" });
+    }
+    try {
+        await db.query(
+            `UPDATE club_members SET status = $1 WHERE userId = $2 AND chatroomId = $3`,
+            ["accepted", userId, chatroomId]
+        );
+        return res.status(200).json("Join request accepted successfully");
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json("Accepting join request failed");
+    }
+};
+
+module.exports.rejectJoinRequest = async (req, res) => {
+    const { userId, chatroomId } = req.body;
+
+    if (!userId || !chatroomId) {
+        return res.status(400).json({ error: "Missing userId or chatroomId" });
+    }
+    try {
+        await db.query(
+            `UPDATE club_members SET status = $1 WHERE userId = $2 AND chatroomId = $3`,
+            ["rejected", userId, chatroomId]
+        );
+
+        return res.status(200).json("Join request rejected successfully");
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json("Rejecting join request failed");
+    }
+};
+
+module.exports.getClubsUserNotIn = async (req, res) => {
+    const token = req.headers.authorization;
+
+    if (!token) {
+        return res.status(401).json({ error: "Authorization header missing" });
+    }
+
+    try {
+        const { userId, universityId } = mobileTokenVerify(token);
+
+        const { rows } = await db.query(
+            `
+            SELECT * FROM clubs 
+            WHERE universityId = $1 
+            AND clubId NOT IN (
+                SELECT c.clubId
+                FROM club_members cm
+                JOIN clubs c ON cm.chatroomId = c.chatroomId
+                WHERE cm.userId = $2
+            )
+            AND status = 'accepted'
+            `,
+            [universityId, userId]
+        );
+
+        return res.status(200).json(rows);
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json("Failed to fetch clubs user is not in");
+    }
+};
+
+module.exports.getClubsUserIsIn = async (req, res) => {
+    const token = req.headers.authorization;
+    if (!token) {
+        return res.status(401).json({ error: "Authorization header missing" });
+    }
+    try {
+        const { userId, universityId } = mobileTokenVerify(token);
+
+        const { rows } = await db.query(
+            `
+            SELECT c.*
+            FROM club_members cm
+            JOIN clubs c ON cm.chatroomId = c.chatroomId
+            WHERE cm.userId = $1 AND c.universityId = $2 AND cm.status = 'accepted'
+            `,
+            [userId, universityId]
+        );
+        return res.status(200).json(rows);
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json("Failed to fetch clubs user is in");
+    }
+};
+
+

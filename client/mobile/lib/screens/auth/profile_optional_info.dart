@@ -8,7 +8,16 @@ import 'dart:convert';
 import 'package:senior_project/functions/auth/complete_profile.dart';
 
 class ProfileOptionalInfo extends StatefulWidget {
-  const ProfileOptionalInfo({super.key});
+  final String email;
+  final String majorId;
+  final String campusId;
+
+  const ProfileOptionalInfo({
+    super.key,
+    required this.email,
+    required this.majorId,
+    required this.campusId,
+  });
 
   @override
   State<ProfileOptionalInfo> createState() => _ProfileOptionalInfoState();
@@ -27,25 +36,16 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
   @override
   void initState() {
     super.initState();
-    _loadSavedData();
+    selectedMajorId = widget.majorId;
+    selectedCampusId = widget.campusId;
+    _saveMajorAndCampus();
   }
 
-  Future<void> _loadSavedData() async {
+  Future<void> _saveMajorAndCampus() async {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
-      setState(() {
-        selectedMajorId = prefs.getString('selectedMajorId');
-        selectedCampusId = prefs.getString('selectedCampusId');
-      });
-
-      if (selectedMajorId == null || selectedCampusId == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please complete the required information first'),
-          ),
-        );
-        context.go('/complete-profile');
-      }
+      await prefs.setString('selectedMajorId', selectedMajorId ?? '');
+      await prefs.setString('selectedCampusId', selectedCampusId ?? '');
     } catch (e) {
       setState(() {
         errorMessage = e.toString();
@@ -60,9 +60,11 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
   }
 
   Future<void> selectImage() async {
+    print("imageUploaded");
     try {
       await handleImageUpload((cdnUrl) {
         final String url = jsonDecode(cdnUrl)['url'];
+        print(url);
         setState(() {
           uploadedImageUrl = url;
         });
@@ -99,7 +101,7 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
         optionalData['bio'] = bioController.text;
       }
       if (uploadedImageUrl != null) {
-        optionalData['profileImageUrl'] = uploadedImageUrl;
+        optionalData['profilePicture'] = uploadedImageUrl;
       }
 
       final result = await completeUserProfile(
@@ -109,25 +111,25 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
       );
 
       if (result['success']) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message'])),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(result['message'])));
         context.go('/home');
       } else {
         setState(() {
           errorMessage = result['message'];
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message'])),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(result['message'])));
       }
     } catch (e) {
       setState(() {
         errorMessage = e.toString();
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
     } finally {
       setState(() {
         isLoading = false;
@@ -194,20 +196,22 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
                           decoration: BoxDecoration(
                             color: Colors.grey[200],
                             shape: BoxShape.circle,
-                            image: hasProfileImage
-                                ? DecorationImage(
-                                    image: NetworkImage(uploadedImageUrl!),
-                                    fit: BoxFit.cover,
-                                  )
-                                : null,
+                            image:
+                                hasProfileImage
+                                    ? DecorationImage(
+                                      image: NetworkImage(uploadedImageUrl!),
+                                      fit: BoxFit.cover,
+                                    )
+                                    : null,
                           ),
-                          child: hasProfileImage
-                              ? null
-                              : const Icon(
-                                  Icons.add_a_photo,
-                                  size: 40,
-                                  color: AppColors.primaryColor,
-                                ),
+                          child:
+                              hasProfileImage
+                                  ? null
+                                  : const Icon(
+                                    Icons.add_a_photo,
+                                    size: 40,
+                                    color: AppColors.primaryColor,
+                                  ),
                         ),
                       ),
                       const SizedBox(height: 8),

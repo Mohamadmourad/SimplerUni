@@ -34,7 +34,7 @@ const UsersManagement = () => {
 
   const fetchUsers = async () => {
     try {
-      const result = await axios.get(NEXT_PUBLIC_END_POINT + "/user/getAllUniversityUsers", {
+      const result = await axios.get(process.env.NEXT_PUBLIC_END_POINT + "/user/getAllUniversityUsers", {
         withCredentials: true,
       });
   
@@ -73,13 +73,13 @@ const UsersManagement = () => {
     try {
       if (currentUser.banned) {
         await axios.put(
-          NEXT_PUBLIC_END_POINT + "/user/unbanUser",
+          process.env.NEXT_PUBLIC_END_POINT + "/user/unbanUser",
           { userid: id },
           { withCredentials: true }
         );
       } else {
         await axios.put(
-          NEXT_PUBLIC_END_POINT + "/user/banUser",
+          process.env.NEXT_PUBLIC_END_POINT + "/user/banUser",
           { userid: id },
           { withCredentials: true }
         );

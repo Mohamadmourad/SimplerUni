@@ -23,7 +23,6 @@ class ChatsPageState extends State<ChatsPage> {
     super.initState();
     loadChatrooms();
 
-    // Safely access user without non-null assertion
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       final User? user = userProvider.currentUser;

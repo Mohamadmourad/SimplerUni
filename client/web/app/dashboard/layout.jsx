@@ -50,7 +50,7 @@ export default function DashboardLayout({ children }) {
   useEffect(() => {
     const fetchPermissions = async () => {
       try {
-        const response = await axios.get(NEXT_PUBLIC_END_POINT + "/admin/getAdmin", {
+        const response = await axios.get(process.env.NEXT_PUBLIC_END_POINT + "/admin/getAdmin", {
           withCredentials: true, 
         });
         if (response.data.permissions.length > 0) {
@@ -68,7 +68,7 @@ export default function DashboardLayout({ children }) {
   useEffect(() => {}, [permissions]);
 
   const handleSignOut = async() => {
-    await axios.post(NEXT_PUBLIC_END_POINT + "/university/logout", {},{withCredentials: true})
+    await axios.post(process.env.NEXT_PUBLIC_END_POINT + "/university/logout", {},{withCredentials: true})
     router.push("/auth/login");
   };
 

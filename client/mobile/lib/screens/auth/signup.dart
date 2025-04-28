@@ -144,7 +144,6 @@ class SignupPageState extends State<SignupPage> {
                     style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 32),
-                  //Username
                   FormInput(
                     controller: usernameController,
                     labelText: 'Username',
@@ -153,7 +152,6 @@ class SignupPageState extends State<SignupPage> {
                     error: usernameError,
                   ),
                   const SizedBox(height: 16),
-                  // Email
                   FormInput(
                     controller: emailController,
                     labelText: 'Email',
