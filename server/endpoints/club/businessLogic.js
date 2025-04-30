@@ -149,7 +149,7 @@ module.exports.getClubsUserNotIn = async (req, res) => {
             AND clubId NOT IN (
                 SELECT c.clubId
                 FROM club_members cm
-                JOIN clubs c ON cm.chatroomId = c.chatroomId
+                JOIN clubs c ON cm.clubId = c.clubId
                 WHERE cm.userId = $2
             )
             AND status = 'accepted'
@@ -176,7 +176,7 @@ module.exports.getClubsUserIsIn = async (req, res) => {
             `
             SELECT c.*
             FROM club_members cm
-            JOIN clubs c ON cm.chatroomId = c.chatroomId
+            JOIN clubs c ON cm.clubId = c.clubId
             WHERE cm.userId = $1 AND c.universityId = $2 AND cm.status = 'accepted'
             `,
             [userId, universityId]
