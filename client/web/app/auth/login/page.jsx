@@ -31,7 +31,6 @@ export default function AdminLogin() {
     try{
     setisClickable(false);
     setError("");
-    console.log(process.env.NEXT_PUBLIC_END_POINT + "/university/login")
     await axios.post(process.env.NEXT_PUBLIC_END_POINT + "/university/login",{
       username,
       password
@@ -53,7 +52,7 @@ export default function AdminLogin() {
           <h2 className="text-3xl font-bold text-white">SimplerUni Dashboard</h2>
           <p className="text-gray-300 mt-2">Sign in to manage your university portal</p>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6" method="POST">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
               Username

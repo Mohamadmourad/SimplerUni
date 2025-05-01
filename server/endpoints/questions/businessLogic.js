@@ -65,7 +65,7 @@ module.exports.getQuestions = async (req, res) => {
         LEFT JOIN question_upvotes uv ON uv.questionId = q.questionId AND uv.userId = $2
         LEFT JOIN question_answers qa ON qa.questionId = q.questionId
         WHERE q.universityId = $1
-        GROUP BY q.questionId, u.username, u.profilePicture, uv.userId
+        GROUP BY q.questionId, u.username, u.profilePicture, uv.userId, u.userid
         ${orderByClause};
         `;
 
