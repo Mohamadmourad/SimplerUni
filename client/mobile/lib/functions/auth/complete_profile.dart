@@ -68,7 +68,6 @@ Future<List<Map<String, dynamic>>> fetchMajors() async {
     );
 
     if (response['statusCode'] == 200 && response['body'] != null) {
-      // Fix for proper data extraction - the API returns an object with a "data" property
       if (response['body'] is Map && response['body']['data'] != null) {
         List<dynamic> majorsData = response['body']['data'];
         return List<Map<String, dynamic>>.from(majorsData);
@@ -100,7 +99,6 @@ Future<List<Map<String, dynamic>>> fetchCampuses() async {
     );
 
     if (response['statusCode'] == 200 && response['body'] != null) {
-      // Fix for proper data extraction - the API returns an object with a "data" property
       if (response['body'] is Map && response['body']['data'] != null) {
         List<dynamic> campusesData = response['body']['data'];
         return List<Map<String, dynamic>>.from(campusesData);

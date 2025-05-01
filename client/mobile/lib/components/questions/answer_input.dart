@@ -45,7 +45,8 @@ class AnswerInput extends StatelessWidget {
             onPressed: isSubmitting ? null : onSubmit,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryColor,
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: const CircleBorder(),
+              padding: const EdgeInsets.all(16),
             ),
             child:
                 isSubmitting
@@ -57,7 +58,7 @@ class AnswerInput extends StatelessWidget {
                         color: Colors.white,
                       ),
                     )
-                    : const Text('Post'),
+                    : const Icon(Icons.send, color: Colors.white, size: 20),
           ),
         ],
       ),

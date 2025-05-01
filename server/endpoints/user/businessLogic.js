@@ -118,8 +118,9 @@ module.exports.addAdditionalUserData = async (req, res)=>{
         if(optionalData.bio){
             await db.query(`UPDATE users SET bio = $1 WHERE userid = $2`, [optionalData.bio, userId]); 
         }
-        if(optionalData.profilePicture){
-            await db.query(`UPDATE users SET profilePicture = $1 WHERE userid = $2`, [optionalData.profilePicture, userId]); 
+        if(optionalData.profileImageUrl) {
+            
+            await db.query(`UPDATE users SET profilepicture = $1 WHERE userid = $2`, [optionalData.profileImageUrl, userId]);
         }
         return res.status(200).json("data added succesfully");
     }

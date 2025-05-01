@@ -4,7 +4,7 @@ import axios from 'axios';
 export const checkAuth = async (requiredPermission) => {
   try {
     const response = await axios.post(
-      'http://localhost:5000/role/checkPermission',
+      process.env.NEXT_PUBLIC_END_POINT + '/role/checkPermission',
       { permission: requiredPermission },
       {
         withCredentials: true,
