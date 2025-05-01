@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:senior_project/modules/question.dart';
 import 'package:senior_project/theme/app_theme.dart';
 import 'package:senior_project/utils/time_utils.dart';
+import 'package:go_router/go_router.dart';
 
 class QuestionCard extends StatelessWidget {
   final Question question;
@@ -26,47 +27,55 @@ class QuestionCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: AppColors.primaryColor,
-                    backgroundImage:
-                        question.profilePicture != null
-                            ? NetworkImage(question.profilePicture!)
-                            : null,
-                    child:
-                        question.profilePicture == null
-                            ? Text(
-                              question.username.isNotEmpty
-                                  ? question.username[0].toUpperCase()
-                                  : '?',
-                              style: const TextStyle(color: Colors.white),
-                            )
-                            : null,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          question.username,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        Text(
-                          TimeAgoUtil.format(question.createdAt),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
+              GestureDetector(
+                // This will override the parent GestureDetector when tapped
+                onTap: () {
+                  if (question.userId != null) {
+                    context.push('/profile/${question.userId}');
+                  }
+                },
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: AppColors.primaryColor,
+                      backgroundImage:
+                          question.profilePicture != null
+                              ? NetworkImage(question.profilePicture!)
+                              : null,
+                      child:
+                          question.profilePicture == null
+                              ? Text(
+                                question.username.isNotEmpty
+                                    ? question.username[0].toUpperCase()
+                                    : '?',
+                                style: const TextStyle(color: Colors.white),
+                              )
+                              : null,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            question.username,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          Text(
+                            TimeAgoUtil.format(question.createdAt),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
               Text(

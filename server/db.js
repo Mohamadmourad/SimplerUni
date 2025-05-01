@@ -7,9 +7,7 @@ const db = new Client({
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
     database: process.env.DB_NAME,
-    // ssl: {
-    //     rejectUnauthorized: false, // Required for NeonDB
-    // },
+    ssl: { rejectUnauthorized: false },
 })
 
 const checkTableExists = async (tableName)=>{
@@ -93,17 +91,6 @@ const tables =
         );`
     },
     {
-        name:"quizes",
-        schema:`CREATE TABLE quizes (
-        quizId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-        content VARCHAR(40),
-        course VARCHAR(30),
-        tag VARCHAR(20),
-        userId UUID REFERENCES users(userId) ON DELETE CASCADE,
-        created_at TIMESTAMPTZ DEFAULT now()
-        );`
-    },
-    {
         name:"universities",
         schema:`CREATE TABLE universities (
         universityId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -113,8 +100,6 @@ const tables =
         created_at TIMESTAMPTZ DEFAULT now()
         );
         ALTER TABLE users ADD COLUMN universityId UUID REFERENCES universities(universityId) ON DELETE SET NULL;
-        ALTER TABLE quizes ADD COLUMN universityId UUID REFERENCES universities(universityId) ON DELETE SET NULL;
-        ALTER TABLE clubs ADD COLUMN universityId UUID REFERENCES universities(universityId) ON DELETE SET NULL;
         ALTER TABLE chatrooms ADD COLUMN universityId UUID REFERENCES universities(universityId) ON DELETE SET NULL;
         `
     },

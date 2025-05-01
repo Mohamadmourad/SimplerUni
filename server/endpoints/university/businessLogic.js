@@ -324,3 +324,81 @@ module.exports.universityRequestReject = async(req,res)=>{
     return res.status(500).json({ message: "Internal Server Error" });
   }
 }
+
+module.exports.universityStatistics = async (req, res)=>{
+  const token = req.cookies.jwt;
+  try{
+    // const {adminId, universityId} = verifyToken(token);
+    const universityId = "6c8a38e6-90a1-4065-b200-fd7d58b05b35";
+    let result = await db.query(`
+      SELECT COUNT(*) AS studentCount
+      FROM users u
+      JOIN universities univ
+      ON u.universityId = univ.universityId
+      WHERE u.isStudent = TRUE AND u.universityId=$1;
+    `,[universityId]);
+    const studentsCount = parseInt(result.rows[0].studentcount, 10);
+
+    result = await db.query(`
+      SELECT COUNT(*) AS instractorsCount
+      FROM users u
+      JOIN universities univ
+      ON u.universityId = univ.universityId
+      WHERE u.isStudent = FALSE AND u.universityId=$1;
+    `,[universityId]);
+    const instractorsCount = parseInt(result.rows[0].instractorscount, 10);
+
+    result = await db.query(`
+      SELECT COUNT(*) AS bannedAccountsCount
+      FROM users u
+      JOIN universities univ
+      ON u.universityId = univ.universityId
+      WHERE u.isBanned = TRUE AND u.universityId=$1;;
+    `,[universityId]);
+    const bannedAccountsCount = parseInt(result.rows[0].bannedaccountscount, 10);
+
+    result = await db.query(`
+      SELECT COUNT(*) AS messagesCount
+      FROM users u
+      JOIN messages m
+      ON u.userId = m.userId
+      WHERE u.universityId=$1;;
+    `,[universityId]);
+    const messagesCount = parseInt(result.rows[0].messagescount, 10);
+
+    result = await db.query(`
+      SELECT 
+        m.majorId,
+        m.name AS majorCount,
+        COUNT(u.userId) AS usersCount
+        FROM majors m LEFT JOIN users u ON m.majorId = u.majorId
+        GROUP BY m.majorId, m.name;
+      `);
+      const majorsMembersCount = result.rows;
+
+      result = await db.query(`
+        SELECT 
+          c.campusId,
+          c.name AS capusName,
+          COUNT(u.userId) AS usersCount
+          FROM campusus c LEFT JOIN users u ON c.campusId = u.campusId
+          GROUP BY c.campusId, c.name;
+        `);
+        const campusesMembersCount = result.rows;
+
+    const analyticsResult = {
+      studentsCount,
+      instractorsCount,
+      bannedAccountsCount,
+      messagesCount,
+      majorsMembersCount,
+      campusesMembersCount
+    }
+
+    return res.status(200).json(analyticsResult);
+  }
+  catch(e){
+   console.log("error while getting university stats ",e);
+   return res.status(500).json("error while getting university stats");
+  }
+}

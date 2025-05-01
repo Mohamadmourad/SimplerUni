@@ -21,7 +21,7 @@ const AddUniversity = () => {
     };
 
     try {
-      await axios.post(NEXT_PUBLIC_END_POINT + "/university/createUniversity", formData, { withCredentials: true });
+      await axios.post(process.env.NEXT_PUBLIC_END_POINT + "/university/createUniversity", formData, { withCredentials: true });
       toast.success("University added successfully!");
       universityNameRef.current.value = "";
       universityEmailRef.current.value = "";

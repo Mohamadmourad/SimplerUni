@@ -1,4 +1,4 @@
-export const accountAcceptanceEmail = (username, originalPassword) => `
+const accountAcceptanceEmail = (username, originalPassword) => `
     <!DOCTYPE html>
     <html>
     <head>
@@ -47,7 +47,7 @@ export const accountAcceptanceEmail = (username, originalPassword) => `
     </html>
 `;
 
-export const otpVerificationEmail = (otp) => `
+const otpVerificationEmail = (otp) => `
     <!DOCTYPE html>
     <html>
     <head>
@@ -90,7 +90,7 @@ export const otpVerificationEmail = (otp) => `
     </html>
 `;
 
-export const newUniversityRequestEmail = (name, email, phoneNumber, additionalInfo) => `
+const newUniversityRequestEmail = (name, email, phoneNumber, additionalInfo) => `
     <!DOCTYPE html>
     <html>
     <head>
@@ -136,3 +136,4 @@ export const newUniversityRequestEmail = (name, email, phoneNumber, additionalIn
     </html>
 `;
 
+module.exports = { accountAcceptanceEmail, otpVerificationEmail, newUniversityRequestEmail };
