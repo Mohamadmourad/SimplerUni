@@ -17,7 +17,6 @@ class SocketService {
     socket.connect();
 
     socket.onConnect((e) {
-      print('Connected to server');
       socket.emit('join', e);
     });
 
