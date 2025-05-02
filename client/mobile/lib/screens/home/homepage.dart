@@ -45,7 +45,7 @@ class HomepageState extends State<Homepage> {
               gap: 8,
               activeColor: Colors.white,
               iconSize: 24,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 12),
               duration: const Duration(milliseconds: 400),
               tabBackgroundColor: AppColors.primaryColor,
               color: AppColors.textSecondary,
@@ -54,7 +54,7 @@ class HomepageState extends State<Homepage> {
                 GButton(icon: Icons.question_answer_outlined, text: 'Q/A'),
                 GButton(icon: Icons.groups_outlined, text: 'Clubs'),
                 GButton(icon: Icons.newspaper_outlined, text: 'News'),
-                GButton(icon: Icons.person_outline, text: 'Profile'),
+                GButton(icon: Icons.person_outline, text: 'Me'),
               ],
               selectedIndex: selectedIndex,
               onTabChange: (index) {
