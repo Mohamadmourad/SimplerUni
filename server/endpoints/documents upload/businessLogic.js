@@ -18,9 +18,6 @@ module.exports.uploadDocument = async (fileData, userId) => {
   }
   const base64Clean = match[2];
   const fileBuffer = Buffer.from(base64Clean, "base64");
-  if (fileBuffer.length > 25 * 1024 * 1024) {
-    throw new Error("File size exceeds 25 MB limit.");
-  }
   const extension = match[1].split("/")[1];
   const key = `${userId}-${Date.now()}.${extension}`;
   await s3

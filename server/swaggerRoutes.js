@@ -216,6 +216,40 @@
 
 /**
  * @swagger
+ * /user/getAllInstructors:
+ *   get:
+ *     summary: Fetch all instructors of a university.
+ *     description: Retrieves a list of all instructors associated with the university of the logged-in admin.
+ *     tags: [User]
+ *     responses:
+ *       200:
+ *         description: List of instructors fetched successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   userId:
+ *                     type: integer
+ *                   name:
+ *                     type: string
+ *                   email:
+ *                     type: string
+ *                   universityId:
+ *                     type: integer
+ *                   isStudent:
+ *                     type: boolean
+ *       401:
+ *         description: Unauthorized request.
+ *       500:
+ *         description: Failed to fetch instructors.
+ */
+
+
+/**
+ * @swagger
  * tags:
  *   name: University
  *   description: University endpoints
@@ -1446,6 +1480,72 @@
  *       500:
  *         description: Failed to fetch clubs.
  */
+/**
+ * @swagger
+ * /clubs/getAdminClubList:
+ *   get:
+ *     summary: Fetch a list of clubs managed by the admin.
+ *     description: Retrieves a list of clubs where the logged-in user is the admin, filtered by their university.
+ *     tags: [Clubs]
+ *     responses:
+ *       200:
+ *         description: List of clubs fetched successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   clubId:
+ *                     type: integer
+ *                   name:
+ *                     type: string
+ *                   adminId:
+ *                     type: integer
+ *                   universityId:
+ *                     type: integer
+ *       401:
+ *         description: Unauthorized request.
+ *       500:
+ *         description: Failed to fetch admin clubs.
+ */
+/**
+ * @swagger
+ * /clubs/getClubMembers/{clubId}:
+ *   get:
+ *     summary: Fetch members of a specific club.
+ *     description: Retrieves a list of users who are members of the specified club.
+ *     tags: [Clubs]
+ *     parameters:
+ *       - in: path
+ *         name: clubId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the club.
+ *     responses:
+ *       200:
+ *         description: Club members fetched successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   userId:
+ *                     type: integer
+ *                   name:
+ *                     type: string
+ *                   email:
+ *                     type: string
+ *       400:
+ *         description: Missing or invalid clubId.
+ *       500:
+ *         description: Failed to get club members.
+ */
+
 
 /**
  * @swagger
@@ -1610,4 +1710,61 @@
  *         description: Missing userId or chatroomId.
  *       500:
  *         description: Rejecting join request failed.
+ */
+
+/**
+ * @swagger
+ * /clubs/removerStudentFromClub/{clubId}/{userId}:
+ *   delete:
+ *     summary: Remove a student from a club.
+ *     description: Deletes a student from a club and their associated chatroom.
+ *     tags: [Clubs]
+ *     parameters:
+ *       - in: path
+ *         name: clubId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the club.
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the user to remove.
+ *     responses:
+ *       200:
+ *         description: Student removed successfully.
+ *       400:
+ *         description: Missing or invalid parameters.
+ *       500:
+ *         description: Failed to remove the student.
+ */
+
+/**
+ * @swagger
+ * /clubs/changeClubAdmin:
+ *   put:
+ *     summary: Change the admin of a club.
+ *     description: Updates the admin of a specified club to a new user.
+ *     tags: [Clubs]
+ *     requestBody:
+ *       description: Information about the new admin and the club.
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               newAdminId:
+ *                 type: integer
+ *               clubId:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Admin changed successfully.
+ *       400:
+ *         description: Missing or invalid body parameters.
+ *       500:
+ *         description: Failed to change admin.
  */
