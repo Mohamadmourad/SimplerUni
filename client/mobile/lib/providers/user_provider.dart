@@ -9,8 +9,6 @@ class UserProvider with ChangeNotifier {
   bool initialized = false;
   bool isLoading = false;
 
-
-
   void setUser(User user) {
     print("Setting user in provider: ${user.email}");
     currentUser = user;
@@ -110,4 +108,6 @@ class UserProvider with ChangeNotifier {
       return false;
     }
   }
+
+  
 }
