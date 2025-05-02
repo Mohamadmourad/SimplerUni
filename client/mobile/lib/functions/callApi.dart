@@ -7,7 +7,7 @@ Future<Map<String, dynamic>> makeApiCall(
   String? urlParam,
   String? authToken,
 ) async {
-  const String baseUrl = 'https://api.simpleruni.com';
+  const String baseUrl = 'http://localhost:5000';
   Uri url = Uri.parse('$baseUrl/$urlParam');
 
   Map<String, String> headers = {
