@@ -115,7 +115,7 @@ export default function DomainsPage() {
           value={studentDomain}
           onChange={(e) => setStudentDomain(e.target.value)}
           className="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:ring-2 focus:ring-purple-500"
-          placeholder="e.g., student.edu"
+          placeholder="e.g., @student.edu"
           disabled={!canAddStudent || loading}
         />
         <button
@@ -134,7 +134,7 @@ export default function DomainsPage() {
           value={instructorDomain}
           onChange={(e) => setInstructorDomain(e.target.value)}
           className="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:ring-2 focus:ring-purple-500"
-          placeholder="e.g., prof.university.com"
+          placeholder="e.g., @prof.university.com"
           disabled={!canAddInstructor || loading}
         />
         <button

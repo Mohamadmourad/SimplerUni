@@ -74,13 +74,11 @@ export default function DashboardLayout({ children }) {
 
   return (
     <div className="min-h-screen flex bg-gray-800 text-gray-300">
-      {/* Fixed sidebar that doesn't move when scrolling */}
       <aside
         className={`fixed top-0 bottom-0 left-0 z-50 w-64 flex flex-col bg-gray-900 shadow-lg transition-transform duration-300 ease-in-out transform ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-64"
         } lg:translate-x-0`}
       >
-        {/* Header - fixed height */}
         <div className="flex-shrink-0 flex items-center justify-between h-16 px-6 bg-gray-950">
           <div className="flex items-center">
             <CalculatorIcon className="w-8 h-8 text-purple-500" />
@@ -132,7 +130,6 @@ export default function DashboardLayout({ children }) {
           }
         </nav>
         
-        {/* Footer - fixed at bottom with flex-shrink-0 */}
         <div className="flex-shrink-0 p-4 border-t border-gray-800">
           <button
             onClick={handleSignOut}
@@ -151,7 +148,6 @@ export default function DashboardLayout({ children }) {
         <Menu className="w-6 h-6" />
       </button>
       
-      {/* Main content area with left padding to accommodate the fixed sidebar */}
       <div className="flex-1 lg:ml-64 min-w-0 bg-gray-800">
         <main className="p-8 w-full">{children}</main>
       </div>

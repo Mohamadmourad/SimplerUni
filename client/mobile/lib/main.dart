@@ -10,6 +10,7 @@ import 'package:senior_project/screens/auth/signup.dart';
 import 'package:senior_project/screens/auth/login.dart';
 import 'package:senior_project/screens/home/homepage.dart';
 import 'package:senior_project/screens/profile/profile_page.dart';
+import 'package:senior_project/screens/auth/loading_page.dart'; 
 import 'package:senior_project/theme/app_theme.dart';
 
 void main() async {
@@ -46,7 +47,9 @@ class MyApp extends StatelessWidget {
             routes: [
               GoRoute(
                 path: '/',
-                builder: (context, state) => const LoginPage(),
+                builder:
+                    (context, state) =>
+                        const LoadingPage(),
               ),
               GoRoute(
                 path: '/signup',

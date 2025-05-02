@@ -56,7 +56,7 @@ const UsersManagement = () => {
   const handleDeleteUser = async (id) => {
     try {
       await axios.delete(
-        `http://localhost:5000/user/deleteUser/${id}`,
+        `${process.env.NEXT_PUBLIC_END_POINT}/user/deleteUser/${id}`,
         { withCredentials: true }
       );
       setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));

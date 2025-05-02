@@ -92,7 +92,7 @@ const News = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/news/deleteNews/${id}`, {
+      await axios.delete(`${process.env.NEXT_PUBLIC_END_POINT}/news/deleteNews/${id}`, {
         withCredentials: true,
       });
       toast.success("News deleted successfully!");

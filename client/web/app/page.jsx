@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import React from "react";
+import React, { useState } from "react";
 
 import { motion } from "framer-motion";
 import {
@@ -13,6 +13,7 @@ import {
   ArrowRight,
   Users,
   Menu,
+  X,
 } from "lucide-react";
 
 const universityLogos = [
@@ -22,6 +23,7 @@ const universityLogos = [
   "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Seal_of_Leland_Stanford_Junior_University.svg/250px-Seal_of_Leland_Stanford_Junior_University.svg.png",
   "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Yale_University_Shield_1.svg/150px-Yale_University_Shield_1.svg.png",
 ];
+
 function BenefitCard({ title, description }) {
   return (
     <div className="p-8 text-center">
@@ -30,6 +32,7 @@ function BenefitCard({ title, description }) {
     </div>
   );
 }
+
 function UniversitySlider() {
   return (
     <div className="overflow-hidden py-10 bg-gray-100 flex justify-center">
@@ -64,8 +67,15 @@ function UniversitySlider() {
 }
 
 function Home() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
   const scrollToSection = (id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    setMobileMenuOpen(false); // Close menu after clicking a link
   };
 
   return (
@@ -90,12 +100,57 @@ function Home() {
               </Link>
             </div>
             <div className="md:hidden">
-              <button className="text-gray-300 hover:text-white">
-                <Menu className="w-6 h-6" />
+              <button 
+                className="text-gray-300 hover:text-white p-2"
+                onClick={toggleMobileMenu}
+                aria-label="Toggle mobile menu"
+              >
+                {mobileMenuOpen ? (
+                  <X className="w-6 h-6" />
+                ) : (
+                  <Menu className="w-6 h-6" />
+                )}
               </button>
             </div>
           </div>
         </div>
+
+        {/* Mobile menu, show/hide based on menu state */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-gray-800">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+              <button 
+                onClick={() => scrollToSection("home")} 
+                className="block text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-base font-medium w-full text-left"
+              >
+                Home
+              </button>
+              <button 
+                onClick={() => scrollToSection("features")} 
+                className="block text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-base font-medium w-full text-left"
+              >
+                Features
+              </button>
+              <button 
+                onClick={() => scrollToSection("benefits")} 
+                className="block text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-base font-medium w-full text-left"
+              >
+                Benefits
+              </button>
+              <button 
+                onClick={() => scrollToSection("cta")} 
+                className="block text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-base font-medium w-full text-left"
+              >
+                Get Started
+              </button>
+              <Link href="/auth/login" className="block w-full">
+                <button className="w-full text-left px-3 py-2 rounded-md text-base font-medium bg-purple-600 text-white hover:bg-purple-700">
+                  Login
+                </button>
+              </Link>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Hero Section */}
