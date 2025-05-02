@@ -18,8 +18,7 @@ module.exports.connectWebSocket = async (io)=>{
               ...msg,
               ...user.rows[0]
             };
-            socket.broadcast.emit('message', fullMessage);
-            socket.emit('message', fullMessage);
+            io.emit('message', fullMessage);
           }
           catch(e){
             console.log("erro sending message", e);
