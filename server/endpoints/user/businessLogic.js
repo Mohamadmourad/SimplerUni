@@ -312,3 +312,20 @@ module.exports.getUserAccountInfo = async (req, res)=>{
         res.status(500).json({ message: "internalServerError" });
     }
 }
+
+module.exports.getAllInstructors = async (req, res) => {
+    const token = req.cookies.jwt;
+
+    try {
+        const { adminId, universityId } = universityVerifyToken(token);
+        const { rows } = await db.query(
+            `SELECT * FROM users WHERE universityId = $1 AND isStudent=$2`,
+            [universityId, false]
+        );
+
+        res.status(200).json(rows);
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json("Failed to fetch get instructors");
+    }
+};

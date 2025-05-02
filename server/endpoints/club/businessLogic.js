@@ -188,4 +188,70 @@ module.exports.getClubsUserIsIn = async (req, res) => {
     }
 };
 
+module.exports.getAdminClubList = async (req, res) => {
+    const token = req.headers.authorization;
 
+    try {
+        const { userId, universityId } = mobileTokenVerify(token);
+        const { rows } = await db.query(
+            `SELECT * FROM clubs WHERE universityId = $1 AND adminId=$2`,
+            [universityId, userId]
+        );
+
+        res.status(200).json(rows);
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json("Failed to fetch admin clubs");
+    }
+};
+
+module.exports.getClubMembers = async (req, res) => {
+    const token = req.headers.authorization;
+    const {clubId} = req.params;
+    try {
+        const { userId, universityId } = mobileTokenVerify(token);
+        const { rows } = await db.query(
+            `SELECT u.* FROM users as u JOIN club_members as cm ON u.userId = cm.userId WHERE cm.clubId = $1`,
+            [clubId]
+        );
+
+        res.status(200).json(rows);
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json("Failed to get club members");
+    }
+};
+
+module.exports.removerStudentFromClub = async (req, res) => {
+    const token = req.headers.authorization;
+    const {userId, clubId} = req.params;
+    try {
+        await db.query(
+            `DELETE FROM club_members WHERE userId=$1 AND clubId=$2`,
+            [userId, clubId]
+        );
+        const {rows}= await db.query(`SELECT chtroomId FROM club WHERE clubId=$1`, [clubId]);
+        await db.query(
+            `DELETE FROM chatroom_members WHERE userId=$1 AND chatroomId=$2`,
+            [userId, rows[0]]
+        );
+
+        res.status(200).json("deleted succesfully");
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json("Failed to get remove student");
+    }
+};
+
+module.exports.changeClubAdmin = async (req, res) => {
+    const token = req.cookies.jwt;
+    const {newAdminId, clubId} = req.body;
+    try {
+        const { adminId, universityId } = verifyToken(token);
+        await db.query(`UPDATE clubs SET adminId=$1 WHERE clubId=$2`,[newAdminId, clubId]);
+        res.status(200).json("admin changed succesfully");
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json("Failed to change");
+    }
+};

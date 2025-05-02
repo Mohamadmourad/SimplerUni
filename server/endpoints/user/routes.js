@@ -6,6 +6,7 @@ const router = express.Router();
 router.get('/getUser', userController.getUser);
 router.get('/getAllUniversityUsers', userController.getAllUniversityUsers);
 router.get('/getUserAccountInfo/:profileUserId', userController.getUserAccountInfo);
+router.get('/getAllInstructors', userController.getAllInstructors);
 
 router.post('/signup', userController.signup_post);
 router.post('/addAdditionalUserData',userController.addAdditionalUserData);
