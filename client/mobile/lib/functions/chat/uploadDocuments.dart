@@ -14,7 +14,7 @@ import 'dart:convert'; // for base64Encode
   required String fieldName,
 }) async {
   try {
-    final uri = Uri.parse('https://api.simpleruni.com/document/uploadDocumentMobile');
+    final uri = Uri.parse('http://localhost:5000/document/uploadDocumentMobile');
 
     final mimeType = lookupMimeType(fileName) ?? 'application/octet-stream';
     final base64File = base64Encode(fileBytes);
