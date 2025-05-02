@@ -71,7 +71,7 @@ const AddCampuses = () => {
     try {
       console.log("Removing campus with ID:", campusId);
       await axios.delete(
-        `http://localhost:5000/university/removeCampus`,
+        `${process.env.NEXT_PUBLIC_END_POINT}/university/removeCampus`,
         {
           data: { campusId },
           withCredentials: true

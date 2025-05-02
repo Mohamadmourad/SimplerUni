@@ -32,7 +32,7 @@ const UniversityAccessPage = () => {
     setLoading(true);
     try {
       await axios.post(
-        `http://localhost:5000/university/universityRequestAccept`,
+        process.env.NEXT_PUBLIC_END_POINT + "/university/universityRequestAccept",
         {requestId: universityId},
         { withCredentials: true }
       );
@@ -50,7 +50,7 @@ const UniversityAccessPage = () => {
     setLoading(true);
     try {
       await axios.post(
-        `http://localhost:5000/university/universityRequestReject`,
+        `${process.env.NEXT_PUBLIC_END_POINT}/university/universityRequestReject`,
         {requestId: universityId},
         { withCredentials: true }
       );

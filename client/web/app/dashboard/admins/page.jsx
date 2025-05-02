@@ -151,7 +151,7 @@ const Admins = () => {
     
     try {
       await axios.delete(
-        `http://localhost:5000/admin/deleteAdmin`,
+        `${process.env.NEXT_PUBLIC_END_POINT}/admin/deleteAdmin`,
         { data: { adminToDeleteId: adminId } }, 
         { withCredentials: true }
       );

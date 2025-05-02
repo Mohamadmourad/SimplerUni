@@ -69,7 +69,7 @@ const AddMajors = () => {
     try {
       console.log("Removing major with ID:", majorId);
       await axios.delete(
-        `http://localhost:5000/university/removeMajor`, 
+        `${process.env.NEXT_PUBLIC_END_POINT}/university/removeMajor`, 
         { 
           data: { majorId },
           withCredentials: true 
