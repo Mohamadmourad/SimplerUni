@@ -9,7 +9,7 @@ class SocketService {
     required Function(dynamic) addNewMessage,
   }
   ) {
-    socket = IO.io('http://localhost:5000', {
+    socket = IO.io('https://api.simpleruni.com', {
       'transports': ['websocket'],
       'autoConnect': false,
     });
@@ -28,7 +28,7 @@ class SocketService {
         }
     });
 
-    socket.onDisconnect((d) => print('Disconnected from server'));
+    socket.onDisconnect((d) => print("disconnected"));
   }
 
   void sendMessage(var message) {
