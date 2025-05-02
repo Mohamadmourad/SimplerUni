@@ -17,7 +17,6 @@ class SocketService {
     socket.connect();
 
     socket.onConnect((e) {
-      print('Connected to server');
       socket.emit('join', e);
     });
 
@@ -28,7 +27,7 @@ class SocketService {
         }
     });
 
-    socket.onDisconnect((d) => print('Disconnected from server'));
+    socket.onDisconnect((d) => print("disconnected"));
   }
 
   void sendMessage(var message) {

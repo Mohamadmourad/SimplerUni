@@ -36,6 +36,7 @@ class ChatsPageState extends State<ChatsPage> {
   }
 
   Future<void> loadChatrooms() async {
+    if (!mounted) return; 
     try {
       setState(() {
         isLoading = true;
@@ -43,12 +44,13 @@ class ChatsPageState extends State<ChatsPage> {
       });
 
       final loadedChatrooms = await getUserChatrooms();
-
+      if (!mounted) return;
       setState(() {
         chatrooms = loadedChatrooms;
         isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         errorMessage = e.toString();
         isLoading = false;
