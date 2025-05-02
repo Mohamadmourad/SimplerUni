@@ -39,7 +39,7 @@ export default function AdminLogin() {
     router.push('/dashboard');
     }
     catch(e){
-      setError(e.response.data.error);
+      setError(e);
       setisClickable(true);
     }
   };
