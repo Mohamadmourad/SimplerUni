@@ -11,7 +11,8 @@ const predefinedPermissions = [
   "majorsPage",
   "campususPage",
   "analyticsPage",
-  "usersManagementPage"
+  "usersManagementPage",
+  "clubsPage",
 ];
 
 const Roles = () => {
