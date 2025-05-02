@@ -11,7 +11,8 @@ const predefinedPermissions = [
   "majorsPage",
   "campususPage",
   "analyticsPage",
-  "usersManagementPage"
+  "usersManagementPage",
+  "clubsPage",
 ];
 
 const Roles = () => {
@@ -26,7 +27,7 @@ const Roles = () => {
 
   useEffect(() => {
     const getRolesData = async () => {
-      const result = await axios.get(NEXT_PUBLIC_END_POINT + "/role/getRoles", { withCredentials: true });
+      const result = await axios.get(process.env.NEXT_PUBLIC_END_POINT + "/role/getRoles", { withCredentials: true });
       const rolesArray = result.data;
       const temp = [];
       for (let role of rolesArray) {
@@ -58,7 +59,7 @@ const Roles = () => {
 
     try {
       const response = await axios.post(
-        NEXT_PUBLIC_END_POINT + "/role/addRole",
+        process.env.NEXT_PUBLIC_END_POINT + "/role/addRole",
         { roleName: roleName.trim(), permissions: selectedPermissions },
         { withCredentials: true }
       );
@@ -77,7 +78,7 @@ const Roles = () => {
     setError("");
     setLoading(true);
     try {
-      await axios.delete(`http://localhost:5000/role/deleteRole/${roleId}`, {
+      await axios.delete(`${process.env.NEXT_PUBLIC_END_POINT}/role/deleteRole/${roleId}`, {
         withCredentials: true,
       });
 
@@ -96,7 +97,7 @@ const Roles = () => {
 
     try {
       await axios.put(
-        `http://localhost:5000/role/updateRolePermissions`,
+        `${process.env.NEXT_PUBLIC_END_POINT}/role/updateRolePermissions`,
         {
           roleId: editingRole.id,
           permissions: editingRole.permissions

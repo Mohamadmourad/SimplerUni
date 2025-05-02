@@ -47,6 +47,15 @@ class _ChatState extends State<Chat> {
     super.dispose();
   }
   void addMessage(message){
+    if (message == null || !message.containsKey('chatroomId')) {
+    print('Invalid message data: $message');
+    return; 
+  }
+
+  if (message['chatroomId'] != widget.chatroomId) {
+    return;
+  }
+    User currentUser = Provider.of<UserProvider>(context, listen: false).currentUser!;
     User user = User(
           userId: message['userid'],
           username: message['username'],
@@ -63,8 +72,9 @@ class _ChatState extends State<Chat> {
           messageContent: message["content"],
           messageType: message["type"],
           user: user,
-          isSender: true
+          isSender: message['userid'] == currentUser.userId
         );
+         if (!mounted) return;
         setState(() {
           messagesList.insert(0, msg);
         });

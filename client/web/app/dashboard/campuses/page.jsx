@@ -32,7 +32,7 @@ const AddCampuses = () => {
 
   const fetchCampuses = async () => {
     try {
-      const result = await axios.get(NEXT_PUBLIC_END_POINT + "/university/getAllCampsus", { withCredentials: true });
+      const result = await axios.get(process.env.NEXT_PUBLIC_END_POINT + "/university/getAllCampsus", { withCredentials: true });
       console.log("API Response:", result.data.data);
       setCampuses(Array.isArray(result.data.data) ? result.data.data : []);
     } catch (err) {
@@ -51,7 +51,7 @@ const AddCampuses = () => {
     setLoading(true);
     try {
       await axios.post(
-        NEXT_PUBLIC_END_POINT + "/university/addCampus",
+        process.env.NEXT_PUBLIC_END_POINT + "/university/addCampus",
         { campus: name.trim() },
         { withCredentials: true }
       );
@@ -71,7 +71,7 @@ const AddCampuses = () => {
     try {
       console.log("Removing campus with ID:", campusId);
       await axios.delete(
-        `http://localhost:5000/university/removeCampus`,
+        `${process.env.NEXT_PUBLIC_END_POINT}/university/removeCampus`,
         {
           data: { campusId },
           withCredentials: true
@@ -210,7 +210,7 @@ const AddCampuses = () => {
       
       // Make sure we're sending the array with the correct property name: campusGroup
       await axios.post(
-        NEXT_PUBLIC_END_POINT + "/university/addCampus", 
+        process.env.NEXT_PUBLIC_END_POINT + "/university/addCampus", 
         { campususGroup: campusesToAdd }, 
         { withCredentials: true }
       );

@@ -17,8 +17,8 @@ const UniversityAccessPage = () => {
   const fetchUniversities = async () => {
     try {
       const [pendingRes, acceptedRes] = await Promise.all([
-        axios.get(NEXT_PUBLIC_END_POINT + "/university/getPendingUniversityAcessList", { withCredentials: true }),
-        axios.get(NEXT_PUBLIC_END_POINT + "/university/getAcceptedUniversityAcessList", { withCredentials: true })
+        axios.get(process.env.NEXT_PUBLIC_END_POINT + "/university/getPendingUniversityAcessList", { withCredentials: true }),
+        axios.get(process.env.NEXT_PUBLIC_END_POINT + "/university/getAcceptedUniversityAcessList", { withCredentials: true })
       ]);
 
       setPendingUniversities(pendingRes.data);
@@ -32,7 +32,7 @@ const UniversityAccessPage = () => {
     setLoading(true);
     try {
       await axios.post(
-        `http://localhost:5000/university/universityRequestAccept`,
+        process.env.NEXT_PUBLIC_END_POINT + "/university/universityRequestAccept",
         {requestId: universityId},
         { withCredentials: true }
       );
@@ -50,7 +50,7 @@ const UniversityAccessPage = () => {
     setLoading(true);
     try {
       await axios.post(
-        `http://localhost:5000/university/universityRequestReject`,
+        `${process.env.NEXT_PUBLIC_END_POINT}/university/universityRequestReject`,
         {requestId: universityId},
         { withCredentials: true }
       );

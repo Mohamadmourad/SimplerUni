@@ -22,12 +22,17 @@ const { connectWebSocket } = require('./webSocket');
 
 const PORT = process.env.PORT;
 const allowedOrigins = [
-  'http://simplerUni.com',
+  'http://simpleruni.com',
+  'https://simpleruni.com',
+  'https://simpleruni.netlify.app',
+  'http://127.0.0.1:5500',
   'http://localhost:3000',
   'http://localhost:5000',
   'http://127.0.0.1:5000',
+  'https://127.0.0.1:5000',
   'http://10.0.2.2:5000',
-  'http://localhost:51645'
+  'http://127.0.0.1:5500',
+  'http://localhost:54064'
 ];
 
 const app = express();
@@ -63,7 +68,7 @@ setupSwagger(app);
   await connectWebSocket(io);
   await createTables();
   await addSuperAdmin();
-  server.listen(PORT, () => {
+  server.listen(PORT, '0.0.0.0',() => {
     console.log(`Server is running on Port: ${PORT}`);
   });
 })();

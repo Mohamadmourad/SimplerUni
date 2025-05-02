@@ -110,7 +110,7 @@ class QuestionDetailsPageState extends State<QuestionDetailsPage> {
                   QuestionCard(
                     question: widget.question,
                     onUpvote: handleUpvote,
-                    onViewDetails: (_) {}, // Already in details view
+                    onViewDetails: (_) {},
                   ),
 
                   const Divider(height: 32, thickness: 1),
@@ -158,14 +158,14 @@ class QuestionDetailsPageState extends State<QuestionDetailsPage> {
   void handleUpvote(Question question) async {
     try {
       if (question.hasUpvoted) {
-        // Remove upvote
+        
         await removeUpvoteFromQuestion(question.questionId);
         setState(() {
           widget.question.upvoteCount--;
           widget.question.hasUpvoted = false;
         });
       } else {
-        // Add upvote
+        
         await upvoteQuestion(question.questionId);
         setState(() {
           widget.question.upvoteCount++;

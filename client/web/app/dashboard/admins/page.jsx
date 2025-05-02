@@ -21,7 +21,7 @@ const Admins = () => {
 
   const fetchCurrentAdmin = async () => {
     try {
-      const response = await axios.get(NEXT_PUBLIC_END_POINT + "/admin/getAdmin", { 
+      const response = await axios.get(process.env.NEXT_PUBLIC_END_POINT + "/admin/getAdmin", { 
         withCredentials: true 
       });
       if (response.data) {
@@ -35,7 +35,7 @@ const Admins = () => {
   
   const fetchAdmins = async () => {
     try {
-      const result = await axios.get(NEXT_PUBLIC_END_POINT + "/admin/getAllAdmins", { withCredentials: true });
+      const result = await axios.get(process.env.NEXT_PUBLIC_END_POINT + "/admin/getAllAdmins", { withCredentials: true });
       if (Array.isArray(result.data)) {
         const temp = result.data.map(admin => ({
           id: admin.adminid,
@@ -57,7 +57,7 @@ const Admins = () => {
 
   const fetchRoles = async () => {
     try {
-      const result = await axios.get(NEXT_PUBLIC_END_POINT + "/role/getRoles", { withCredentials: true });
+      const result = await axios.get(process.env.NEXT_PUBLIC_END_POINT + "/role/getRoles", { withCredentials: true });
       if (Array.isArray(result.data)) {
         const temp = result.data.map(role => ({
           id: role.roleid,
@@ -121,7 +121,7 @@ const Admins = () => {
     
     try {
       await axios.post(
-        NEXT_PUBLIC_END_POINT + "/admin/addAdmin", 
+        process.env.NEXT_PUBLIC_END_POINT + "/admin/addAdmin", 
         { firstName, lastName, username, password, roleId }, 
         { withCredentials: true }
       );
@@ -151,7 +151,7 @@ const Admins = () => {
     
     try {
       await axios.delete(
-        `http://localhost:5000/admin/deleteAdmin`,
+        `${process.env.NEXT_PUBLIC_END_POINT}/admin/deleteAdmin`,
         { data: { adminToDeleteId: adminId } }, 
         { withCredentials: true }
       );
@@ -192,7 +192,7 @@ const Admins = () => {
     
     try {
       await axios.put(
-        NEXT_PUBLIC_END_POINT + "/admin/updateAdmin", 
+        process.env.NEXT_PUBLIC_END_POINT + "/admin/updateAdmin", 
         {
           adminToUpdateId: editingAdmin.id,
           firstName: editingAdmin.firstName,
