@@ -20,6 +20,7 @@ router.get('/getAllMajors',universityController.getAllMajors);
 router.get('/getPendingUniversityAcessList',universityController.getPendingUniversityAcessList);
 router.get('/getAcceptedUniversityAcessList',universityController.getAcceptedUniversityAcessList);
 router.get('/checkLogin', universityController.checkLogin);
+router.get('/universityStatistics', universityController.universityStatistics)
 
 router.delete("/removeCampus",universityController.deleteCampus);
 router.delete("/removeMajor",universityController.deleteMajor);

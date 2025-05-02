@@ -1,0 +1,2 @@
+C:/Users/we/Desktop/simplerUni/client/mobile/android/app/.cxx/RelWithDebInfo/3t6h1n1t/x86_64/CMakeFiles/edit_cache.dir
+C:/Users/we/Desktop/simplerUni/client/mobile/android/app/.cxx/RelWithDebInfo/3t6h1n1t/x86_64/CMakeFiles/rebuild_cache.dir
