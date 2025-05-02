@@ -328,8 +328,7 @@ module.exports.universityRequestReject = async(req,res)=>{
 module.exports.universityStatistics = async (req, res)=>{
   const token = req.cookies.jwt;
   try{
-    // const {adminId, universityId} = verifyToken(token);
-    const universityId = "6c8a38e6-90a1-4065-b200-fd7d58b05b35";
+    const {adminId, universityId} = verifyToken(token);
     let result = await db.query(`
       SELECT COUNT(*) AS studentCount
       FROM users u
@@ -340,7 +339,7 @@ module.exports.universityStatistics = async (req, res)=>{
     const studentsCount = parseInt(result.rows[0].studentcount, 10);
 
     result = await db.query(`
-      SELECT COUNT(*) AS instractorsCount
+      SELECT COUNT(*) AS instructorsCount
       FROM users u
       JOIN universities univ
       ON u.universityId = univ.universityId
@@ -387,12 +386,100 @@ module.exports.universityStatistics = async (req, res)=>{
         const campusesMembersCount = result.rows;
 
     const analyticsResult = {
-      studentsCount,
-      instractorsCount,
-      bannedAccountsCount,
-      messagesCount,
-      majorsMembersCount,
-      campusesMembersCount
+      studentsCount: studentsCount || 0,
+      instractorsCount: instractorsCount || 0,
+      bannedAccountsCount: bannedAccountsCount || 0,
+      messagesCount: messagesCount || 0,
+      majorsMembersCount: majorsMembersCount || 0,
+      campusesMembersCount: campusesMembersCount || 0
+    }
+
+    return res.status(200).json(analyticsResult);
+  }
+  catch(e){
+   console.log("error while getting university stats ",e);
+   return res.status(500).json("error while getting university stats");
+  }
+}
+
+module.exports.superAdminStatistics = async (req, res)=>{
+  const token = req.cookies.jwt;
+  try{
+    const {adminId, universityId} = verifyToken(token);
+    let result = await db.query(`
+      SELECT COUNT(*) AS studentCount
+      FROM users u
+      JOIN universities univ
+      ON u.universityId = univ.universityId
+      WHERE u.isStudent = TRUE;
+    `);
+    const studentsCount = parseInt(result.rows[0].studentcount, 10);
+
+    result = await db.query(`
+      SELECT COUNT(*) AS instructorsCount
+      FROM users u
+      JOIN universities univ
+      ON u.universityId = univ.universityId
+      WHERE u.isStudent = FALSE 
+    `);
+    const instractorsCount = parseInt(result.rows[0].instractorscount, 10);
+
+    result = await db.query(`
+      SELECT COUNT(*) AS bannedAccountsCount
+      FROM users u
+      JOIN universities univ
+      ON u.universityId = univ.universityId
+      WHERE u.isBanned = TRUE;
+    `);
+    const bannedAccountsCount = parseInt(result.rows[0].bannedaccountscount, 10);
+
+    result = await db.query(`
+      SELECT COUNT(*) AS messagesCount
+      FROM users u
+      JOIN messages m
+      ON u.userId = m.userId;
+    `);
+    const messagesCount = parseInt(result.rows[0].messagescount, 10);
+
+    result = await db.query(`
+      SELECT 
+        univ.name,
+        COUNT(*) AS memberCount
+      FROM users u
+      JOIN universities univ
+      ON u.universityId = univ.universityId
+      GROUP BY univ.name
+      ORDER BY memberCount DESC
+      LIMIT 5;
+    `);
+    
+    const topUniversities = result.rows.map(row => ({
+      universityName: row.name,
+      memberCount: parseInt(row.membercount, 10) || 0
+    }));
+
+    result = await db.query(`
+      SELECT 
+        univ.name,
+        COUNT(*) AS memberCount
+      FROM users u
+      JOIN universities univ
+      ON u.universityId = univ.universityId
+      GROUP BY univ.name
+      ORDER BY memberCount DESC
+    `);
+      const allUniversitiesWithCount = result.rows.map(row => ({
+        universityName: row.name,
+        memberCount: parseInt(row.membercount, 10) || 0
+      }));;
+
+    const analyticsResult = {
+      studentsCount: studentsCount || 0,
+      instractorsCount: instractorsCount || 0,
+      bannedAccountsCount: bannedAccountsCount || 0,
+      messagesCount: messagesCount || 0,
+      topUniversities,
+      allUniversitiesWithCount
     }
 
     return res.status(200).json(analyticsResult);
