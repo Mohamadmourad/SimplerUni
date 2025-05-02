@@ -47,6 +47,7 @@ class _ChatState extends State<Chat> {
     super.dispose();
   }
   void addMessage(message){
+    if (!mounted) return;
     User user = User(
           userId: message['userid'],
           username: message['username'],
