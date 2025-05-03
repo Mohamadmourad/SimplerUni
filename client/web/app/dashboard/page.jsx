@@ -3,17 +3,22 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { School } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function DashboardHome() {
   const [admin, setAdmin] = useState(null);
   const [error, setError] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     const fetchAdmin = async () => {
       try {
         const response = await axios.get(process.env.NEXT_PUBLIC_END_POINT + "/admin/getAdmin", { withCredentials: true });
-        console.log("API Response:", response.data);
-        setAdmin(response.data);
+        const adminData = response.data; 
+        if(!adminData.ispasswordchanged){
+          router.push("/dashboard/password");
+        }
+        setAdmin(adminData);
       } catch (err) {
         setError("Failed to load admin details.");
       }

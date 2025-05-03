@@ -1,14 +1,12 @@
 const {db} = require("../../db");
 const {DateTime} = require("luxon");
-const { hashText, createToken, handleErrors, compareHashedText, getUserIdFromToken, getEmailDomain, verifyToken } = require("./helper");
+const { hashText, createToken, handleErrors, compareHashedText, getEmailDomain, verifyToken } = require("./helper");
 const { verifyToken: universityVerifyToken } = require("../university/helper")
 const { sendEmail } = require("../helper");
 const { otpVerificationEmail } = require("../emailTemplates");
-const { addToChatroom } = require("../chat/businessLogic");
 
 module.exports.signup_post = async (req, res) => {
     let { email, password, username } = req.body;
-    console.log("email", email);
     password = await hashText(password);
     try{
         const user = await db.query('SELECT * FROM users WHERE email = $1', [email]);
@@ -18,7 +16,7 @@ module.exports.signup_post = async (req, res) => {
                 errors:{
                     email:"this account is banned"
                 }
-            })
+            });
         }
 
         if (user.rows.length > 0 && !user.rows[0].isemailverified) {
@@ -60,7 +58,8 @@ module.exports.login_post = async (req, res) => {
                 },
             });
         }
-        if(user.rows.isBanned){
+        console.log(user.rows[0]);
+        if(user.rows[0].isBanned){
             return res.status(400).json({
                 errors:{
                     email:"this account is banned"

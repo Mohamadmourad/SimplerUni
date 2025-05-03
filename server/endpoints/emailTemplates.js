@@ -136,4 +136,80 @@ const newUniversityRequestEmail = (name, email, phoneNumber, additionalInfo) => 
     </html>
 `;
 
-module.exports = { accountAcceptanceEmail, otpVerificationEmail, newUniversityRequestEmail };
+const clubAcceptanceEmail = (username, clubName) => `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Welcome to the Club</title>
+        <style>
+        body { margin: 0; padding: 0; background-color: #f0f4f8; font-family: Arial, sans-serif; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 6px; overflow: hidden; }
+        .header { background-color: #10b981; padding: 20px; text-align: center; color: #ffffff; }
+        .content { padding: 30px 20px; color: #030712; text-align: center; }
+        .footer { background-color: #10b981; padding: 15px; text-align: center; color: #ffffff; font-size: 14px; }
+        </style>
+    </head>
+    <body>
+        <table class="container" width="100%" border="0" cellspacing="0" cellpadding="0">
+        <tr>
+            <td class="header">
+            <h1>Welcome to the Club, ${username}!</h1>
+            </td>
+        </tr>
+        <tr>
+            <td class="content">
+            <p>Congratulations!</p>
+            <p>We're thrilled to inform you that your application to join the club ${clubName} has been accepted. We're excited to have you on board and can't wait for you to be part of our amazing community.</p>
+            <p>Stay tuned for upcoming events and updates. If you have any questions, feel free to reach out to us.</p>
+            <p>Welcome aboard!</p>
+            </td>
+        </tr>
+        <tr>
+            <td class="footer">
+            <p>© 2025 Csimpleruni. All rights reserved.</p>
+            </td>
+        </tr>
+        </table>
+    </body>
+    </html>
+`;
+
+const clubRejectionEmail = (username, clubName) => `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Club Application Status</title>
+        <style>
+        body { margin: 0; padding: 0; background-color: #f0f4f8; font-family: Arial, sans-serif; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 6px; overflow: hidden; }
+        .header { background-color: #ef4444; padding: 20px; text-align: center; color: #ffffff; }
+        .content { padding: 30px 20px; color: #030712; text-align: center; }
+        .footer { background-color: #ef4444; padding: 15px; text-align: center; color: #ffffff; font-size: 14px; }
+        </style>
+    </head>
+    <body>
+        <table class="container" width="100%" border="0" cellspacing="0" cellpadding="0">
+        <tr>
+            <td class="header">
+            <h1>Dear ${username},</h1>
+            </td>
+        </tr>
+        <tr>
+            <td class="content">
+            <p>Thank you for your interest in joining our club ${clubName}</p>
+            <p>After careful consideration, we regret to inform you that your application was not successful at this time.</p>
+            <p>We encourage you to stay engaged and consider reapplying in the future. Your enthusiasm is appreciated, and we hope to see your name again.</p>
+            <p>Best wishes in all your endeavors.</p>
+            </td>
+        </tr>
+        <tr>
+            <td class="footer">
+            <p>© 2025 Club Community. All rights reserved.</p>
+            </td>
+        </tr>
+        </table>
+    </body>
+    </html>
+`;
+
+module.exports = { accountAcceptanceEmail, otpVerificationEmail, newUniversityRequestEmail, clubAcceptanceEmail, clubRejectionEmail };

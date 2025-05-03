@@ -1,5 +1,7 @@
 const {db} = require("../../db");
 const { createChatroom } = require("../chat/businessLogic");
+const { clubAcceptanceEmail } = require("../emailTemplates");
+const { sendEmail } = require("../helper");
 const { verifyToken } = require("../university/helper");
 const { verifyToken: mobileTokenVerify } = require("../user/helper");
 
@@ -123,10 +125,17 @@ module.exports.acceptJoinRequest = async (req, res) => {
         return res.status(400).json({ error: "Missing userId or chatroomId" });
     }
     try {
+        const user = await db.query(`SELECT * FROM users WHERE userId=$1`,[userId]);
+        if(user.rowCount ===0){
+            return res.status(400).json({message:"user not found"});
+        }
         await db.query(
             `UPDATE club_members SET status = $1 WHERE userId = $2 AND chatroomId = $3`,
             ["accepted", userId, chatroomId]
         );
+        await db.query(`INSERT INTO chatroom_members(userid,chatroomid) VALUES($1,$2)`,[userId,chatroomId]);
+        const emailContent = clubAcceptanceEmail(user.rows[0].username, );
+        await sendEmail(user.rows[0].email,"club acceptence","")
         return res.status(200).json("Join request accepted successfully");
     } catch (e) {
         console.error(e);
@@ -289,7 +298,7 @@ module.exports.getClubJoinRequests = async (req, res) => {
     const token = req.headers.authorization;
     const {clubId} = req.params;
     try {
-        const {rows} = await db.query(`SELECT u.* FROM club_members as cm JOIN users as u ON cm.userId = u.userId WHERE clubId=$1 AND status=$2`,[clubId,"accepted"]);
+        const {rows} = await db.query(`SELECT u.* FROM club_members as cm JOIN users as u ON cm.userId = u.userId WHERE clubId=$1 AND status=$2`,[clubId,"underReview"]);
 
         res.status(200).json(rows);
     } catch (e) {
