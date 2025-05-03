@@ -1,28 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:senior_project/functions/clubs/clubs_api.dart';
+import 'package:senior_project/functions/user/get_user_profile.dart'; // Add this import for the user profile API
 import 'package:senior_project/theme/app_theme.dart';
-import 'package:senior_project/modules/club.dart';
-import 'package:go_router/go_router.dart';
+import 'package:go_router/go_router.dart'; // Add this import
 
-class ClubMembersPage extends StatefulWidget {
+class ClubDetailsPage extends StatefulWidget {
   final String clubId;
   final String clubName;
 
-  const ClubMembersPage({
+  const ClubDetailsPage({
     Key? key,
     required this.clubId,
     required this.clubName,
   }) : super(key: key);
 
   @override
-  State<ClubMembersPage> createState() => _ClubMembersPageState();
+  State<ClubDetailsPage> createState() => ClubDetailsPageState();
 }
 
-class _ClubMembersPageState extends State<ClubMembersPage> {
+class ClubDetailsPageState extends State<ClubDetailsPage> {
   bool isLoading = true;
   String? errorMessage;
   List<dynamic> members = [];
   Map<String, dynamic> clubInfo = {};
+  Map<String, dynamic>? instructorInfo; // Add a field for instructor info
 
   @override
   void initState() {
@@ -40,86 +41,36 @@ class _ClubMembersPageState extends State<ClubMembersPage> {
       final info = await getClubInfo(widget.clubId);
       setState(() {
         clubInfo = info;
-        // Extract members from the clubMembers property
         members = info['clubMembers'] as List<dynamic>? ?? [];
-        isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        errorMessage = e.toString();
-        isLoading = false;
-      });
-    }
-  }
-
-  Future<void> removeMember(String userId) async {
-    try {
-      // Show confirmation dialog
-      final shouldRemove =
-          await showDialog<bool>(
-            context: context,
-            builder:
-                (context) => AlertDialog(
-                  title: const Text('Remove Member'),
-                  content: const Text(
-                    'Are you sure you want to remove this member from the club?',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(false),
-                      child: const Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(true),
-                      child: const Text(
-                        'Remove',
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  ],
-                ),
-          ) ??
-          false;
-
-      if (!shouldRemove) return;
-
-      // Show loading indicator
-      setState(() {
-        isLoading = true;
       });
 
-      // Call API to remove the member
-      final success = await removeStudentFromClub(widget.clubId, userId);
-
-      if (success) {
-        // Reload club info to refresh the members list
-        await loadClubInfo();
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Member removed successfully')),
-          );
+      if (clubInfo['adminid'] != null) {
+        try {
+          final adminProfile = await getUserProfileData(clubInfo['adminid']);
+          if (mounted && adminProfile != null) {
+            setState(() {
+              instructorInfo = {
+                'username': adminProfile.username,
+                'email': adminProfile.email,
+              };
+            });
+          }
+        } catch (e) {
+          print('Failed to load instructor info: $e');
         }
-      } else {
+      }
+
+      if (mounted) {
         setState(() {
           isLoading = false;
         });
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to remove member')),
-          );
-        }
       }
     } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
-
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+        setState(() {
+          errorMessage = e.toString();
+          isLoading = false;
+        });
       }
     }
   }
@@ -149,16 +100,16 @@ class _ClubMembersPageState extends State<ClubMembersPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildClubInfoSection(),
+                    buildClubInfoSection(),
                     const Divider(height: 32, thickness: 1),
-                    _buildMembersSection(),
+                    buildMembersSection(),
                   ],
                 ),
               ),
     );
   }
 
-  Widget _buildClubInfoSection() {
+  Widget buildClubInfoSection() {
     if (clubInfo.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(16.0),
@@ -177,21 +128,58 @@ class _ClubMembersPageState extends State<ClubMembersPage> {
           ),
           const SizedBox(height: 16),
 
-          _buildInfoRow('Name', clubInfo['name'] ?? 'Not specified'),
+          buildInfoRow('Name', clubInfo['name'] ?? 'Not specified'),
 
+          // Use proper conditional for widgets in a list
           if (clubInfo['description'] != null &&
               clubInfo['description'].toString().isNotEmpty)
-            _buildInfoRow('Description', clubInfo['description']),
+            buildInfoRow('Description', clubInfo['description']),
 
           if (clubInfo['room'] != null &&
               clubInfo['room'].toString().isNotEmpty)
-            _buildInfoRow('Room', clubInfo['room']),
+            buildInfoRow('Room', clubInfo['room']),
+
+          // Fix the instructor info display with profile navigation
+          if (instructorInfo != null)
+            buildInstructorRow(
+              'Instructor',
+              '${instructorInfo!['username'] ?? 'Unknown'} (${instructorInfo!['email'] ?? ''})',
+              clubInfo['adminid'],
+            )
+          else if (clubInfo['adminid'] != null)
+            buildInfoRow('Instructor ID', clubInfo['adminid']),
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
+  // New method for clickable instructor row with normal styling
+  Widget buildInstructorRow(String label, String value, String? userId) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+          const SizedBox(height: 4),
+          GestureDetector(
+            onTap: () {
+              if (userId != null) {
+                context.push('/profile/$userId');
+              }
+            },
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 16),
+              // Removed the blue color and underline
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildInfoRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: Column(
@@ -205,7 +193,7 @@ class _ClubMembersPageState extends State<ClubMembersPage> {
     );
   }
 
-  Widget _buildMembersSection() {
+  Widget buildMembersSection() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -265,28 +253,12 @@ class _ClubMembersPageState extends State<ClubMembersPage> {
                         },
                         child: Text(
                           member['username'] ?? 'Unknown',
-                          style: TextStyle(
-                            color: Colors.blue[700],
-                            decoration: TextDecoration.underline,
-                          ),
+                          style: const TextStyle(fontSize: 16),
+                          // Removed the blue color and underline
                         ),
                       ),
                       subtitle: Text(member['email'] ?? ''),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.person_remove),
-                        onPressed: () {
-                          final userId = member['userid'];
-                          if (userId != null) {
-                            removeMember(userId);
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('User ID not found'),
-                              ),
-                            );
-                          }
-                        },
-                      ),
+                      // No trailing remove button for regular members
                     ),
                   );
                 },

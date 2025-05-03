@@ -4,19 +4,20 @@ import 'package:senior_project/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:senior_project/screens/clubs/club_members_page.dart';
 import 'package:senior_project/screens/clubs/club_join_requests_page.dart';
+import 'package:senior_project/screens/clubs/club_details_page.dart';
 
 class ClubCard extends StatelessWidget {
   final Club club;
   final bool isUserMember;
   final VoidCallback? onJoin;
-  final bool isAdmin; // Add the isAdmin property
+  final bool isAdmin;
 
   const ClubCard({
     super.key,
     required this.club,
     required this.isUserMember,
     this.onJoin,
-    this.isAdmin = false, // Default to false
+    this.isAdmin = false,
   });
 
   @override
@@ -39,7 +40,6 @@ class ClubCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Removed the Member chip that was here
               ],
             ),
             if (club.description != null && club.description!.isNotEmpty) ...[
@@ -74,24 +74,22 @@ class ClubCard extends StatelessWidget {
 
   Widget _buildMemberActions(BuildContext context) {
     if (isAdmin) {
-      // Admin/instructor specific actions - simplified to just two primary functions
       return Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             ElevatedButton.icon(
-              icon: const Icon(Icons.people),
-              label: const Text('Manage Members'),
+              icon: const Icon(Icons.info_outline),
+              label: const Text('Club Details & Members'),
               onPressed: () {
-                if (club.chatroomId != null) {
-                  // Navigate to members management screen
+                if (club.clubId != null) {
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder:
                           (context) => ClubMembersPage(
-                            clubId: club.chatroomId!,
-                            clubName: club.name ?? 'Club Members',
+                            clubId: club.clubId!,
+                            clubName: club.name ?? 'Club Details',
                           ),
                     ),
                   );
@@ -106,13 +104,12 @@ class ClubCard extends StatelessWidget {
               icon: const Icon(Icons.pending_actions),
               label: const Text('View Join Requests'),
               onPressed: () {
-                if (club.chatroomId != null) {
-                  // Navigate to join requests screen
+                if (club.clubId != null) {
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder:
                           (context) => ClubJoinRequestsPage(
-                            clubId: club.chatroomId!,
+                            clubId: club.clubId!,
                             clubName: club.name ?? 'Join Requests',
                           ),
                     ),
@@ -127,24 +124,31 @@ class ClubCard extends StatelessWidget {
         ),
       );
     } else {
+      // For regular members, show a more compact right-aligned button
       return Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: ElevatedButton.icon(
-          icon: const Icon(Icons.forum),
-          label: const Text('Open Chat'),
-          onPressed: () {
-            if (club.chatroomId != null) {
-              context.go(
-                '/chat/${Uri.encodeComponent(club.name ?? 'Unnamed Club')}/${club.chatroomId}',
-              );
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Chat not available')),
-              );
-            }
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primaryColor,
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Align(
+          alignment: Alignment.centerRight,
+          child: ElevatedButton(
+            onPressed: () {
+              if (club.clubId != null) {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder:
+                        (context) => ClubDetailsPage(
+                          clubId: club.clubId!,
+                          clubName: club.name ?? 'Club Details',
+                        ),
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryColor,
+              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+              minimumSize: const Size(0, 0),
+            ),
+            child: const Text('Club Details'),
           ),
         ),
       );

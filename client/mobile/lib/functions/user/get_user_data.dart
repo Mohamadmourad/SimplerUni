@@ -37,6 +37,7 @@ Future<User?> fetchCurrentUserData() async {
         email: userData['email'],
         isEmailVerified: userData['isemailverified'] ?? false,
         isStudent: userData['isstudent'] ?? false,
+        isBanned: userData['isbanned'] ?? false,
         bio: userData['bio'],
         profilePicture: userData['profilepicture'],
         startingUniYear: userData['startinguniyear'],

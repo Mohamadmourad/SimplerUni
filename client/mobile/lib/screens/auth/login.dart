@@ -41,52 +41,101 @@ class LoginPageState extends State<LoginPage> {
 
     setState(() {
       isLoading = true;
+      emailError = "";
+      passwordError = "";
     });
 
     try {
       String email = emailController.text;
       String password = passwordController.text;
-      setState(() {
-        if (email.isEmpty) {
+
+      if (email.isEmpty) {
+        setState(() {
           emailError = "Please enter your email";
-          return;
-        } else if (!email.contains('@')) {
+          isLoading = false;
+        });
+        return;
+      } else if (!email.contains('@')) {
+        setState(() {
           emailError = "Please enter a valid email";
-          return;
-        }
-        if (password.isEmpty) {
+          isLoading = false;
+        });
+        return;
+      }
+      if (password.isEmpty) {
+        setState(() {
           passwordError = "Please enter your password";
-          return;
-        }
-      });
+          isLoading = false;
+        });
+        return;
+      }
+
       final result = await loginMethode(email, password, context: context);
 
       if (result['statusCode'] == 200) {
         final userProvider = Provider.of<UserProvider>(context, listen: false);
-        await userProvider.fetchUserFromAPI(); 
-
+        await userProvider.fetchUserFromAPI();
         context.go('/home');
       } else if (result['statusCode'] == 201) {
         context.go('/complete-profile', extra: {'email': email});
       } else if (result['statusCode'] == 401) {
-        final error = result["error"];
-        Map<String, dynamic> decodedError = jsonDecode(error);
-        context.go(
-          '/otp-verify',
-          extra: {
-            'email': emailController.text,
-            'authToken': decodedError["authToken"],
-          },
-        );
+        final dynamic error = result["error"];
+        dynamic parsedError;
+
+        try {
+          if (error is String) {
+            parsedError = jsonDecode(error);
+          } else {
+            parsedError = error;
+          }
+
+          if (parsedError != null && parsedError["authToken"] != null) {
+            context.go(
+              '/otp-verify',
+              extra: {
+                'email': emailController.text,
+                'authToken': parsedError["authToken"],
+              },
+            );
+            return;
+          }
+        } catch (e) {
+          setState(() {
+            emailError = "Authentication error";
+          });
+        }
       } else {
-        final error = result["error"];
-        Map<String, dynamic> decodedError = jsonDecode(error);
-        setState(() {
-          if (decodedError["email"] != "")
-            emailError = decodedError['errors']["email"];
-          if (decodedError["password"] != "")
-            passwordError = decodedError['errors']["password"];
-        });
+        final dynamic error = result["error"];
+
+        try {
+          dynamic parsedError;
+          if (error is String) {
+            parsedError = jsonDecode(error);
+          } else {
+            parsedError = error;
+          }
+
+          if (parsedError != null && parsedError.containsKey("errors")) {
+            final errors = parsedError["errors"];
+
+            setState(() {
+              if (errors.containsKey("email")) {
+                emailError = errors["email"];
+              }
+              if (errors.containsKey("password")) {
+                passwordError = errors["password"];
+              }
+            });
+          } else {
+            setState(() {
+              emailError = error.toString();
+            });
+          }
+        } catch (e) {
+          setState(() {
+            emailError = error.toString();
+          });
+        }
       }
     } catch (e) {
       ScaffoldMessenger.of(

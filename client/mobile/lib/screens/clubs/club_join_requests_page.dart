@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:senior_project/functions/clubs/clubs_api.dart';
 import 'package:senior_project/theme/app_theme.dart';
+import 'package:go_router/go_router.dart';
 
 class ClubJoinRequestsPage extends StatefulWidget {
   final String clubId;
@@ -125,14 +126,32 @@ class _ClubJoinRequestsPageState extends State<ClubJoinRequestsPage> {
                     child: ListTile(
                       leading: CircleAvatar(
                         backgroundColor: AppColors.primaryColor,
+                        backgroundImage:
+                            request['profilepicture'] != null
+                                ? NetworkImage(request['profilepicture'])
+                                : null,
+                        child:
+                            request['profilepicture'] == null
+                                ? Text(
+                                  request['username']?.isNotEmpty == true
+                                      ? request['username'][0].toUpperCase()
+                                      : '?',
+                                  style: const TextStyle(color: Colors.white),
+                                )
+                                : null,
+                      ),
+                      title: GestureDetector(
+                        onTap: () {
+                          final userId = request['userid'];
+                          if (userId != null) {
+                            context.push('/profile/$userId');
+                          }
+                        },
                         child: Text(
-                          request['username']?.isNotEmpty == true
-                              ? request['username'][0].toUpperCase()
-                              : '?',
-                          style: const TextStyle(color: Colors.white),
+                          request['username'] ?? 'Unknown',
+                          style: const TextStyle(fontSize: 16),
                         ),
                       ),
-                      title: Text(request['username'] ?? 'Unknown'),
                       subtitle: Text(request['email'] ?? ''),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -140,14 +159,36 @@ class _ClubJoinRequestsPageState extends State<ClubJoinRequestsPage> {
                           IconButton(
                             icon: const Icon(Icons.check_circle),
                             color: Colors.green,
-                            onPressed:
-                                () => handleAcceptRequest(request['userId']),
+                            onPressed: () {
+                              // Use lowercase 'userid' instead of 'userId'
+                              final userId = request['userid'];
+                              if (userId != null) {
+                                handleAcceptRequest(userId);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('User ID not found'),
+                                  ),
+                                );
+                              }
+                            },
                           ),
                           IconButton(
                             icon: const Icon(Icons.cancel),
                             color: Colors.red,
-                            onPressed:
-                                () => handleRejectRequest(request['userId']),
+                            onPressed: () {
+                              // Use lowercase 'userid' instead of 'userId'
+                              final userId = request['userid'];
+                              if (userId != null) {
+                                handleRejectRequest(userId);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('User ID not found'),
+                                  ),
+                                );
+                              }
+                            },
                           ),
                         ],
                       ),

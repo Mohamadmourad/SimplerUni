@@ -241,16 +241,19 @@ class ProfilePageState extends State<ProfilePage> {
                 label: 'University',
                 value: userProfile!.universityName ?? 'Not specified',
               ),
-              const Divider(height: 20),
-              ProfileInfoRow(
-                label: 'Campus',
-                value: userProfile!.campusName ?? 'Not specified',
-              ),
-              const Divider(height: 20),
-              ProfileInfoRow(
-                label: 'Major',
-                value: userProfile!.majorName ?? 'Not specified',
-              ),
+              // Only show campus and major for students
+              if (userProfile!.isStudent == true) ...[
+                const Divider(height: 20),
+                ProfileInfoRow(
+                  label: 'Campus',
+                  value: userProfile!.campusName ?? 'Not specified',
+                ),
+                const Divider(height: 20),
+                ProfileInfoRow(
+                  label: 'Major',
+                  value: userProfile!.majorName ?? 'Not specified',
+                ),
+              ],
             ],
           ),
 

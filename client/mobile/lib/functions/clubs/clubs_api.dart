@@ -173,7 +173,7 @@ Future<bool> acceptJoinRequest(String userId, String clubId) async {
       throw Exception('No authentication token found');
     }
 
-    final requestBody = jsonEncode({'userId': userId, 'chatroomId': clubId});
+    final requestBody = jsonEncode({'userId': userId, 'clubId': clubId});
 
     final result = await makeApiCall(
       'POST',
@@ -198,7 +198,7 @@ Future<bool> rejectJoinRequest(String userId, String clubId) async {
       throw Exception('No authentication token found');
     }
 
-    final requestBody = jsonEncode({'userId': userId, 'chatroomId': clubId});
+    final requestBody = jsonEncode({'userId': userId, 'clubId': clubId});
 
     final result = await makeApiCall(
       'POST',
@@ -213,34 +213,6 @@ Future<bool> rejectJoinRequest(String userId, String clubId) async {
   }
 }
 
-// Get members of a club
-Future<List<dynamic>> getClubMembers(String clubId) async {
-  try {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String? token = prefs.getString('authToken');
-
-    if (token == null) {
-      throw Exception('No authentication token found');
-    }
-
-    final result = await makeApiCall(
-      'GET',
-      null,
-      'clubs/getClubMembers/$clubId',
-      token,
-    );
-
-    if (result['statusCode'] == 200) {
-      return result['body'] as List<dynamic>;
-    } else {
-      throw Exception('Failed to load club members: ${result['error']}');
-    }
-  } catch (e) {
-    throw Exception('Failed to load club members: $e');
-  }
-}
-
-// Get join requests for a club
 Future<List<dynamic>> getClubJoinRequests(String clubId) async {
   try {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -256,7 +228,7 @@ Future<List<dynamic>> getClubJoinRequests(String clubId) async {
       'clubs/getClubJoinRequests/$clubId',
       token,
     );
-
+    print(result);
     if (result['statusCode'] == 200) {
       return result['body'] as List<dynamic>;
     } else {
@@ -264,5 +236,55 @@ Future<List<dynamic>> getClubJoinRequests(String clubId) async {
     }
   } catch (e) {
     throw Exception('Failed to load join requests: $e');
+  }
+}
+
+// Get club information including members
+Future<Map<String, dynamic>> getClubInfo(String clubId) async {
+  try {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String? token = prefs.getString('authToken');
+
+    if (token == null) {
+      throw Exception('No authentication token found');
+    }
+
+    final result = await makeApiCall(
+      'GET',
+      null,
+      'clubs/getClubInfo/$clubId',
+      token,
+    );
+    print(result);
+    if (result['statusCode'] == 200) {
+      return result['body'] as Map<String, dynamic>;
+    } else {
+      throw Exception('Failed to load club information: ${result['error']}');
+    }
+  } catch (e) {
+    throw Exception('Failed to load club information: $e');
+  }
+}
+
+// Remove a student from a club
+Future<bool> removeStudentFromClub(String clubId, String userId) async {
+  try {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String? token = prefs.getString('authToken');
+
+    if (token == null) {
+      throw Exception('No authentication token found');
+    }
+
+    final result = await makeApiCall(
+      'DELETE',
+      null,
+      'clubs/removerStudentFromClub/$clubId/$userId',
+      token,
+    );
+
+    return result['statusCode'] == 200;
+  } catch (e) {
+    throw Exception('Failed to remove student from club: $e');
   }
 }

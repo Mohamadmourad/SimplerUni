@@ -4,6 +4,7 @@ class User {
   String? email;
   bool? isEmailVerified;
   bool? isStudent;
+  bool? isBanned;
   String? bio;
   String? profilePicture;
   String? startingUniYear;
@@ -18,6 +19,7 @@ class User {
     this.email,
     this.isEmailVerified,
     this.isStudent,
+    this.isBanned,
     this.bio,
     this.profilePicture,
     this.startingUniYear,
@@ -34,6 +36,7 @@ class User {
       email: json['email'],
       isEmailVerified: json['isEmailVerified'] ?? json['isemailverified'],
       isStudent: json['isStudent'] ?? json['isstudent'],
+      isBanned: json['isBanned'] ?? json['isbanned'],
       bio: json['bio'],
       profilePicture: json['profilePicture'] ?? json['profilepicture'],
       startingUniYear: json['startingUniYear'] ?? json['startinguniyear'],

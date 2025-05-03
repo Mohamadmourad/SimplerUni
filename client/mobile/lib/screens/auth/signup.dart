@@ -43,6 +43,9 @@ class SignupPageState extends State<SignupPage> {
 
     setState(() {
       isLoading = true;
+      usernameError = "";
+      emailError = "";
+      passwordError = "";
     });
 
     try {
@@ -50,33 +53,52 @@ class SignupPageState extends State<SignupPage> {
       String email = emailController.text;
       String password = passwordController.text;
 
-      setState(() {
-        if (username.isEmpty) {
+      if (username.isEmpty) {
+        setState(() {
           usernameError = "Please enter your username";
-          return;
-        }
-        if (username.length < 3) {
+          isLoading = false;
+        });
+        return;
+      }
+      if (username.length < 3) {
+        setState(() {
           usernameError = "Username must be at least 3 characters";
-          return;
-        }
-        if (email.isEmpty) {
+          isLoading = false;
+        });
+        return;
+      }
+      if (email.isEmpty) {
+        setState(() {
           emailError = "Please enter your email";
-          return;
-        } else if (!email.contains('@')) {
+          isLoading = false;
+        });
+        return;
+      } else if (!email.contains('@')) {
+        setState(() {
           emailError = "Please enter a valid email";
-          return;
-        }
-        if (password.isEmpty) {
+          isLoading = false;
+        });
+        return;
+      }
+      if (password.isEmpty) {
+        setState(() {
           passwordError = "Please enter your password";
-          return;
-        } else if (password.length < 6) {
+          isLoading = false;
+        });
+        return;
+      } else if (password.length < 6) {
+        setState(() {
           passwordError = "Password must be at least 6 characters";
-          return;
-        } else if (password != confirmPasswordController.text) {
+          isLoading = false;
+        });
+        return;
+      } else if (password != confirmPasswordController.text) {
+        setState(() {
           passwordError = "Passwords mismatch";
-          return;
-        }
-      });
+          isLoading = false;
+        });
+        return;
+      }
 
       final result = await sign_up(email, password, username, context: context);
 
@@ -89,28 +111,95 @@ class SignupPageState extends State<SignupPage> {
           },
         );
       } else if (result["statusCode"] == 401) {
-        final error = result["error"];
-        Map<String, dynamic> decodedError = jsonDecode(error);
-        context.go(
-          '/otp-verify',
-          extra: {
-            'email': emailController.text,
-            'authToken': decodedError["authToken"],
-          },
-        );
+        final dynamic error = result["error"];
+        dynamic parsedError;
+
+        if (error is String) {
+          try {
+            parsedError = jsonDecode(error);
+          } catch (e) {
+            setState(() {
+              emailError = error;
+            });
+            return;
+          }
+        } else {
+          parsedError = error;
+        }
+
+        if (parsedError != null && parsedError["authToken"] != null) {
+          context.go(
+            '/otp-verify',
+            extra: {
+              'email': emailController.text,
+              'authToken': parsedError["authToken"],
+            },
+          );
+        }
       } else {
-        final error = result["error"];
-        Map<String, dynamic> decodedError = jsonDecode(error);
-        setState(() {
-          if (decodedError["email"] != "") emailError = decodedError["email"];
-          if (decodedError["username"] != "")
-            usernameError = decodedError["username"];
-          if (decodedError["password"] != "")
-            passwordError = decodedError["password"];
-        });
+        final dynamic error = result["error"];
+
+        if (error is String) {
+          try {
+            final Map<String, dynamic> parsedJson = jsonDecode(error);
+
+            if (parsedJson.containsKey("errors")) {
+              final errorsObj = parsedJson["errors"];
+              if (errorsObj is Map) {
+                setState(() {
+                  if (errorsObj.containsKey("email"))
+                    emailError = errorsObj["email"];
+                  if (errorsObj.containsKey("username"))
+                    usernameError = errorsObj["username"];
+                  if (errorsObj.containsKey("password"))
+                    passwordError = errorsObj["password"];
+                });
+              } else {
+                setState(() {
+                  emailError = errorsObj.toString();
+                });
+              }
+            } else {
+              setState(() {
+                emailError = error;
+              });
+            }
+          } catch (e) {
+            setState(() {
+              emailError = error;
+            });
+          }
+        } else if (error is Map) {
+          if (error.containsKey("errors")) {
+            final errorsObj = error["errors"];
+            setState(() {
+              if (errorsObj is Map) {
+                if (errorsObj.containsKey("email"))
+                  emailError = errorsObj["email"];
+                if (errorsObj.containsKey("username"))
+                  usernameError = errorsObj["username"];
+                if (errorsObj.containsKey("password"))
+                  passwordError = errorsObj["password"];
+              } else if (errorsObj != null) {
+                emailError = errorsObj.toString();
+              }
+            });
+          } else {
+            setState(() {
+              emailError = "An error occurred during signup";
+            });
+          }
+        } else {
+          setState(() {
+            emailError = "An unexpected error occurred";
+          });
+        }
       }
     } catch (e) {
-      print(e);
+      setState(() {
+        emailError = "An unexpected error occurred: ${e.toString()}";
+      });
+      print("Signup error: $e");
     }
 
     setState(() {

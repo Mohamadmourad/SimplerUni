@@ -143,8 +143,7 @@ module.exports.rejectJoinRequest = async (req, res) => {
     }
     try {
         await db.query(
-            `UPDATE club_members SET status = $1 WHERE userId = $2 AND clubId = $3`,
-            ["rejected", userId, clubId]
+           `DELETE FROM club_members WHERE userId=$1 AND clubId=$2`, [userId, clubId]
         );
 
         return res.status(200).json("Join request rejected successfully");
@@ -233,8 +232,9 @@ module.exports.getClubInfo = async (req, res) => {
     try {
         const { userId, universityId } = mobileTokenVerify(token);
         const members = await db.query(
-            `SELECT u.* FROM users as u JOIN club_members as cm ON u.userId = cm.userId WHERE cm.clubId = $1`,
-            [clubId]
+            `SELECT u.* FROM users as u JOIN club_members as cm ON u.userId = cm.userId WHERE cm.clubId = $1 AND cm.status = $2`,
+            [clubId, "accepted"]
+            
         );
         const clubData = await db.query(
             `SELECT * FROM clubs WHERE clubId = $1`,
@@ -260,10 +260,10 @@ module.exports.removerStudentFromClub = async (req, res) => {
             `DELETE FROM club_members WHERE userId=$1 AND clubId=$2`,
             [userId, clubId]
         );
-        const {rows}= await db.query(`SELECT chtroomId FROM club WHERE clubId=$1`, [clubId]);
+        const {rows}= await db.query(`SELECT chatroomId FROM clubs WHERE clubId=$1`, [clubId]);
         await db.query(
             `DELETE FROM chatroom_members WHERE userId=$1 AND chatroomId=$2`,
-            [userId, rows[0]]
+            [userId, rows[0].chatroomid]
         );
 
         res.status(200).json("deleted succesfully");
@@ -289,8 +289,9 @@ module.exports.changeClubAdmin = async (req, res) => {
 module.exports.getClubJoinRequests = async (req, res) => {
     const token = req.headers.authorization;
     const {clubId} = req.params;
+    console.log("ss: " + clubId);
     try {
-        const {rows} = await db.query(`SELECT u.* FROM club_members as cm JOIN users as u ON cm.userId = u.userId WHERE clubId=$1 AND status=$2`,[clubId,"accepted"]);
+        const {rows} = await db.query(`SELECT u.* FROM club_members as cm JOIN users as u ON cm.userId = u.userId WHERE clubId=$1 AND status=$2`,[clubId,"underReview"]);
 
         res.status(200).json(rows);
     } catch (e) {
