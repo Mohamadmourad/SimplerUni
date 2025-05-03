@@ -11,6 +11,7 @@ export default function ClubsManagement() {
   const [activeTab, setActiveTab] = useState("pendingClubs");
   const [pendingClubs, setPendingClubs] = useState([]);
   const [acceptedClubs, setAcceptedClubs] = useState([]);
+  const [instructors, setInstructors] = useState([]); // State for instructors
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,13 +27,7 @@ export default function ClubsManagement() {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectClubId, setRejectClubId] = useState(null);
 
-  const instructors = [
-    { id: "1", name: "Dr. John Smith", department: "Computer Science" },
-    { id: "2", name: "Prof. Sarah Johnson", department: "Mathematics" },
-    { id: "3", name: "Dr. Michael Brown", department: "Engineering" },
-    { id: "4", name: "Prof. Emily Davis", department: "Physics" },
-    { id: "5", name: "Dr. Robert Wilson", department: "Chemistry" }
-  ];
+  // Remove dummy instructors array
 
   useEffect(() => {
     const verify = async () => {
@@ -45,7 +40,27 @@ export default function ClubsManagement() {
     };
     verify();
     fetchClubs();
+    fetchInstructors(); // Add this call to fetch instructors
   }, [router]);
+
+  const fetchInstructors = async () => {
+    try {
+      const response = await axios.get(
+        process.env.NEXT_PUBLIC_END_POINT + "/user/getAllInstructors",
+        { withCredentials: true }
+      );
+      
+      if (response.data && Array.isArray(response.data)) {
+        setInstructors(response.data);
+      } else {
+        console.error("Unexpected response format:", response.data);
+        setError("Failed to load instructors data");
+      }
+    } catch (err) {
+      console.error("Error fetching instructors:", err);
+      setError("Failed to load instructors data");
+    }
+  };
 
   const fetchClubs = async () => {
     setLoading(true);
@@ -242,7 +257,6 @@ export default function ClubsManagement() {
         )}
       </div>
 
-      {/* Enhanced Modal for accepting a club */}
       {showAcceptModal && selectedClub && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50">
           <div className="bg-gray-800 rounded-lg p-6 max-w-lg w-full mx-4">
@@ -303,9 +317,12 @@ export default function ClubsManagement() {
                   required
                 >
                   <option value="">Select an instructor</option>
-                  {instructors.map((instructor) => (
-                    <option key={instructor.id} value={instructor.id}>
-                      {instructor.name} - {instructor.department}
+                  {instructors.map((instructor, index) => (
+                    <option 
+                      key={instructor.userid || `instructor-${index}`} 
+                      value={instructor.userid}
+                    >
+                      {instructor.username || instructor.name} - {instructor.email}
                     </option>
                   ))}
                 </select>

@@ -47,8 +47,9 @@ module.exports.makeClubRequest = async (req, res)=>{
 }
 
 module.exports.getUnderReviewClubs = async (req, res) => {
-    const token = req.cookies.jwt;
-
+    let token = req.cookies.jwt;
+    if(!token)
+        token = req.headers.authorization;
     try {
         const { universityId } = verifyToken(token);
         const { rows } = await db.query(
@@ -119,10 +120,10 @@ module.exports.removeJoinClubRequest = async (req, res)=>{
 }
 
 module.exports.acceptJoinRequest = async (req, res) => {
-    const { userId, chatroomId } = req.body;
+    const { userId, clubId } = req.body;
 
-    if (!userId || !chatroomId) {
-        return res.status(400).json({ error: "Missing userId or chatroomId" });
+    if (!userId || !clubId) {
+        return res.status(400).json({ error: "Missing userId or clubId" });
     }
     try {
         const user = await db.query(`SELECT * FROM users WHERE userId=$1`,[userId]);
@@ -130,8 +131,8 @@ module.exports.acceptJoinRequest = async (req, res) => {
             return res.status(400).json({message:"user not found"});
         }
         await db.query(
-            `UPDATE club_members SET status = $1 WHERE userId = $2 AND chatroomId = $3`,
-            ["accepted", userId, chatroomId]
+            `UPDATE club_members SET status = $1 WHERE userId = $2 AND clubId = $3`,
+            ["accepted", userId, clubId]
         );
         await db.query(`INSERT INTO chatroom_members(userid,chatroomid) VALUES($1,$2)`,[userId,chatroomId]);
         const emailContent = clubAcceptanceEmail(user.rows[0].username, );
@@ -144,15 +145,14 @@ module.exports.acceptJoinRequest = async (req, res) => {
 };
 
 module.exports.rejectJoinRequest = async (req, res) => {
-    const { userId, chatroomId } = req.body;
+    const { userId, clubId } = req.body;
 
-    if (!userId || !chatroomId) {
-        return res.status(400).json({ error: "Missing userId or chatroomId" });
+    if (!userId || !clubId) {
+        return res.status(400).json({ error: "Missing userId or clubId" });
     }
     try {
         await db.query(
-            `UPDATE club_members SET status = $1 WHERE userId = $2 AND chatroomId = $3`,
-            ["rejected", userId, chatroomId]
+           `DELETE FROM club_members WHERE userId=$1 AND clubId=$2`, [userId, clubId]
         );
 
         return res.status(200).json("Join request rejected successfully");
@@ -180,7 +180,7 @@ module.exports.getClubsUserNotIn = async (req, res) => {
                 SELECT c.clubId
                 FROM club_members cm
                 JOIN clubs c ON cm.clubId = c.clubId
-                WHERE cm.userId = $2
+                WHERE cm.userId = $2 AND cm.status = 'accepted'
             )
             AND status = 'accepted'
             `,
@@ -241,8 +241,9 @@ module.exports.getClubInfo = async (req, res) => {
     try {
         const { userId, universityId } = mobileTokenVerify(token);
         const members = await db.query(
-            `SELECT u.* FROM users as u JOIN club_members as cm ON u.userId = cm.userId WHERE cm.clubId = $1`,
-            [clubId]
+            `SELECT u.* FROM users as u JOIN club_members as cm ON u.userId = cm.userId WHERE cm.clubId = $1 AND cm.status = $2`,
+            [clubId, "accepted"]
+            
         );
         const clubData = await db.query(
             `SELECT * FROM clubs WHERE clubId = $1`,
@@ -268,10 +269,10 @@ module.exports.removerStudentFromClub = async (req, res) => {
             `DELETE FROM club_members WHERE userId=$1 AND clubId=$2`,
             [userId, clubId]
         );
-        const {rows}= await db.query(`SELECT chtroomId FROM club WHERE clubId=$1`, [clubId]);
+        const {rows}= await db.query(`SELECT chatroomId FROM clubs WHERE clubId=$1`, [clubId]);
         await db.query(
             `DELETE FROM chatroom_members WHERE userId=$1 AND chatroomId=$2`,
-            [userId, rows[0]]
+            [userId, rows[0].chatroomid]
         );
 
         res.status(200).json("deleted succesfully");
@@ -297,6 +298,7 @@ module.exports.changeClubAdmin = async (req, res) => {
 module.exports.getClubJoinRequests = async (req, res) => {
     const token = req.headers.authorization;
     const {clubId} = req.params;
+    console.log("ss: " + clubId);
     try {
         const {rows} = await db.query(`SELECT u.* FROM club_members as cm JOIN users as u ON cm.userId = u.userId WHERE clubId=$1 AND status=$2`,[clubId,"underReview"]);
 

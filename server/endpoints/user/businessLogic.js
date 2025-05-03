@@ -30,7 +30,11 @@ module.exports.signup_post = async (req, res) => {
         }
         const domain = getEmailDomain(email);
         const uniRequest = await db.query("SELECT * FROM universities WHERE studentdomain=$1 OR instructordomain=$1",[domain]);
-        if(uniRequest.rowCount === 0) res.status(400).json("your university is not supported");
+        if(uniRequest.rowCount === 0) return res.status(400).json({
+            errors:{
+                email:"Your University is not supported yet."
+            }
+        });
         const type = domain == uniRequest.rows[0].studentdomain;
         const result = await db.query('INSERT INTO users(username, email, password, isEmailVerified,isStudent,universityid,isBanned) VALUES ($1,$2,$3,false,$4,$5,$6) RETURNING *',[username,email,password,type,uniRequest.rows[0].universityid,false]);
         const authToken = createToken(result.rows[0].userid, result.rows[0].universityid)
@@ -58,8 +62,7 @@ module.exports.login_post = async (req, res) => {
                 },
             });
         }
-        console.log(user.rows[0]);
-        if(user.rows[0].isBanned){
+        if(user.rows[0].isbanned){
             return res.status(400).json({
                 errors:{
                     email:"this account is banned"
@@ -116,9 +119,9 @@ module.exports.addAdditionalUserData = async (req, res)=>{
         if(optionalData.bio){
             await db.query(`UPDATE users SET bio = $1 WHERE userid = $2`, [optionalData.bio, userId]); 
         }
-        if(optionalData.profileImageUrl) {
+        if(optionalData.profilePicture) {
             
-            await db.query(`UPDATE users SET profilepicture = $1 WHERE userid = $2`, [optionalData.profileImageUrl, userId]);
+            await db.query(`UPDATE users SET profilepicture = $1 WHERE userid = $2`, [optionalData.profilePicture, userId]);
         }
         return res.status(200).json("data added succesfully");
     }
@@ -287,9 +290,10 @@ module.exports.banUser = async (req, res) => {
   
 
 module.exports.getUserAccountInfo = async (req, res)=>{
+    console.log("getting user account info")
     try {
         const { profileUserId } = req.params;
-
+        console.log("profileUserId", profileUserId)
         const result = await db.query(`
             SELECT
              u.userId,
@@ -304,7 +308,6 @@ module.exports.getUserAccountInfo = async (req, res)=>{
              un.name as universityName 
              FROM users as u JOIN campusus as c ON u.campusId = c.campusId JOIN majors as m ON u.majorId = m.majorId JOIN universities as un ON u.universityId = un.universityId WHERE u.userId=$1`
              ,[profileUserId]);
-
         res.status(200).json(result.rows[0]);
     } catch (error) {
         console.error("Error getting profile info :", error);

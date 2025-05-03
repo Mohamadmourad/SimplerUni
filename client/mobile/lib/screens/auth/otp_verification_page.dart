@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:senior_project/providers/user_provider.dart';
 import 'package:senior_project/functions/auth/verify_otp.dart';
 import 'package:senior_project/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:senior_project/functions/auth/send_otp.dart';
+import 'package:shared_preferences/shared_preferences.dart'; 
+import 'dart:convert';
 
 import 'package:senior_project/components/auth_button.dart';
 import 'package:senior_project/components/app_title.dart';
@@ -90,16 +94,48 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
 
     bool success = await verify_otp(otp);
 
-    setState(() {
-      isLoading = false;
-    });
-
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('OTP verified successfully!')),
-      );
-      context.go('/complete-profile', extra: {'email': widget.email});
+      try {
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        await userProvider.fetchUserFromAPI();
+
+        final currentUser = userProvider.currentUser;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('OTP verified successfully!')),
+        );
+
+        if (currentUser != null && currentUser.isStudent == false) {
+
+          final prefs = await SharedPreferences.getInstance();
+
+          if (currentUser.toJson != null) {
+            try {
+              final userJson = currentUser.toJson();
+              await prefs.setString('userData', jsonEncode(userJson));
+            } catch (e) {
+              print('Error saving user data: $e');
+            }
+          }
+
+          final authToken = prefs.getString('authToken');
+          if (authToken == null || authToken.isEmpty) {
+            print('Warning: Auth token not found after verification');
+          }
+
+          context.go('/home');
+        } else {
+          context.go('/complete-profile', extra: {'email': widget.email});
+        }
+      } catch (e) {
+        print('Error fetching user data: $e');
+        context.go('/complete-profile', extra: {'email': widget.email});
+      }
     } else {
+      setState(() {
+        isLoading = false;
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Invalid OTP. Please try again.')),
       );
@@ -123,7 +159,6 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
         context,
       ).showSnackBar(const SnackBar(content: Text('OTP resent successfully!')));
     } else {
-      // Handle specific error cases
       if (result['message'] == 'otpAlreadySent' &&
           result['minutesLeft'] != null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -175,7 +210,6 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                 ),
                 const SizedBox(height: 32),
 
-                // OTP Input Fields
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: List.generate(
@@ -208,7 +242,6 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
 
                 const SizedBox(height: 32),
 
-                // Error message if any
                 if (errorMessage != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16.0),
@@ -219,7 +252,6 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                     ),
                   ),
 
-                // Verify Button - using AuthButton component
                 AuthButton(
                   text: 'VERIFY',
                   isLoading: isLoading,
@@ -228,7 +260,6 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
 
                 const SizedBox(height: 24),
 
-                // Resend OTP
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
