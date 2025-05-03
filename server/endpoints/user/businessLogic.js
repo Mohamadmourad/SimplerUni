@@ -103,7 +103,6 @@ module.exports.login_post = async (req, res) => {
 
 module.exports.addAdditionalUserData = async (req, res)=>{
     const {majorId, campusId, optionalData} = req.body;
-    console.log(optionalData);
     const token = req.headers.authorization;
     if (!token) {
         return res.status(401).json({ error: "Authorization header missing" });
