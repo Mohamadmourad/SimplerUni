@@ -1,6 +1,6 @@
 const {db} = require("../../db");
 const { createChatroom } = require("../chat/businessLogic");
-const { clubAcceptanceEmail } = require("../emailTemplates");
+const { clubAcceptanceEmail, clubRejectionEmail } = require("../emailTemplates");
 const { sendEmail } = require("../helper");
 const { verifyToken } = require("../university/helper");
 const { verifyToken: mobileTokenVerify } = require("../user/helper");
@@ -130,13 +130,17 @@ module.exports.acceptJoinRequest = async (req, res) => {
         if(user.rowCount ===0){
             return res.status(400).json({message:"user not found"});
         }
+        const club = await db.query(`SELECT * FROM clubs WHERE clubId=$1`,[clubId]);
+        if(club.rowCount ===0){
+            return res.status(400).json({message:"user not found"});
+        }
         await db.query(
             `UPDATE club_members SET status = $1 WHERE userId = $2 AND clubId = $3`,
             ["accepted", userId, clubId]
         );
-        await db.query(`INSERT INTO chatroom_members(userid,chatroomid) VALUES($1,$2)`,[userId,chatroomId]);
-        const emailContent = clubAcceptanceEmail(user.rows[0].username, );
-        await sendEmail(user.rows[0].email,"club acceptence","")
+        await db.query(`INSERT INTO chatroom_members(userid,chatroomid) VALUES($1,$2)`,[userId,club.rows[0].chatroomid]);
+        const emailContent = clubAcceptanceEmail(user.rows[0].username,club.rows[0].name);
+        await sendEmail(user.rows[0].email,"club acceptence",emailContent);
         return res.status(200).json("Join request accepted successfully");
     } catch (e) {
         console.error(e);
@@ -151,9 +155,15 @@ module.exports.rejectJoinRequest = async (req, res) => {
         return res.status(400).json({ error: "Missing userId or clubId" });
     }
     try {
+        const club = await db.query(`SELECT * FROM clubs WHERE clubId=$1`,[clubId]);
+        if(club.rowCount ===0){
+            return res.status(400).json({message:"user not found"});
+        }
         await db.query(
            `DELETE FROM club_members WHERE userId=$1 AND clubId=$2`, [userId, clubId]
         );
+        const emailContent = clubRejectionEmail(user.rows[0].username,"club rejection",club.rows[0].name);
+        await sendEmail(user.rows[0].email,"club acceptence",emailContent);
 
         return res.status(200).json("Join request rejected successfully");
     } catch (e) {
@@ -174,25 +184,36 @@ module.exports.getClubsUserNotIn = async (req, res) => {
 
         const { rows } = await db.query(
             `
-            SELECT * FROM clubs 
-            WHERE universityId = $1 
-            AND clubId NOT IN (
+            SELECT 
+                c.*, 
+                CASE 
+                    WHEN cm.status = 'underReview' THEN true 
+                    ELSE false 
+                END AS hasUserMadeRequest
+            FROM clubs c
+            LEFT JOIN club_members cm 
+                ON cm.clubId = c.clubId AND cm.userId = $2
+            WHERE c.universityId = $1 
+            AND c.clubId NOT IN (
                 SELECT c.clubId
                 FROM club_members cm
                 JOIN clubs c ON cm.clubId = c.clubId
                 WHERE cm.userId = $2 AND cm.status = 'accepted'
             )
-            AND status = 'accepted'
+            AND c.status = 'accepted'
             `,
             [universityId, userId]
         );
-
+console.log(rows);
         return res.status(200).json(rows);
     } catch (e) {
         console.error(e);
         return res.status(500).json("Failed to fetch clubs user is not in");
     }
 };
+
+
+
 
 module.exports.getClubsUserIsIn = async (req, res) => {
     const token = req.headers.authorization;
