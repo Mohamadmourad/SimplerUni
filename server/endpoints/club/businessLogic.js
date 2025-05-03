@@ -19,7 +19,7 @@ module.exports.acceptClubRequest = async (req, res) => {
              WHERE clubId = $7`,
             [name, description, room, adminId, chatroomId, "accepted", clubId]
         );
-        await db.query(`INSERT INTO chatroom_members(userid,chatroomid) VALUES($1,$2)`,[userId,chatroomId]);
+        await db.query(`INSERT INTO chatroom_members(userid,chatroomid) VALUES($1,$2)`,[adminId,chatroomId]);
         res.status(200).json({ message: "Club updated successfully" });
     } catch (e) {
         console.error(e);
