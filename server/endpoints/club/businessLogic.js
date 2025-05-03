@@ -19,7 +19,7 @@ module.exports.acceptClubRequest = async (req, res) => {
              WHERE clubId = $7`,
             [name, description, room, adminId, chatroomId, "accepted", clubId]
         );
-
+        await db.query(`INSERT INTO chatroom_members(userid,chatroomid) VALUES($1,$2)`,[userId,chatroomId]);
         res.status(200).json({ message: "Club updated successfully" });
     } catch (e) {
         console.error(e);
@@ -83,11 +83,32 @@ module.exports.requestJoinClub = async (req, res)=>{
     if (!token) {
         return res.status(401).json({ error: "Authorization header missing" });
     }
-    const { chatroomId } = req.body;
+    const { clubId } = req.body;
      try {
        const { userId, universityId } = mobileTokenVerify(token);
-       await db.query(`INSERT INTO club_members (userId, chatroomId,status) VALUES($1,$2,$3)`,[userId, chatroomId, "underReview"]);
+       const available = await db.query(`SELECT * FROM club_members WHERE userId=$1 AND clubId=$2`,[userId, clubId]);
+       if(available.rowCount === 0){
+         await db.query(`INSERT INTO club_members (userId, clubId,status) VALUES($1,$2,$3)`,[userId, clubId, "underReview"]);
+       }
        return res.status(200).json("request sended succefully");
+     }
+     catch(e){
+       console.log(e);
+       return res.status(500).json("creating club failed");
+     }
+}
+
+module.exports.removeJoinClubRequest = async (req, res)=>{
+    const token = req.headers.authorization;
+    if (!token) {
+        return res.status(401).json({ error: "Authorization header missing" });
+    }
+    const { clubId } = req.params;
+     try {
+       const { userId, universityId } = mobileTokenVerify(token);
+       await db.query(`DELETE FROM club_members WHERE userId=$1 AND clubId=$2`, [userId, clubId]);
+
+       return res.status(200).json("request removed succefully");
      }
      catch(e){
        console.log(e);
@@ -205,17 +226,25 @@ module.exports.getAdminClubList = async (req, res) => {
     }
 };
 
-module.exports.getClubMembers = async (req, res) => {
+module.exports.getClubInfo = async (req, res) => {
     const token = req.headers.authorization;
     const {clubId} = req.params;
     try {
         const { userId, universityId } = mobileTokenVerify(token);
-        const { rows } = await db.query(
+        const members = await db.query(
             `SELECT u.* FROM users as u JOIN club_members as cm ON u.userId = cm.userId WHERE cm.clubId = $1`,
             [clubId]
         );
+        const clubData = await db.query(
+            `SELECT * FROM clubs WHERE clubId = $1`,
+            [clubId]
+        );
+        const result = {
+            clubMembers: members.rows,
+            ...clubData.rows[0]
+        }
 
-        res.status(200).json(rows);
+        res.status(200).json(result);
     } catch (e) {
         console.error(e);
         return res.status(500).json("Failed to get club members");
@@ -253,5 +282,18 @@ module.exports.changeClubAdmin = async (req, res) => {
     } catch (e) {
         console.error(e);
         return res.status(500).json("Failed to change");
+    }
+};
+
+module.exports.getClubJoinRequests = async (req, res) => {
+    const token = req.headers.authorization;
+    const {clubId} = req.params;
+    try {
+        const {rows} = await db.query(`SELECT u.* FROM club_members as cm JOIN users as u ON cm.userId = u.userId WHERE clubId=$1 AND status=$2`,[clubId,"accepted"]);
+
+        res.status(200).json(rows);
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json("Failed to get club join request student");
     }
 };
