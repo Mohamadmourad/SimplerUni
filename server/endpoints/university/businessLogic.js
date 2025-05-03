@@ -246,7 +246,6 @@ module.exports.getUniversity = async (req,res)=>{
 
 module.exports.universityRequest = async(req,res)=>{
   const {name, email, phoneNumber, additionalInfo} = req.body;
-  console.log(process.env.SUPER_ADMIN_EMAIL)
   await db.query(`INSERT INTO university_requests (name, email, phoneNumber, additional_information,status) VALUES ($1, $2, $3, $4,$5)`,[name, email, phoneNumber, additionalInfo,"pending"]);
   const htmlContent = newUniversityRequestEmail(name, email, phoneNumber, additionalInfo);
   await sendEmail(process.env.SUPER_ADMIN_EMAIL, "request", htmlContent);
@@ -305,7 +304,6 @@ module.exports.universityRequestAccept = async(req,res)=>{
 module.exports.universityRequestReject = async(req,res)=>{
   const token = req.cookies.jwt;
   const { requestId } = req.body;
-  console.log(requestId);
   try {
     const { adminId } = verifyToken(token);
     if (!await isAuthed("superAdmin", adminId)) {

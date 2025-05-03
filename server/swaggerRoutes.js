@@ -1512,10 +1512,10 @@
  */
 /**
  * @swagger
- * /clubs/getClubMembers/{clubId}:
+ * /clubs/getClubInfo/{clubId}:
  *   get:
- *     summary: Fetch members of a specific club.
- *     description: Retrieves a list of users who are members of the specified club.
+ *     summary: Fetch data for club.
+ *     description: Retrieves a list of users who are members of the specified club and club data.
  *     tags: [Clubs]
  *     parameters:
  *       - in: path
@@ -1544,6 +1544,43 @@
  *         description: Missing or invalid clubId.
  *       500:
  *         description: Failed to get club members.
+ */
+/**
+ * @swagger
+ * /clubs/getClubJoinRequests/{clubId}:
+ *   get:
+ *     summary: Fetch join requests for a specific club.
+ *     description: Retrieves a list of users who have requested to join a specific club and whose status is "accepted."
+ *     tags: [Clubs]
+ *     parameters:
+ *       - in: path
+ *         name: clubId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the club for which join requests are being fetched.
+ *     responses:
+ *       200:
+ *         description: List of join requests fetched successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   userId:
+ *                     type: integer
+ *                   name:
+ *                     type: string
+ *                   email:
+ *                     type: string
+ *                   status:
+ *                     type: string
+ *       400:
+ *         description: Missing or invalid clubId.
+ *       500:
+ *         description: Failed to fetch club join requests.
  */
 
 
@@ -1740,6 +1777,30 @@
  *       500:
  *         description: Failed to remove the student.
  */
+
+/**
+ * @swagger
+ * /clubs/removeJoinClubRequest/{clubId}:
+ *   delete:
+ *     summary: Remove a join club request.
+ *     description: Allows a user to cancel their request to join a specific club.
+ *     tags: [Clubs]
+ *     parameters:
+ *       - in: path
+ *         name: clubId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the club whose join request is being removed.
+ *     responses:
+ *       200:
+ *         description: Join request removed successfully.
+ *       401:
+ *         description: Authorization header missing or invalid token.
+ *       500:
+ *         description: Failed to remove join club request.
+ */
+
 
 /**
  * @swagger
