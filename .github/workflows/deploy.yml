@@ -22,7 +22,8 @@ jobs:
       run: |
         ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
           cd ~/SimplerUni/server || exit
-          git pull origin Master || exit
+          git fetch origin || exit
+          git reset --hard origin/Master || exit
           npm install || exit
           pm2 restart server || exit
         EOF
