@@ -22,7 +22,7 @@ jobs:
       run: |
         ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
           cd ~/server || exit
-          git pull origin main || exit
+          git pull origin Master || exit
           npm install || exit
           pm2 restart server || exit
         EOF
