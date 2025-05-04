@@ -21,7 +21,7 @@ jobs:
     - name: Deploy to EC2
       run: |
         ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
-          cd ~/server || exit
+          cd ~/SimplerUni/server || exit
           git pull origin Master || exit
           npm install || exit
           pm2 restart server || exit
