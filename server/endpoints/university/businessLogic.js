@@ -22,7 +22,11 @@ module.exports.createUniversity = async (req, res)=>{
     const result = await db.query('INSERT INTO universities(name) VALUES ($1) RETURNING *',[universityName]); 
     const  universityId = result.rows[0].universityid;
     const roleId = await addRoleMethode("generalAdmin",universityId,["universityDashboard"]);
-    await db.query('INSERT INTO web_admins(username, password, universityid, roleid) VALUES ($1,$2,$3,$4)',[ username, password, universityId, roleId]);
+    const doAdminExist = await db.query(`SELECT * FROM web_admins WHERE username=$1`,[username]);
+      if(doAdminExist.rowCount > 0){
+        return res.status(401).json({ message: "username already exits" });
+      }
+    await db.query('INSERT INTO web_admins(username, password, universityid, roleid,isPasswordChanged) VALUES ($1,$2,$3,$4,$5)',[ username, password, universityId, roleId,false]);
     await createChatroom( `${universityName} global chat`, universityId);
     await createChatroom( `${universityName} Instructors`, universityId);
     const htmlContent = accountAcceptanceEmail(username, Originalpassword);

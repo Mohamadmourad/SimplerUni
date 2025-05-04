@@ -1,14 +1,12 @@
 const {db} = require("../../db");
 const {DateTime} = require("luxon");
-const { hashText, createToken, handleErrors, compareHashedText, getUserIdFromToken, getEmailDomain, verifyToken } = require("./helper");
+const { hashText, createToken, handleErrors, compareHashedText, getEmailDomain, verifyToken } = require("./helper");
 const { verifyToken: universityVerifyToken } = require("../university/helper")
 const { sendEmail } = require("../helper");
 const { otpVerificationEmail } = require("../emailTemplates");
-const { addToChatroom } = require("../chat/businessLogic");
 
 module.exports.signup_post = async (req, res) => {
     let { email, password, username } = req.body;
-    console.log("email", email);
     password = await hashText(password);
     try{
         const user = await db.query('SELECT * FROM users WHERE email = $1', [email]);
@@ -18,7 +16,7 @@ module.exports.signup_post = async (req, res) => {
                 errors:{
                     email:"this account is banned"
                 }
-            })
+            });
         }
 
         if (user.rows.length > 0 && !user.rows[0].isemailverified) {
@@ -88,8 +86,7 @@ module.exports.login_post = async (req, res) => {
                 },
             });
         }
-        if(!user.rows[0].majorid && !user.rows[0].campusid){
-            
+        if((!user.rows[0].majorid || !user.rows[0].campusid) && user.rows.isstudent){      
             return res.status(201).json(authToken);
         }
         res.status(200).json({
@@ -292,25 +289,44 @@ module.exports.banUser = async (req, res) => {
   
 
 module.exports.getUserAccountInfo = async (req, res)=>{
-    console.log("getting user account info")
     try {
         const { profileUserId } = req.params;
-        console.log("profileUserId", profileUserId)
+        const user = await db.query(`SELECT * FROM users WHERE userId=$1`,[profileUserId]);
+        if(user.rowCount === 0){
+            return res.status(400).json({message:"user not found"});
+        }
+        if(user.rows[0].isstudent){
+            const result = await db.query(`
+                SELECT
+                u.userId,
+                u.username,
+                u.email,
+                u.isStudent,
+                u.bio,
+                u.profilePicture,
+                u.created_at,
+                c.name as campusName,
+                m.name as majorName,
+                un.name as universityName 
+                FROM users as u JOIN campusus as c ON u.campusId = c.campusId JOIN majors as m ON u.majorId = m.majorId JOIN universities as un ON u.universityId = un.universityId WHERE u.userId=$1`
+                ,[profileUserId]);
+            return res.status(200).json(result.rows[0]);
+       }
+       else{
         const result = await db.query(`
             SELECT
-             u.userId,
-             u.username,
-             u.email,
-             u.isStudent,
-             u.bio,
-             u.profilePicture,
-             u.created_at,
-             c.name as campusName,
-             m.name as majorName,
-             un.name as universityName 
-             FROM users as u JOIN campusus as c ON u.campusId = c.campusId JOIN majors as m ON u.majorId = m.majorId JOIN universities as un ON u.universityId = un.universityId WHERE u.userId=$1`
-             ,[profileUserId]);
-        res.status(200).json(result.rows[0]);
+            u.userId,
+            u.username,
+            u.email,
+            u.isStudent,
+            u.bio,
+            u.profilePicture,
+            u.created_at,
+            un.name as universityName 
+            FROM users as u JOIN universities as un ON u.universityId = un.universityId WHERE u.userId=$1`
+            ,[profileUserId]);
+        return res.status(200).json(result.rows[0]);
+       }
     } catch (error) {
         console.error("Error getting profile info :", error);
         res.status(500).json({ message: "internalServerError" });

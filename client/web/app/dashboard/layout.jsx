@@ -39,6 +39,7 @@ export default function DashboardLayout({ children }) {
     { name: "Roles", icon: UserPlus, path: "/dashboard/roles", permission: "rolesPage" },
     { name: "Club Management", icon: ChartNoAxesGantt, path: "/dashboard/clubs", permission: "clubsPage" },
     { name: "News", icon: Newspaper, path: "/dashboard/news", permission: "newsPage" },
+    { name: "Password", icon: Newspaper, path: "/dashboard/password", permission: "newsPage" },
   ];
   const superAdminnavigationItems = [
     { name: "Home", icon: Home, path: "/dashboard", permission: null }, 
