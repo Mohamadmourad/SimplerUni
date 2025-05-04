@@ -128,6 +128,7 @@ const tables =
         firstName varchar(50),
         lastName varchar(50),
         password VARCHAR(255),
+        isPasswordChanged BOOLEAN,
         universityId UUID REFERENCES universities(universityId) ON DELETE CASCADE,
         roleId UUID REFERENCES roles(roleId) ON DELETE CASCADE,
         created_at TIMESTAMPTZ DEFAULT now()

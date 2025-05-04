@@ -4,6 +4,7 @@ const adminController = require('./businessLogic');
 const router = express.Router();
 
 router.post("/addAdmin", adminController.addAdmin);
+router.post("/changePassword", adminController.changePassword);
 
 router.put("/updateAdmin", adminController.updateAdmin);
 

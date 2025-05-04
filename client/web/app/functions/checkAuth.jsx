@@ -17,7 +17,6 @@ export const checkAuth = async (requiredPermission) => {
       return false;
     }
   } catch (error) {
-    console.log("test")
     return false;
   }
 };

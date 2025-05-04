@@ -1,14 +1,12 @@
 const {db} = require("../../db");
 const {DateTime} = require("luxon");
-const { hashText, createToken, handleErrors, compareHashedText, getUserIdFromToken, getEmailDomain, verifyToken } = require("./helper");
+const { hashText, createToken, handleErrors, compareHashedText, getEmailDomain, verifyToken } = require("./helper");
 const { verifyToken: universityVerifyToken } = require("../university/helper")
 const { sendEmail } = require("../helper");
 const { otpVerificationEmail } = require("../emailTemplates");
-const { addToChatroom } = require("../chat/businessLogic");
 
 module.exports.signup_post = async (req, res) => {
     let { email, password, username } = req.body;
-    console.log("email", email);
     password = await hashText(password);
     try{
         const user = await db.query('SELECT * FROM users WHERE email = $1', [email]);
@@ -18,7 +16,7 @@ module.exports.signup_post = async (req, res) => {
                 errors:{
                     email:"this account is banned"
                 }
-            })
+            });
         }
 
         if (user.rows.length > 0 && !user.rows[0].isemailverified) {
@@ -32,7 +30,11 @@ module.exports.signup_post = async (req, res) => {
         }
         const domain = getEmailDomain(email);
         const uniRequest = await db.query("SELECT * FROM universities WHERE studentdomain=$1 OR instructordomain=$1",[domain]);
-        if(uniRequest.rowCount === 0) res.status(400).json("your university is not supported");
+        if(uniRequest.rowCount === 0) return res.status(400).json({
+            errors:{
+                email:"Your University is not supported yet."
+            }
+        });
         const type = domain == uniRequest.rows[0].studentdomain;
         const result = await db.query('INSERT INTO users(username, email, password, isEmailVerified,isStudent,universityid,isBanned) VALUES ($1,$2,$3,false,$4,$5,$6) RETURNING *',[username,email,password,type,uniRequest.rows[0].universityid,false]);
         const authToken = createToken(result.rows[0].userid, result.rows[0].universityid)
@@ -60,7 +62,7 @@ module.exports.login_post = async (req, res) => {
                 },
             });
         }
-        if(user.rows.isBanned){
+        if(user.rows[0].isbanned){
             return res.status(400).json({
                 errors:{
                     email:"this account is banned"
@@ -84,8 +86,7 @@ module.exports.login_post = async (req, res) => {
                 },
             });
         }
-        if(!user.rows[0].majorid && !user.rows[0].campusid){
-            
+        if((!user.rows[0].majorid || !user.rows[0].campusid) && user.rows.isstudent){      
             return res.status(201).json(authToken);
         }
         res.status(200).json({
@@ -103,7 +104,6 @@ module.exports.login_post = async (req, res) => {
 
 module.exports.addAdditionalUserData = async (req, res)=>{
     const {majorId, campusId, optionalData} = req.body;
-    console.log(optionalData);
     const token = req.headers.authorization;
     if (!token) {
         return res.status(401).json({ error: "Authorization header missing" });
@@ -118,9 +118,9 @@ module.exports.addAdditionalUserData = async (req, res)=>{
         if(optionalData.bio){
             await db.query(`UPDATE users SET bio = $1 WHERE userid = $2`, [optionalData.bio, userId]); 
         }
-        if(optionalData.profileImageUrl) {
+        if(optionalData.profilePicture) {
             
-            await db.query(`UPDATE users SET profilepicture = $1 WHERE userid = $2`, [optionalData.profileImageUrl, userId]);
+            await db.query(`UPDATE users SET profilepicture = $1 WHERE userid = $2`, [optionalData.profilePicture, userId]);
         }
         return res.status(200).json("data added succesfully");
     }
@@ -291,25 +291,61 @@ module.exports.banUser = async (req, res) => {
 module.exports.getUserAccountInfo = async (req, res)=>{
     try {
         const { profileUserId } = req.params;
-
+        const user = await db.query(`SELECT * FROM users WHERE userId=$1`,[profileUserId]);
+        if(user.rowCount === 0){
+            return res.status(400).json({message:"user not found"});
+        }
+        if(user.rows[0].isstudent){
+            const result = await db.query(`
+                SELECT
+                u.userId,
+                u.username,
+                u.email,
+                u.isStudent,
+                u.bio,
+                u.profilePicture,
+                u.created_at,
+                c.name as campusName,
+                m.name as majorName,
+                un.name as universityName 
+                FROM users as u JOIN campusus as c ON u.campusId = c.campusId JOIN majors as m ON u.majorId = m.majorId JOIN universities as un ON u.universityId = un.universityId WHERE u.userId=$1`
+                ,[profileUserId]);
+            return res.status(200).json(result.rows[0]);
+       }
+       else{
         const result = await db.query(`
             SELECT
-             u.userId,
-             u.username,
-             u.email,
-             u.isStudent,
-             u.bio,
-             u.profilePicture,
-             u.created_at,
-             c.name as campusName,
-             m.name as majorName,
-             un.name as universityName 
-             FROM users as u JOIN campusus as c ON u.campusId = c.campusId JOIN majors as m ON u.majorId = m.majorId JOIN universities as un ON u.universityId = un.universityId WHERE u.userId=$1`
-             ,[profileUserId]);
-
-        res.status(200).json(result.rows[0]);
+            u.userId,
+            u.username,
+            u.email,
+            u.isStudent,
+            u.bio,
+            u.profilePicture,
+            u.created_at,
+            un.name as universityName 
+            FROM users as u JOIN universities as un ON u.universityId = un.universityId WHERE u.userId=$1`
+            ,[profileUserId]);
+        return res.status(200).json(result.rows[0]);
+       }
     } catch (error) {
         console.error("Error getting profile info :", error);
         res.status(500).json({ message: "internalServerError" });
     }
 }
+
+module.exports.getAllInstructors = async (req, res) => {
+    const token = req.cookies.jwt;
+
+    try {
+        const { adminId, universityId } = universityVerifyToken(token);
+        const { rows } = await db.query(
+            `SELECT * FROM users WHERE universityId = $1 AND isStudent=$2`,
+            [universityId, false]
+        );
+
+        res.status(200).json(rows);
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json("Failed to fetch get instructors");
+    }
+};

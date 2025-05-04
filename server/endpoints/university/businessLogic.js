@@ -22,7 +22,11 @@ module.exports.createUniversity = async (req, res)=>{
     const result = await db.query('INSERT INTO universities(name) VALUES ($1) RETURNING *',[universityName]); 
     const  universityId = result.rows[0].universityid;
     const roleId = await addRoleMethode("generalAdmin",universityId,["universityDashboard"]);
-    await db.query('INSERT INTO web_admins(username, password, universityid, roleid) VALUES ($1,$2,$3,$4)',[ username, password, universityId, roleId]);
+    const doAdminExist = await db.query(`SELECT * FROM web_admins WHERE username=$1`,[username]);
+      if(doAdminExist.rowCount > 0){
+        return res.status(401).json({ message: "username already exits" });
+      }
+    await db.query('INSERT INTO web_admins(username, password, universityid, roleid,isPasswordChanged) VALUES ($1,$2,$3,$4,$5)',[ username, password, universityId, roleId,false]);
     await createChatroom( `${universityName} global chat`, universityId);
     await createChatroom( `${universityName} Instructors`, universityId);
     const htmlContent = accountAcceptanceEmail(username, Originalpassword);
@@ -246,7 +250,6 @@ module.exports.getUniversity = async (req,res)=>{
 
 module.exports.universityRequest = async(req,res)=>{
   const {name, email, phoneNumber, additionalInfo} = req.body;
-  console.log(process.env.SUPER_ADMIN_EMAIL)
   await db.query(`INSERT INTO university_requests (name, email, phoneNumber, additional_information,status) VALUES ($1, $2, $3, $4,$5)`,[name, email, phoneNumber, additionalInfo,"pending"]);
   const htmlContent = newUniversityRequestEmail(name, email, phoneNumber, additionalInfo);
   await sendEmail(process.env.SUPER_ADMIN_EMAIL, "request", htmlContent);
@@ -305,7 +308,6 @@ module.exports.universityRequestAccept = async(req,res)=>{
 module.exports.universityRequestReject = async(req,res)=>{
   const token = req.cookies.jwt;
   const { requestId } = req.body;
-  console.log(requestId);
   try {
     const { adminId } = verifyToken(token);
     if (!await isAuthed("superAdmin", adminId)) {

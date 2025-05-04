@@ -4,6 +4,7 @@ const { checkAdminToken } = require("../role/helper");
 const { getUniversityId } = require("../university/businessLogic");
 const { verifyToken } = require("../university/helper");
 const { hashText } = require("../user/helper");
+const bcrypt = require('bcrypt');
 
 module.exports.addAdmin = async (req, res) => {
     const { firstName, lastName, username, password, roleId } = req.body;
@@ -14,12 +15,17 @@ module.exports.addAdmin = async (req, res) => {
       if (!isAuthed("admindPage", adminId)) return res.status(401).json({ message: "Unauthorized" });
   
       const hashedPassword = await hashText(password);
+
+      const doAdminExist = await db.query(`SELECT * FROM web_admins WHERE username=$1`,[username]);
+      if(doAdminExist.rowCount > 0){
+        return res.status(401).json({ message: "username already exits" });
+      }
   
       const result = await db.query(`
-        INSERT INTO web_admins(firstname, lastname, username, password, roleid, universityid)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO web_admins(firstname, lastname, username, password, roleid, universityid, isPasswordChanged)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING *
-      `, [firstName, lastName, username, hashedPassword, roleId, universityId]);
+      `, [firstName, lastName, username, hashedPassword, roleId, universityId,false]);
   
       return res.status(200).json({ message: "Admin added successfully", admin: result.rows[0] });
     } catch (e) {
@@ -120,7 +126,7 @@ module.exports.getAllAdmins = async (req, res) => {
       const {adminId, universityId} = verifyToken(token);
       if (!isAuthed("adminPage", adminId)) return res.status(401).json({ message: "Unauthorized" });
       const result = await db.query(
-        `SELECT a.adminid, a.firstname, a.lastname, a.username, r.name AS rolename, 
+        `SELECT a.adminid, a.firstname, a.lastname, a.username, a.ispasswordchanged, r.name AS rolename, 
          ARRAY_AGG(p.name) AS permissions
          FROM web_admins AS a
          JOIN roles AS r ON a.roleid = r.roleid
@@ -165,5 +171,33 @@ module.exports.getAllAdmins = async (req, res) => {
     }
 };
   
-  
+module.exports.changePassword = async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  const token = req.cookies.jwt;
+
+  try {
+    const { adminId } = verifyToken(token);
+
+    const result = await db.query(`SELECT password FROM web_admins WHERE adminId = $1`, [adminId]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+    const storedPasswordHash = result.rows[0].password;
+
+    const isPasswordValid = await bcrypt.compare(currentPassword, storedPasswordHash);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Current password is incorrect" });
+    }
+    const hashedNewPassword = await hashText(newPassword, 10);
+
+    await db.query(`UPDATE web_admins SET password = $1, isPasswordChanged = $2 WHERE adminId = $3`, [hashedNewPassword, true, adminId]);
+
+    return res.status(200).json({ message: "Password updated successfully" });
+  } catch (e) {
+    console.error("Error changing password:", e);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
   

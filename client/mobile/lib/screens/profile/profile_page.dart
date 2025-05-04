@@ -9,7 +9,7 @@ import 'package:senior_project/functions/user/get_user_profile.dart';
 
 class ProfilePage extends StatefulWidget {
   final bool fromBottomNav;
-  final String? userId;  
+  final String? userId;
 
   const ProfilePage({super.key, this.fromBottomNav = true, this.userId});
 
@@ -241,16 +241,19 @@ class ProfilePageState extends State<ProfilePage> {
                 label: 'University',
                 value: userProfile!.universityName ?? 'Not specified',
               ),
-              const Divider(height: 20),
-              ProfileInfoRow(
-                label: 'Campus',
-                value: userProfile!.campusName ?? 'Not specified',
-              ),
-              const Divider(height: 20),
-              ProfileInfoRow(
-                label: 'Major',
-                value: userProfile!.majorName ?? 'Not specified',
-              ),
+              // Only show campus and major for students
+              if (userProfile!.isStudent == true) ...[
+                const Divider(height: 20),
+                ProfileInfoRow(
+                  label: 'Campus',
+                  value: userProfile!.campusName ?? 'Not specified',
+                ),
+                const Divider(height: 20),
+                ProfileInfoRow(
+                  label: 'Major',
+                  value: userProfile!.majorName ?? 'Not specified',
+                ),
+              ],
             ],
           ),
 
@@ -260,7 +263,7 @@ class ProfilePageState extends State<ProfilePage> {
               ProfileInfoRow(
                 label: 'Account Type',
                 value:
-                    userProfile!.isStudent == true ? 'Student' : 'Regular User',
+                    userProfile!.isStudent == true ? 'Student' : 'Instructor',
               ),
               const Divider(height: 20),
               ProfileInfoRow(

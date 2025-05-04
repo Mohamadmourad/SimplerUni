@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:senior_project/providers/user_provider.dart';
 import 'package:senior_project/components/auth_button.dart';
 import 'package:senior_project/functions/chat/uploadDocuments.dart';
 import 'package:senior_project/theme/app_theme.dart';
@@ -32,16 +34,17 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
   final bioController = TextEditingController();
   String? uploadedImageUrl;
   bool get hasProfileImage => uploadedImageUrl != null;
+  bool isImageUploading = false;
 
   @override
   void initState() {
     super.initState();
     selectedMajorId = widget.majorId;
     selectedCampusId = widget.campusId;
-    _saveMajorAndCampus();
+    saveMajorAndCampus();
   }
 
-  Future<void> _saveMajorAndCampus() async {
+  Future<void> saveMajorAndCampus() async {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString('selectedMajorId', selectedMajorId ?? '');
@@ -60,16 +63,34 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
   }
 
   Future<void> selectImage() async {
-    print("imageUploaded");
     try {
+      setState(() {
+        isImageUploading = true;
+      });
+
+      bool uploadCompleted = false;
+
       await handleImageUpload((cdnUrl) {
+        uploadCompleted = true;
         final String url = jsonDecode(cdnUrl)['url'];
-        print(url);
+        print('Image upload completed successfully. CDN URL: $url');
+
         setState(() {
           uploadedImageUrl = url;
+          isImageUploading = false;
         });
       });
+
+      if (!uploadCompleted) {
+        setState(() {
+          isImageUploading = false;
+        });
+      }
     } catch (e) {
+      setState(() {
+        isImageUploading = false;
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error uploading image: ${e.toString()}')),
       );
@@ -77,6 +98,16 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
   }
 
   Future<void> submitProfile() async {
+    // Don't submit if image is uploading
+    if (isImageUploading) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please wait for image upload to complete'),
+        ),
+      );
+      return;
+    }
+
     if (!formKey.currentState!.validate()) {
       return;
     }
@@ -102,6 +133,7 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
       }
       if (uploadedImageUrl != null) {
         optionalData['profilePicture'] = uploadedImageUrl;
+        print(optionalData['profilePicture']);
       }
 
       final result = await completeUserProfile(
@@ -111,6 +143,18 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
       );
 
       if (result['success']) {
+        // Update local user data
+        await updateUserData(optionalData);
+
+        // Fetch the updated user data from the server to ensure everything is current
+        if (mounted) {
+          final userProvider = Provider.of<UserProvider>(
+            context,
+            listen: false,
+          );
+          await userProvider.fetchUserFromAPI();
+        }
+
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(result['message'])));
@@ -134,6 +178,29 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
       setState(() {
         isLoading = false;
       });
+    }
+  }
+
+  Future<void> updateUserData(Map<String, dynamic> optionalData) async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String? userData = prefs.getString('userData');
+
+      if (userData != null) {
+        final Map<String, dynamic> userMap = json.decode(userData);
+
+        if (optionalData.containsKey('bio')) {
+          userMap['bio'] = optionalData['bio'];
+        }
+        if (optionalData.containsKey('profilePicture')) {
+          userMap['profilePicture'] = optionalData['profilePicture'];
+        }
+
+        await prefs.setString('userData', json.encode(userMap));
+        print('User data updated in SharedPreferences');
+      }
+    } catch (e) {
+      print('Error updating user data in SharedPreferences: $e');
     }
   }
 
@@ -189,7 +256,10 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
                   child: Column(
                     children: [
                       GestureDetector(
-                        onTap: selectImage,
+                        onTap:
+                            isImageUploading
+                                ? null
+                                : selectImage, // Disable during upload
                         child: Container(
                           width: 120,
                           height: 120,
@@ -197,7 +267,7 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
                             color: Colors.grey[200],
                             shape: BoxShape.circle,
                             image:
-                                hasProfileImage
+                                hasProfileImage && !isImageUploading
                                     ? DecorationImage(
                                       image: NetworkImage(uploadedImageUrl!),
                                       fit: BoxFit.cover,
@@ -205,7 +275,11 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
                                     : null,
                           ),
                           child:
-                              hasProfileImage
+                              isImageUploading
+                                  ? const Center(
+                                    child: CircularProgressIndicator(),
+                                  )
+                                  : hasProfileImage
                                   ? null
                                   : const Icon(
                                     Icons.add_a_photo,
@@ -216,9 +290,17 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
                       ),
                       const SizedBox(height: 8),
                       TextButton(
-                        onPressed: selectImage,
-                        child: const Text('Choose Profile Picture'),
+                        onPressed:
+                            isImageUploading
+                                ? null
+                                : selectImage, // Disable during upload
+                        child: Text(
+                          isImageUploading
+                              ? 'Uploading...'
+                              : 'Choose Profile Picture',
+                        ),
                       ),
+                      // Remove the standalone CircularProgressIndicator here
                     ],
                   ),
                 ),
@@ -242,11 +324,22 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
                 AuthButton(
                   text: 'COMPLETE PROFILE',
                   isLoading: isLoading,
-                  onPressed: submitProfile,
+                  // Disable when image is uploading or regular loading is happening
+                  onPressed:
+                      (isImageUploading || isLoading) ? null : submitProfile,
                 ),
                 const SizedBox(height: 16),
                 TextButton(
-                  onPressed: submitProfile,
+                  // Disable when image is uploading or regular loading is happening
+                  onPressed:
+                      (isImageUploading || isLoading) ? null : submitProfile,
+                  style: TextButton.styleFrom(
+                    // Show disabled state visually
+                    foregroundColor:
+                        (isImageUploading || isLoading)
+                            ? Colors.grey
+                            : AppColors.primaryColor,
+                  ),
                   child: const Text('SKIP FOR NOW'),
                 ),
               ],
