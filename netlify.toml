@@ -1,6 +1,6 @@
 [build]
-  base = "client/web" 
-  command = "npm run build"  
-  publish = ".next"  
+  base = "/opt/build/repo/client/web"
+  command = "npm run build"
+  publish = "/opt/build/repo/client/web/.next"  # This should be the correct path to .next folder
 [[plugins]]
   package = "@netlify/plugin-nextjs"
