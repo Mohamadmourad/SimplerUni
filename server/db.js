@@ -7,7 +7,7 @@ const db = new Client({
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
     database: process.env.DB_NAME,
-    // ssl: { rejectUnauthorized: false },
+    ssl: process.env.ENVIROMENT !== "development" ? { rejectUnauthorized: false } : false,
 })
 
 const checkTableExists = async (tableName)=>{
