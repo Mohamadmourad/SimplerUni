@@ -9,7 +9,7 @@ class SocketService {
     required Function(dynamic) addNewMessage,
   }
   ) {
-    socket = IO.io('http://localhost:5000', {
+    socket = IO.io('https://api.simpleruni.com', {
       'transports': ['websocket'],
       'autoConnect': false,
     });
