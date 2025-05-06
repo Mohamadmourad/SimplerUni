@@ -26,7 +26,7 @@ module.exports.createUniversity = async (req, res)=>{
       if(doAdminExist.rowCount > 0){
         return res.status(401).json({ message: "username already exits" });
       }
-    await db.query('INSERT INTO web_admins(username, password, universityid, roleid,isPasswordChanged) VALUES ($1,$2,$3,$4,$5)',[ username, password, universityId, roleId,false]);
+    await db.query('INSERT INTO web_admins(username, password, universityid, roleid,isPasswordChanged) VALUES ($1,$2,$3,$4,$5)',[ username, password, universityId, roleId,true]);
     await createChatroom( `${universityName} global chat`, universityId);
     await createChatroom( `${universityName} Instructors`, universityId);
     const htmlContent = accountAcceptanceEmail(username, Originalpassword);
