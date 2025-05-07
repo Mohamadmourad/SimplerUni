@@ -19,6 +19,7 @@ const clubRoutes = require("./endpoints/club/routes");
 
 const { addSuperAdmin } = require('./endpoints/admin/businessLogic');
 const { connectWebSocket } = require('./webSocket');
+const { checkUserAccount } = require('./endpoints/user/businessLogic');
 
 const PORT = process.env.PORT;
 const allowedOrigins = [
@@ -32,7 +33,7 @@ const allowedOrigins = [
   'https://127.0.0.1:5000',
   'http://10.0.2.2:5000',
   'http://127.0.0.1:5500',
-  'http://localhost:63689'
+  'http://localhost:63356'
 ];
 
 const app = express();
@@ -56,9 +57,15 @@ app.use(cors({
 
 app.use(cookieParser());
 
-app.use((req, res, next) => {
+app.use(async(req, res, next) => {
   console.log(req.path, req.method);
-  next();
+  let check = true;
+  if(req.headers.authorization){
+    check = await checkUserAccount(req.headers.authorization);
+    if(!check) return res.status(403).json("account not found or banned");
+  }
+  if(check)
+    next();
 });
 
 setupSwagger(app);
