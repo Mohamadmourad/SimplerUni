@@ -14,6 +14,7 @@ router.get("/getClubJoinRequests/:clubId", clubController.getClubJoinRequests);
 
 router.post("/makeClubRequest", clubController.makeClubRequest);         
 router.post("/acceptClubRequest", clubController.acceptClubRequest);  
+router.post("/rejectClubRequest", clubController.rejectClubRequest);  
    
 router.post("/requestJoinClub", clubController.requestJoinClub);        
 router.post("/acceptJoinRequest", clubController.acceptJoinRequest);  
@@ -23,5 +24,6 @@ router.put("/changeClubAdmin", clubController.changeClubAdmin);
 
 router.delete("/removerStudentFromClub/:clubId/:userId", clubController.removerStudentFromClub);
 router.delete("/removeJoinClubRequest/:clubId", clubController.removeJoinClubRequest);
+router.delete("/deleteClub/:clubId", clubController.deleteClub);
 
 module.exports = router;

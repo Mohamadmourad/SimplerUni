@@ -349,3 +349,17 @@ module.exports.getAllInstructors = async (req, res) => {
         return res.status(500).json("Failed to fetch get instructors");
     }
 };
+
+module.exports.checkUserAccount = async (token)=>{
+    try{
+        const { userId } = verifyToken(token);
+        const userData = await db.query(`SELECT * FROM users WHERE userId=$1`,[userId]);
+        if(userData.rowCount === 0) return false;
+        const user = userData.rows[0];
+        if(user.isbanned) return false;
+        return true;
+    }
+    catch(e){
+        console.log("error while checking user ", e);
+    }
+}
