@@ -33,7 +33,7 @@ const allowedOrigins = [
   'https://127.0.0.1:5000',
   'http://10.0.2.2:5000',
   'http://127.0.0.1:5500',
-  'http://localhost:63356'
+  'http://localhost:65052'
 ];
 
 const app = express();

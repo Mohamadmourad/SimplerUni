@@ -370,7 +370,7 @@ module.exports.universityStatistics = async (req, res)=>{
     result = await db.query(`
       SELECT 
         m.majorId,
-        m.name AS majorCount,
+        m.name AS majorName,
         COUNT(u.userId) AS usersCount
         FROM majors m LEFT JOIN users u ON m.majorId = u.majorId
         GROUP BY m.majorId, m.name;
@@ -380,7 +380,7 @@ module.exports.universityStatistics = async (req, res)=>{
       result = await db.query(`
         SELECT 
           c.campusId,
-          c.name AS capusName,
+          c.name AS campusName,
           COUNT(u.userId) AS usersCount
           FROM campusus c LEFT JOIN users u ON c.campusId = u.campusId
           GROUP BY c.campusId, c.name;
