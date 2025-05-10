@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { School, Mail, User, Phone, FileText } from "lucide-react";
+import Image from "next/image";
 import axios from "axios";
 import { useRouter } from 'next/navigation';
 
@@ -34,7 +35,13 @@ export default function RequestAccess() {
     <div className="min-h-screen flex items-center justify-center bg-gray-900">
       <div className="bg-gray-800 rounded-2xl p-8 max-w-lg w-full mx-4 relative shadow-lg">
         <div className="text-center mb-8">
-          <School className="w-12 h-12 text-purple-500 mx-auto mb-4" />
+          <Image 
+            src="/icon.png" 
+            width={48}
+            height={48}
+            alt="SimplerUni Logo"
+            className="mx-auto mb-4"
+          />
           <h2 className="text-3xl font-bold text-white">Join Our Family</h2>
         </div>
         <form onSubmit={handleSubmit} className="space-y-6">

@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { School, Mail, Lock, ArrowRight } from "lucide-react";
+import { Mail, Lock, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import axios from "axios";
 import { useRouter } from 'next/navigation';
 
@@ -49,7 +50,13 @@ export default function AdminLogin() {
     <div className="min-h-screen flex items-center justify-center bg-gray-900">
       <div className="bg-gray-800 rounded-2xl p-8 max-w-md w-full mx-4 relative shadow-xl">
         <div className="text-center mb-8">
-          <School className="w-12 h-12 text-purple-500 mx-auto mb-4" />
+          <Image 
+            src="/icon.png" 
+            width={48}
+            height={48}
+            alt="SimplerUni Logo"
+            className="mx-auto mb-4"
+          />
           <h2 className="text-3xl font-bold text-white">SimplerUni Dashboard</h2>
           <p className="text-gray-300 mt-2">Sign in to manage your university portal</p>
         </div>

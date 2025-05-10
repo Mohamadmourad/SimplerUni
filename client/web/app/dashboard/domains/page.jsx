@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from 'next/navigation';
+import { Pencil } from 'lucide-react';
 
 export default function DomainsPage() {
   const [studentDomain, setStudentDomain] = useState("");
@@ -11,6 +12,8 @@ export default function DomainsPage() {
   const [error, setError] = useState("");
   const [canAddStudent, setCanAddStudent] = useState(false);
   const [canAddInstructor, setCanAddInstructor] = useState(false);
+  const [isEditingStudent, setIsEditingStudent] = useState(false);
+  const [isEditingInstructor, setIsEditingInstructor] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -50,7 +53,7 @@ export default function DomainsPage() {
     //     verify();
   }, []);
 
-  const handleAddDomain = async (type) => {
+  const handleAddOrUpdateDomain = async (type) => {
     setError("");
     setLoading(true);
 
@@ -60,44 +63,54 @@ export default function DomainsPage() {
           studentDomain: studentDomain.trim(),
         }, { withCredentials: true });
 
-        setDomains([...domains, { type, domain: studentDomain.trim() }]);
+        // Update existing domain or add new one
+        const existingIndex = domains.findIndex(d => d.type === "Student");
+        if (existingIndex >= 0) {
+          const updatedDomains = [...domains];
+          updatedDomains[existingIndex] = { type, domain: studentDomain.trim() };
+          setDomains(updatedDomains);
+        } else {
+          setDomains([...domains, { type, domain: studentDomain.trim() }]);
+        }
+        
         setStudentDomain("");
         setCanAddStudent(false);
+        setIsEditingStudent(false);
       } else if (type === "Instructor" && instructorDomain.trim()) {
         await axios.post(process.env.NEXT_PUBLIC_END_POINT + "/university/addIntructorDomain", {
           instructorDomain: instructorDomain.trim(),
         }, { withCredentials: true });
 
-        setDomains([...domains, { type, domain: instructorDomain.trim() }]);
+        // Update existing domain or add new one
+        const existingIndex = domains.findIndex(d => d.type === "Instructor");
+        if (existingIndex >= 0) {
+          const updatedDomains = [...domains];
+          updatedDomains[existingIndex] = { type, domain: instructorDomain.trim() };
+          setDomains(updatedDomains);
+        } else {
+          setDomains([...domains, { type, domain: instructorDomain.trim() }]);
+        }
+        
         setInstructorDomain("");
         setCanAddInstructor(false);
+        setIsEditingInstructor(false);
       }
     } catch (err) {
-      setError(`Failed to add ${type} domain.`);
+      setError(`Failed to ${isEditingStudent || isEditingInstructor ? 'update' : 'add'} ${type} domain.`);
     } finally {
       setLoading(false);
     }
   };
-  const handleDeleteDomain = async (type, domain) => {
-    setError("");
-    setLoading(true);
 
-    try {
-      if (type === "Student") {
-        await axios.delete(process.env.NEXT_PUBLIC_END_POINT + "/university/removeStudentDomain", {
-          data: { studentDomain: domain },
-        }, { withCredentials: true });
-      } else if (type === "Instructor") {
-        await axios.delete(process.env.NEXT_PUBLIC_END_POINT + "/university/removeIntructorDomain", {
-          data: { instructorDomain: domain },
-        }, { withCredentials: true });
-      }
-
-      setDomains(domains.filter((d) => d.domain !== domain));
-    } catch (err) {
-      setError(`Failed to remove ${type} domain.`);
-    } finally {
-      setLoading(false);
+  const handleEditDomain = (type, domain) => {
+    if (type === "Student") {
+      setStudentDomain(domain);
+      setIsEditingStudent(true);
+      setCanAddStudent(true);
+    } else if (type === "Instructor") {
+      setInstructorDomain(domain);
+      setIsEditingInstructor(true);
+      setCanAddInstructor(true);
     }
   };
 
@@ -106,7 +119,11 @@ export default function DomainsPage() {
       <h1 className="text-2xl font-bold mb-6 text-white">Manage Domains</h1>
       {error && <p className="text-red-500 mb-4">{error}</p>}
 
-      <h2 className="text-xl font-semibold mb-4 text-white">Add Domains</h2>
+      <h2 className="text-xl font-semibold mb-4 text-white">
+        {isEditingStudent ? "Edit Student Domain" : 
+         isEditingInstructor ? "Edit Instructor Domain" : 
+         "Add Domains"}
+      </h2>
 
       <div className="mb-4">
         <label className="block text-sm mb-1">Student Domain</label>
@@ -119,11 +136,11 @@ export default function DomainsPage() {
           disabled={!canAddStudent || loading}
         />
         <button
-          onClick={() => handleAddDomain("Student")}
+          onClick={() => handleAddOrUpdateDomain("Student")}
           className={`mt-2 px-4 py-2 rounded ${(!canAddStudent || loading) ? "bg-gray-500 cursor-not-allowed" : "bg-purple-600 hover:bg-purple-700 text-white"}`}
           disabled={!canAddStudent || loading}
         >
-          {loading ? "Adding..." : "Add Student Domain"}
+          {loading ? "Processing..." : isEditingStudent ? "Update Student Domain" : "Add Student Domain"}
         </button>
       </div>
 
@@ -138,15 +155,15 @@ export default function DomainsPage() {
           disabled={!canAddInstructor || loading}
         />
         <button
-          onClick={() => handleAddDomain("Instructor")}
+          onClick={() => handleAddOrUpdateDomain("Instructor")}
           className={`mt-2 px-4 py-2 rounded ${(!canAddInstructor || loading) ? "bg-gray-500 cursor-not-allowed" : "bg-purple-600 hover:bg-purple-700 text-white"}`}
           disabled={!canAddInstructor || loading}
         >
-          {loading ? "Adding..." : "Add Instructor Domain"}
+          {loading ? "Processing..." : isEditingInstructor ? "Update Instructor Domain" : "Add Instructor Domain"}
         </button>
       </div>
 
-      <h2 className="text-xl font-semibold mt-6 mb-4 text-white">Imported Domains</h2>
+      <h2 className="text-xl font-semibold mt-6 mb-4 text-white">Your Domains</h2>
       <div className="space-y-2">
         {domains.length > 0 ? (
           domains.map((d, index) => (
@@ -155,11 +172,11 @@ export default function DomainsPage() {
                 {d.type}: {d.domain}
               </span>
               <button
-                onClick={() => handleDeleteDomain(d.type, d.domain)}
-                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                onClick={() => handleEditDomain(d.type, d.domain)}
+                className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center"
                 disabled={loading}
               >
-                {loading ? "Removing..." : "Delete"}
+                <Pencil className="h-4 w-4 mr-1" /> Edit
               </button>
             </div>
           ))
