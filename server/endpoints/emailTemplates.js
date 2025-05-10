@@ -166,7 +166,7 @@ const clubAcceptanceEmail = (username, clubName) => `
         </tr>
         <tr>
             <td class="footer">
-            <p>© 2025 Csimpleruni. All rights reserved.</p>
+            <p>© 2025 simpleruni. All rights reserved.</p>
             </td>
         </tr>
         </table>
@@ -204,7 +204,7 @@ const clubRejectionEmail = (username, clubName) => `
         </tr>
         <tr>
             <td class="footer">
-            <p>© 2025 Club Community. All rights reserved.</p>
+            <p>© 2025 simplerUni. All rights reserved.</p>
             </td>
         </tr>
         </table>
@@ -212,4 +212,93 @@ const clubRejectionEmail = (username, clubName) => `
     </html>
 `;
 
-module.exports = { accountAcceptanceEmail, otpVerificationEmail, newUniversityRequestEmail, clubAcceptanceEmail, clubRejectionEmail };
+const resetPasswordEmail = (username, resetToken) => `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Reset Your Password</title>
+        <style>
+        body { margin: 0; padding: 0; background-color: #030712; font-family: Arial, sans-serif; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 6px; overflow: hidden; }
+        .header { background-color: #6d28d9; padding: 20px; text-align: center; color: #ffffff; }
+        .content { padding: 30px 20px; color: #030712; text-align: center; }
+        .message { font-size: 16px; margin: 20px 0; }
+        .footer { background-color: #6d28d9; padding: 15px; text-align: center; color: #ffffff; font-size: 14px; }
+        a.button { background-color: #6d28d9; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 4px; display: inline-block; margin-top: 20px; }
+        a.button:hover { opacity: 0.9; }
+        </style>
+    </head>
+    <body>
+        <table class="container" width="100%" border="0" cellspacing="0" cellpadding="0">
+        <tr>
+            <td class="header">
+                <h1>Password Reset Request</h1>
+            </td>
+        </tr>
+        <tr>
+            <td class="content">
+                <p>Hello ${username},</p>
+                <p class="message">
+                    We received a request to reset your password. Please click the button below to reset your password:
+                </p>
+                <a href="https://simpleruni/user/reset-password/${resetToken}" class="button">Reset Password</a>
+                <p class="message">
+                    If you didn't request this, please ignore this email or contact support if you have questions.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td class="footer">
+                <p>© 2025 Your Company. All rights reserved.</p>
+            </td>
+        </tr>
+        </table>
+    </body>
+    </html>
+`;
+
+const adminResetPasswordEmail = (username, resetToken) => `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Reset Your Password</title>
+        <style>
+        body { margin: 0; padding: 0; background-color: #030712; font-family: Arial, sans-serif; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 6px; overflow: hidden; }
+        .header { background-color: #6d28d9; padding: 20px; text-align: center; color: #ffffff; }
+        .content { padding: 30px 20px; color: #030712; text-align: center; }
+        .message { font-size: 16px; margin: 20px 0; }
+        .footer { background-color: #6d28d9; padding: 15px; text-align: center; color: #ffffff; font-size: 14px; }
+        a.button { background-color: #6d28d9; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 4px; display: inline-block; margin-top: 20px; }
+        a.button:hover { opacity: 0.9; }
+        </style>
+    </head>
+    <body>
+        <table class="container" width="100%" border="0" cellspacing="0" cellpadding="0">
+        <tr>
+            <td class="header">
+                <h1>Password Reset Request</h1>
+            </td>
+        </tr>
+        <tr>
+            <td class="content">
+                <p class="message">
+                    We received a request to reset password of the admin ${username}. Please click the button below to reset your password:
+                </p>
+                <a href="https://simpleruni/admin/reset-password/${resetToken}" class="button">Reset Password</a>
+                <p class="message">
+                    If you didn't request this, please ignore this email or contact support if you have questions.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td class="footer">
+                <p>© 2025 simplerUni. All rights reserved.</p>
+            </td>
+        </tr>
+        </table>
+    </body>
+    </html>
+`;
+
+module.exports = { accountAcceptanceEmail, otpVerificationEmail, newUniversityRequestEmail, clubAcceptanceEmail, clubRejectionEmail, resetPasswordEmail, adminResetPasswordEmail };

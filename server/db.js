@@ -95,6 +95,7 @@ const tables =
         schema:`CREATE TABLE universities (
         universityId UUID DEFAULT gen_random_uuid() PRIMARY KEY,
         name VARCHAR(60),
+        email VARCHAR(255),
         studentDomain VARCHAR(255),
         instructorDomain VARCHAR(255),
         created_at TIMESTAMPTZ DEFAULT now()
@@ -128,6 +129,7 @@ const tables =
         firstName varchar(50),
         lastName varchar(50),
         password VARCHAR(255),
+        passwordResetToken VARCHAR(255),
         isPasswordChanged BOOLEAN,
         universityId UUID REFERENCES universities(universityId) ON DELETE CASCADE,
         roleId UUID REFERENCES roles(roleId) ON DELETE CASCADE,

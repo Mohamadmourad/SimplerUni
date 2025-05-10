@@ -1,9 +1,9 @@
 const {db} = require("../../db");
 const {DateTime} = require("luxon");
-const { hashText, createToken, handleErrors, compareHashedText, getEmailDomain, verifyToken } = require("./helper");
+const { hashText, createToken, handleErrors, compareHashedText, getEmailDomain, verifyToken, generateRandomString } = require("./helper");
 const { verifyToken: universityVerifyToken } = require("../university/helper")
 const { sendEmail } = require("../helper");
-const { otpVerificationEmail } = require("../emailTemplates");
+const { otpVerificationEmail, resetPasswordEmail } = require("../emailTemplates");
 
 module.exports.signup_post = async (req, res) => {
     let { email, password, username } = req.body;
@@ -361,5 +361,59 @@ module.exports.checkUserAccount = async (token)=>{
     }
     catch(e){
         console.log("error while checking user ", e);
+         return res.status(500).json({ error: 'Internal server error.' });
     }
 }
+
+module.exports.sendChangePasswordLink = async (req, res)=>{
+    try{
+        const { email } = req.body;
+        const userData = await db.query(`SELECT * FROM users WHERE email=$1`,[email]);
+        if(userData.rowCount === 0) 
+            return res.status(400).json({
+              error: 'That email is not registered.',
+            });
+        const token = generateRandomString();
+        await db.query(`UPDATE users SET passwordResetToken=$1 WHERE userId=$2`,[token, userData.rows[0].userid]);
+        const subject = "Reset Password";
+        const htmlContent = resetPasswordEmail(userData.rows[0].username, token);
+        console.log(`https://simpleruni/user/reset-password/${token}`)
+        await sendEmail(email, subject, htmlContent);
+        return res.status(200).json('link sended succesfully');
+
+    }
+    catch(e){
+        console.log("error while checking user ", e);
+        return res.status(500).json({ error: 'Internal server error.' });
+    }
+}
+
+module.exports.changeUserPassword = async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        if (!token || !newPassword) {
+            return res.status(400).json({ error: 'Token and new password are required.' });
+        }
+
+        const userData = await db.query(
+            `SELECT * FROM users WHERE passwordResetToken = $1`,
+            [token]
+        );
+
+        if (userData.rowCount === 0) {
+            return res.status(400).json({ error: 'Invalid or expired token.' });
+        }
+        const hashedPassword = await hashText(newPassword);
+
+        await db.query(
+            `UPDATE users SET password = $1, passwordResetToken = NULL WHERE userId = $2`,
+            [hashedPassword, userData.rows[0].userid]
+        );
+
+        return res.status(200).json('Password has been updated successfully.');
+    } catch (e) {
+        console.error('Error while changing password:', e);
+        return res.status(500).json({ error: 'Internal server error.' });
+    }
+};

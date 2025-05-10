@@ -13,6 +13,8 @@ router.post('/addAdditionalUserData',userController.addAdditionalUserData);
 router.post('/login', userController.login_post);
 router.post('/sendOtp', userController.sendOtp);
 router.post('/verifyOtp', userController.verifyOtp);
+router.post('/sendChangePasswordLink', userController.sendChangePasswordLink);
+router.post('/changeUserPassword', userController.changeUserPassword);
 
 router.put("/banUser",userController.banUser);
 router.put("/unbanUser",userController.unbanUser);

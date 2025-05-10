@@ -1,8 +1,8 @@
 const {db} = require("../../db");
 const generator = require('generate-password');
-const { hashText } = require("../user/helper");
+const { hashText, generateRandomString } = require("../user/helper");
 const { sendEmail } = require("../helper");
-const { accountAcceptanceEmail, newUniversityRequestEmail } = require("../emailTemplates");
+const { accountAcceptanceEmail, newUniversityRequestEmail, adminResetPasswordEmail } = require("../emailTemplates");
 const { createToken, verifyToken } = require("./helper");
 const { addRoleMethode, isAuthed } = require("../role/businessLogic");
 const bcrypt = require('bcrypt');
@@ -19,14 +19,14 @@ module.exports.createUniversity = async (req, res)=>{
     });
     const password = await hashText(Originalpassword);
 
-    const result = await db.query('INSERT INTO universities(name) VALUES ($1) RETURNING *',[universityName]); 
+    const result = await db.query('INSERT INTO universities(name, email) VALUES ($1, $2) RETURNING *',[universityName, universityEmail]); 
     const  universityId = result.rows[0].universityid;
     const roleId = await addRoleMethode("generalAdmin",universityId,["universityDashboard"]);
     const doAdminExist = await db.query(`SELECT * FROM web_admins WHERE username=$1`,[username]);
       if(doAdminExist.rowCount > 0){
         return res.status(401).json({ message: "username already exits" });
       }
-    await db.query('INSERT INTO web_admins(username, password, universityid, roleid,isPasswordChanged) VALUES ($1,$2,$3,$4,$5)',[ username, password, universityId, roleId,true]);
+    await db.query('INSERT INTO web_admins(username, password, universityid, roleid,isPasswordChanged) VALUES ($1,$2,$3,$4,$5)',[ username, password, universityId, roleId,false]);
     await createChatroom( `${universityName} global chat`, universityId);
     await createChatroom( `${universityName} Instructors`, universityId);
     const htmlContent = accountAcceptanceEmail(username, Originalpassword);
@@ -491,3 +491,56 @@ module.exports.superAdminStatistics = async (req, res)=>{
    return res.status(500).json("error while getting university stats");
   }
 }
+
+module.exports.sendChangePasswordLink = async (req, res)=>{
+    try{
+        const { username } = req.body;
+        const userData = await db.query(`SELECT * FROM web_admins WHERE username=$1`,[username]);
+        if(userData.rowCount === 0) 
+            return res.status(400).json({
+              error: 'That user is not registered.',
+            });
+        const token = generateRandomString();
+        await db.query(`UPDATE web_admins SET passwordResetToken=$1 WHERE adminId=$2`,[token, userData.rows[0].adminid]);
+        const universityData = await db.query(`SELECT * FROM universities WHERE universityId=$1`,[userData.rows[0].universityid]);
+        const subject = "Reset Password";
+        const htmlContent = adminResetPasswordEmail(username,token);
+        console.log(`https://simpleruni/admin/reset-password/${token}`);
+        await sendEmail(universityData.rows[0].email, subject, htmlContent);
+        return res.status(200).json('link sended succesfully');
+
+    }
+    catch(e){
+        console.log("error while checking user ", e);
+    }
+}
+
+module.exports.changeUserPassword = async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        if (!token || !newPassword) {
+            return res.status(400).json({ error: 'Token and new password are required.' });
+        }
+
+        const userData = await db.query(
+            `SELECT * FROM web_admins WHERE passwordResetToken = $1`,
+            [token]
+        );
+
+        if (userData.rowCount === 0) {
+            return res.status(400).json({ error: 'Invalid or expired token.' });
+        }
+
+        const hashedPassword = await hashText(newPassword);
+        await db.query(
+            `UPDATE web_admins SET password = $1, passwordResetToken = NULL, isPasswordChanged=$2 WHERE adminId = $3`,
+            [hashedPassword, true,userData.rows[0].adminid]
+        );
+
+        return res.status(200).json('Password has been updated successfully.');
+    } catch (e) {
+        console.error('Error while changing password:', e);
+        return res.status(500).json({ error: 'Internal server error.' });
+    }
+};
