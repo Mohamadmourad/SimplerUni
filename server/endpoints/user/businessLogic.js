@@ -417,3 +417,100 @@ module.exports.changeUserPassword = async (req, res) => {
         return res.status(500).json({ error: 'Internal server error.' });
     }
 };
+
+module.exports.editUserProfile = async (req, res) => {
+    try {
+        const token = req.headers.authorization;
+        const { userId, universityId } = verifyToken(token);
+        const {
+            username,
+            bio,
+            profilePicture,
+            campusId,
+            majorId
+        } = req.body;
+
+        if (!userId) {
+            return res.status(400).json({ error: "User ID is required." });
+        }
+        const userData = await db.query(
+            `SELECT * FROM users WHERE userId = $1`,
+            [userId]
+        );
+
+        if (userData.rowCount === 0) {
+            return res.status(404).json({ error: "User not found." });
+        }
+
+        const fieldsToUpdate = [];
+        const values = [];
+        let query = `UPDATE users SET `;
+
+        if (username) {
+            
+            fieldsToUpdate.push(`username = $${fieldsToUpdate.length + 1}`);
+            values.push(username);
+        }
+
+        if (bio) {
+            fieldsToUpdate.push(`bio = $${fieldsToUpdate.length + 1}`);
+            values.push(bio);
+        }
+
+        if (profilePicture) {
+            fieldsToUpdate.push(`profilePicture = $${fieldsToUpdate.length + 1}`);
+            values.push(profilePicture);
+        }
+
+        if (campusId) {
+        const currentCampusId = userData.rows[0].campusid;
+        const currentCampusChatroom = await db.query(
+            `SELECT chatroomid FROM campusus WHERE campusid = $1`,
+            [currentCampusId]
+        );
+        
+        await db.query(
+            `DELETE FROM chatroom_members WHERE chatroomid = $1 AND userid = $2`,
+            [currentCampusChatroom.rows[0].chatroomid, userId]
+        );
+
+        const newCampusChatroom = await db.query(
+            `SELECT chatroomid FROM campusus WHERE campusid = $1`,
+            [campusId]
+        );
+
+        await db.query(
+            `INSERT INTO chatroom_members (userid, chatroomid) VALUES ($1, $2)`,
+            [userId, newCampusChatroom.rows[0].chatroomid]
+        );
+        fieldsToUpdate.push(`campusId = $${fieldsToUpdate.length + 1}`);
+        values.push(campusId);
+    }
+
+
+        if (majorId) {
+            const currentMajorId = userData.rows[0].majorid;
+            const currentMajorChatroom = await db.query(`SELECT chatroomid FROM majors WHERE majorid=$1`,[currentMajorId]);
+            await db.query(`DELETE FROM chatroom_members WHERE chatroomid=$1 AND userid=$2`,[currentMajorChatroom.rows[0].chatroomid, userId]);
+
+            const majorChatroom = await db.query(`SELECT * FROM majors WHERE majorid=$1`,[majorId]);
+            await db.query(`INSERT INTO chatroom_members(userid,chatroomid) VALUES($1,$2)`,[userId,majorChatroom.rows[0].chatroomid]);
+            fieldsToUpdate.push(`majorId = $${fieldsToUpdate.length + 1}`);
+            values.push(majorId);
+        }
+
+        if (fieldsToUpdate.length === 0) {
+            return res.status(400).json({ error: "No fields to update provided." });
+        }
+
+        query += fieldsToUpdate.join(", ") + ` WHERE userId = $${fieldsToUpdate.length + 1}`;
+        values.push(userId);
+
+        await db.query(query, values);
+
+        return res.status(200).json({ message: "Profile updated successfully." });
+    } catch (e) {
+        console.error("Error while updating user profile:", e);
+        return res.status(500).json({ error: "Internal server error." });
+    }
+};
