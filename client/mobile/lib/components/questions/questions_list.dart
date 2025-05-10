@@ -7,6 +7,7 @@ class QuestionsList extends StatelessWidget {
   final Function(Question) onUpvote;
   final Function(Question) onViewDetails;
   final Future<void> Function() onRefresh;
+  final Map<String, bool> upvotingQuestions;
 
   const QuestionsList({
     Key? key,
@@ -14,6 +15,7 @@ class QuestionsList extends StatelessWidget {
     required this.onUpvote,
     required this.onViewDetails,
     required this.onRefresh,
+    required this.upvotingQuestions,
   }) : super(key: key);
 
   @override
@@ -23,10 +25,14 @@ class QuestionsList extends StatelessWidget {
       child: ListView.builder(
         itemCount: questions.length,
         itemBuilder: (context, index) {
+          final question = questions[index];
+          final isUpvoting = upvotingQuestions[question.questionId] ?? false;
+
           return QuestionCard(
-            question: questions[index],
+            question: question,
             onUpvote: onUpvote,
             onViewDetails: onViewDetails,
+            isUpvoting: isUpvoting,
           );
         },
       ),

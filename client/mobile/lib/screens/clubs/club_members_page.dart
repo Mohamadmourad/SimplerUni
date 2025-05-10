@@ -265,10 +265,7 @@ class _ClubMembersPageState extends State<ClubMembersPage> {
                         },
                         child: Text(
                           member['username'] ?? 'Unknown',
-                          style: TextStyle(
-                            color: Colors.blue[700],
-                            decoration: TextDecoration.underline,
-                          ),
+                          style: const TextStyle(fontSize: 16),
                         ),
                       ),
                       subtitle: Text(member['email'] ?? ''),

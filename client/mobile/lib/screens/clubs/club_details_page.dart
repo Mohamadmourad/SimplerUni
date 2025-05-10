@@ -130,7 +130,6 @@ class ClubDetailsPageState extends State<ClubDetailsPage> {
 
           buildInfoRow('Name', clubInfo['name'] ?? 'Not specified'),
 
-          // Use proper conditional for widgets in a list
           if (clubInfo['description'] != null &&
               clubInfo['description'].toString().isNotEmpty)
             buildInfoRow('Description', clubInfo['description']),
@@ -139,7 +138,6 @@ class ClubDetailsPageState extends State<ClubDetailsPage> {
               clubInfo['room'].toString().isNotEmpty)
             buildInfoRow('Room', clubInfo['room']),
 
-          // Fix the instructor info display with profile navigation
           if (instructorInfo != null)
             buildInstructorRow(
               'Instructor',
@@ -153,7 +151,6 @@ class ClubDetailsPageState extends State<ClubDetailsPage> {
     );
   }
 
-  // New method for clickable instructor row with normal styling
   Widget buildInstructorRow(String label, String value, String? userId) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),

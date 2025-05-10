@@ -3,7 +3,6 @@ import 'package:senior_project/modules/club.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
-// Get clubs the user is not a member of
 Future<List<Club>> getClubsUserNotIn() async {
   try {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -31,7 +30,6 @@ Future<List<Club>> getClubsUserNotIn() async {
   }
 }
 
-// Get clubs the user is a member of
 Future<List<Club>> getClubsUserIsIn() async {
   try {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -114,7 +112,6 @@ Future<List<Club>> getUnderReviewClubs() async {
   }
 }
 
-// Make a request to create a club
 Future<bool> makeClubRequest(String name, String description) async {
   try {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -163,7 +160,6 @@ Future<bool> requestJoinClub(String clubId) async {
   }
 }
 
-// Accept a request to join a club
 Future<bool> acceptJoinRequest(String userId, String clubId) async {
   try {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -188,7 +184,6 @@ Future<bool> acceptJoinRequest(String userId, String clubId) async {
   }
 }
 
-// Reject a request to join a club
 Future<bool> rejectJoinRequest(String userId, String clubId) async {
   try {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -239,7 +234,6 @@ Future<List<dynamic>> getClubJoinRequests(String clubId) async {
   }
 }
 
-// Get club information including members
 Future<Map<String, dynamic>> getClubInfo(String clubId) async {
   try {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -266,7 +260,6 @@ Future<Map<String, dynamic>> getClubInfo(String clubId) async {
   }
 }
 
-// Remove a student from a club
 Future<bool> removeStudentFromClub(String clubId, String userId) async {
   try {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -286,5 +279,27 @@ Future<bool> removeStudentFromClub(String clubId, String userId) async {
     return result['statusCode'] == 200;
   } catch (e) {
     throw Exception('Failed to remove student from club: $e');
+  }
+}
+
+Future<bool> removeJoinClubRequest(String clubId) async {
+  try {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String? token = prefs.getString('authToken');
+
+    if (token == null) {
+      throw Exception('No authentication token found');
+    }
+
+    final result = await makeApiCall(
+      'DELETE',
+      null,
+      'clubs/removeJoinClubRequest/$clubId',
+      token,
+    );
+
+    return result['statusCode'] == 200;
+  } catch (e) {
+    throw Exception('Failed to remove join request: $e');
   }
 }

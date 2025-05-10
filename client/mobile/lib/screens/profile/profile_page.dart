@@ -79,6 +79,14 @@ class ProfilePageState extends State<ProfilePage> {
             widget.fromBottomNav
                 ? [
                   IconButton(
+                    icon: const Icon(Icons.edit),
+                    tooltip: 'Edit Profile',
+                    onPressed: () {
+                      // Navigate to the edit profile page
+                      context.push('/edit-profile', extra: userProfile);
+                    },
+                  ),
+                  IconButton(
                     icon: const Icon(Icons.logout),
                     onPressed: () {
                       showDialog(
@@ -127,157 +135,116 @@ class ProfilePageState extends State<ProfilePage> {
       return const Center(child: Text('No profile data available'));
     }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Center(
-            child: Stack(
+    return RefreshIndicator(
+      onRefresh: _loadUserProfile,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Center(
+              child: CircleAvatar(
+                radius: 60,
+                backgroundColor:
+                    userProfile!.profilePicture == null ||
+                            userProfile!.profilePicture!.isEmpty
+                        ? Colors.blueGrey[700]
+                        : Colors.grey[300],
+                backgroundImage:
+                    userProfile!.profilePicture != null &&
+                            userProfile!.profilePicture!.isNotEmpty
+                        ? NetworkImage(userProfile!.profilePicture!)
+                            as ImageProvider
+                        : null,
+                child:
+                    userProfile!.profilePicture == null ||
+                            userProfile!.profilePicture!.isEmpty
+                        ? Text(
+                          (userProfile!.username?.isNotEmpty == true)
+                              ? userProfile!.username![0].toUpperCase()
+                              : '?',
+                          style: const TextStyle(
+                            fontSize: 40,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        )
+                        : null,
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            Text(
+              userProfile!.username ?? 'No Username',
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              userProfile!.email ?? 'No Email',
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            ),
+
+            const SizedBox(height: 20),
+
+            ProfileSectionCard(
+              title: 'Bio',
               children: [
-                CircleAvatar(
-                  radius: 60,
-                  backgroundColor:
-                      userProfile!.profilePicture == null ||
-                              userProfile!.profilePicture!.isEmpty
-                          ? Colors.blueGrey[700]
-                          : Colors.grey[300],
-                  backgroundImage:
-                      userProfile!.profilePicture != null &&
-                              userProfile!.profilePicture!.isNotEmpty
-                          ? NetworkImage(userProfile!.profilePicture!)
-                              as ImageProvider
-                          : null,
-                  child:
-                      userProfile!.profilePicture == null ||
-                              userProfile!.profilePicture!.isEmpty
-                          ? Text(
-                            (userProfile!.username?.isNotEmpty == true)
-                                ? userProfile!.username![0].toUpperCase()
-                                : '?',
-                            style: const TextStyle(
-                              fontSize: 40,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          )
-                          : null,
-                ),
-                if (widget.fromBottomNav)
-                  Positioned(
-                    right: 0,
-                    bottom: 0,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor,
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.edit,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Edit profile picture feature coming soon',
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
+                Text(
+                  userProfile!.bio ?? 'No bio information available.',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color.fromARGB(255, 255, 255, 255),
                   ),
+                ),
               ],
             ),
-          ),
 
-          const SizedBox(height: 20),
-
-          Text(
-            userProfile!.username ?? 'No Username',
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            userProfile!.email ?? 'No Email',
-            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-          ),
-
-          const SizedBox(height: 20),
-
-          ProfileSectionCard(
-            title: 'Bio',
-            actionButton:
-                widget.fromBottomNav
-                    ? IconButton(
-                      icon: const Icon(Icons.edit, size: 20),
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Edit bio feature coming soon'),
-                          ),
-                        );
-                      },
-                    )
-                    : null,
-            children: [
-              Text(
-                userProfile!.bio ?? 'No bio information available.',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: const Color.fromARGB(255, 255, 255, 255),
-                ),
-              ),
-            ],
-          ),
-
-          ProfileSectionCard(
-            title: 'Education',
-            children: [
-              ProfileInfoRow(
-                label: 'University',
-                value: userProfile!.universityName ?? 'Not specified',
-              ),
-              // Only show campus and major for students
-              if (userProfile!.isStudent == true) ...[
-                const Divider(height: 20),
+            ProfileSectionCard(
+              title: 'Education',
+              children: [
                 ProfileInfoRow(
-                  label: 'Campus',
-                  value: userProfile!.campusName ?? 'Not specified',
+                  label: 'University',
+                  value: userProfile!.universityName ?? 'Not specified',
+                ),
+                // Only show campus and major for students
+                if (userProfile!.isStudent == true) ...[
+                  const Divider(height: 20),
+                  ProfileInfoRow(
+                    label: 'Campus',
+                    value: userProfile!.campusName ?? 'Not specified',
+                  ),
+                  const Divider(height: 20),
+                  ProfileInfoRow(
+                    label: 'Major',
+                    value: userProfile!.majorName ?? 'Not specified',
+                  ),
+                ],
+              ],
+            ),
+
+            ProfileSectionCard(
+              title: 'Account Status',
+              children: [
+                ProfileInfoRow(
+                  label: 'Account Type',
+                  value:
+                      userProfile!.isStudent == true ? 'Student' : 'Instructor',
                 ),
                 const Divider(height: 20),
                 ProfileInfoRow(
-                  label: 'Major',
-                  value: userProfile!.majorName ?? 'Not specified',
+                  label: 'Member Since',
+                  value:
+                      userProfile!.createdAt != null
+                          ? '${userProfile!.createdAt!.day}/${userProfile!.createdAt!.month}/${userProfile!.createdAt!.year}'
+                          : 'Unknown',
                 ),
               ],
-            ],
-          ),
+            ),
 
-          ProfileSectionCard(
-            title: 'Account Status',
-            children: [
-              ProfileInfoRow(
-                label: 'Account Type',
-                value:
-                    userProfile!.isStudent == true ? 'Student' : 'Instructor',
-              ),
-              const Divider(height: 20),
-              ProfileInfoRow(
-                label: 'Member Since',
-                value:
-                    userProfile!.createdAt != null
-                        ? '${userProfile!.createdAt!.day}/${userProfile!.createdAt!.month}/${userProfile!.createdAt!.year}'
-                        : 'Unknown',
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 24),
-        ],
+            const SizedBox(height: 24),
+          ],
+        ),
       ),
     );
   }
