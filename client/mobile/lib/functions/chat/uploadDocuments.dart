@@ -7,14 +7,15 @@ import 'package:file_picker/file_picker.dart';
 import 'package:mime/mime.dart';
 import 'dart:convert'; // for base64Encode
 
-
-  Future<String?> uploadFileToServerCrossPlatform({
+Future<String?> uploadFileToServerCrossPlatform({
   required Uint8List fileBytes,
   required String fileName,
   required String fieldName,
 }) async {
   try {
-    final uri = Uri.parse('https://api.simpleruni.com/document/uploadDocumentMobile');
+    final uri = Uri.parse(
+      'http://localhost:5000/document/uploadDocumentMobile',
+    );
 
     final mimeType = lookupMimeType(fileName) ?? 'application/octet-stream';
     final base64File = base64Encode(fileBytes);
@@ -44,32 +45,30 @@ import 'dart:convert'; // for base64Encode
   }
 }
 
-  Future<void> handleImageUpload(Function(String url) onComplete) async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+Future<void> handleImageUpload(Function(String url) onComplete) async {
+  final picker = ImagePicker();
+  final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
-    if (pickedFile != null) {
-      final fileBytes = await pickedFile.readAsBytes();
-      final url = await uploadFileToServerCrossPlatform(
-        fileBytes: fileBytes,
-        fileName: pickedFile.name,
-        fieldName: 'image',
-      );
-      if (url != null) onComplete(url);
-    }
+  if (pickedFile != null) {
+    final fileBytes = await pickedFile.readAsBytes();
+    final url = await uploadFileToServerCrossPlatform(
+      fileBytes: fileBytes,
+      fileName: pickedFile.name,
+      fieldName: 'image',
+    );
+    if (url != null) onComplete(url);
   }
+}
 
-  Future<void> handleDocumentUpload(Function(String url) onComplete) async {
-    final result = await FilePicker.platform.pickFiles();
+Future<void> handleDocumentUpload(Function(String url) onComplete) async {
+  final result = await FilePicker.platform.pickFiles();
 
-    if (result != null && result.files.single.bytes != null) {
-      final url = await uploadFileToServerCrossPlatform(
-        fileBytes: result.files.single.bytes!,
-        fileName: result.files.single.name,
-        fieldName: 'document',
-      );
-      if (url != null) onComplete(url);
-    }
+  if (result != null && result.files.single.bytes != null) {
+    final url = await uploadFileToServerCrossPlatform(
+      fileBytes: result.files.single.bytes!,
+      fileName: result.files.single.name,
+      fieldName: 'document',
+    );
+    if (url != null) onComplete(url);
   }
-
- 
+}
