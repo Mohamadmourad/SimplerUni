@@ -15,6 +15,7 @@ router.post('/sendOtp', userController.sendOtp);
 router.post('/verifyOtp', userController.verifyOtp);
 router.post('/sendChangePasswordLink', userController.sendChangePasswordLink);
 router.post('/changeUserPassword', userController.changeUserPassword);
+router.post('/editUserProfile', userController.editUserProfile);
 
 router.put("/banUser",userController.banUser);
 router.put("/unbanUser",userController.unbanUser);
