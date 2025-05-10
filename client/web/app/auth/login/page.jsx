@@ -29,17 +29,18 @@ export default function AdminLogin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try{
-    setisClickable(false);
-    setError("");
-    await axios.post(process.env.NEXT_PUBLIC_END_POINT + "/university/login",{
-      username,
-      password
-    },{ withCredentials: true });
-    setisClickable(true);
-    router.push('/dashboard');
+      setisClickable(false);
+      setError("");
+      await axios.post(process.env.NEXT_PUBLIC_END_POINT + "/university/login",{
+        username,
+        password
+      },{ withCredentials: true });
+      setisClickable(true);
+      router.push('/dashboard');
     }
     catch(e){
-      setError(e);
+      const errorMessage = e.response?.data?.error || e.response?.data?.message || e.message || "Login failed";
+      setError(errorMessage);
       setisClickable(true);
     }
   };
@@ -67,10 +68,12 @@ export default function AdminLogin() {
                 onChange={(e) => setUsername(e.target.value)}
                 required
               />
-              <label className="text-sm font-medium text-red-600 mb-2">
-              {error}
-            </label>
             </div>
+            {error && (
+              <p className="mt-2 text-sm font-medium text-red-500">
+                {error}
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
