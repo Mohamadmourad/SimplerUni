@@ -160,10 +160,10 @@ module.exports.getAllAdmins = async (req, res) => {
       await db.query("INSERT INTO role_permissions(name, roleid) VALUES ($1, $2)", ["superAdmin", roleId])
   
        result = await db.query(`
-        INSERT INTO web_admins(username, password, roleid)
-        VALUES ($1, $2, $3)
+        INSERT INTO web_admins(username, password, roleid, isPasswordChanged)
+        VALUES ($1, $2, $3, $4)
         RETURNING *
-      `, [username, hashedPassword, roleId]);
+      `, [username, hashedPassword, roleId, true]);
       console.log("superAdmin created succesfully");
       return result.rows[0];
     } catch (e) {
