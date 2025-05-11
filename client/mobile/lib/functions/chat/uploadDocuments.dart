@@ -61,7 +61,7 @@ Future<void> handleImageUpload(Function(String url) onComplete) async {
 }
 
 Future<void> handleDocumentUpload(Function(String url) onComplete) async {
-  final result = await FilePicker.platform.pickFiles();
+  final result = await FilePicker.platform.pickFiles(withData: true); 
 
   if (result != null && result.files.single.bytes != null) {
     final url = await uploadFileToServerCrossPlatform(
@@ -70,5 +70,7 @@ Future<void> handleDocumentUpload(Function(String url) onComplete) async {
       fieldName: 'document',
     );
     if (url != null) onComplete(url);
+  } else {
+    print("No bytes found in picked file.");
   }
 }
