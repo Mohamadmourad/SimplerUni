@@ -101,9 +101,11 @@ export default function AdminLogin() {
           <div className="flex items-center justify-between">
             <div className="flex items-center">
             </div>
-            <button className="text-sm font-medium text-purple-500 hover:text-purple-400">
+            <Link href="/auth/forget-password">
+             <span className="text-sm font-medium text-purple-500 hover:text-purple-400 cursor-pointer">
               Forgot password?
-            </button>
+            </span>
+            </Link>
           </div>
           <button
             type="submit"

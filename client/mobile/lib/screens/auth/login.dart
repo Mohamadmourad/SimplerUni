@@ -188,7 +188,18 @@ class LoginPageState extends State<LoginPage> {
                     isPassword: true,
                     error: passwordError,
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => context.push('/forgot-password'),
+                      child: Text(
+                        'Forgot Password?',
+                        style: TextStyle(color: AppColors.primaryColor),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   AuthButton(
                     text: 'LOG IN',
                     isLoading: isLoading,
