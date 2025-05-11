@@ -44,7 +44,7 @@ const io = new Server(server, {
   }
 });
 
-app.use(express.json({ limit: '30mb' }));
+app.use(express.json({ limit: '100mb' }));
 
 app.use(cors({
   origin: (origin, callback) => {
