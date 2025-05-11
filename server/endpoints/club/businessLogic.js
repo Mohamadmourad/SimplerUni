@@ -345,7 +345,11 @@ module.exports.changeClubAdmin = async (req, res) => {
     const {newAdminId, clubId} = req.body;
     try {
         const { adminId, universityId } = verifyToken(token);
+        const club = await db.query(`SELECT * FROM clubs WHERE clubid=$1`,[clubId]);
+        const oldAdminId = club.rows[0].adminid;
+        await db.query(`DELETE FROM club_members WHERE clubid=$1 AND userid=$2`,[clubId,oldAdminId]);
         await db.query(`UPDATE clubs SET adminId=$1 WHERE clubId=$2`,[newAdminId, clubId]);
+        await db.query(`INSERT INTO club_members (userId, clubId,status) VALUES($1,$2,$3)`,[newAdminId, clubId, "accepted"]);
         res.status(200).json("admin changed succesfully");
     } catch (e) {
         console.error(e);
