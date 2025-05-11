@@ -56,7 +56,6 @@ Future<Map<String, dynamic>> loginMethode(
                 : {"message": error};
         authToken = errorData["authToken"];
       } catch (e) {
-        // Error parsing response
       }
 
       if (authToken != null && authToken.isNotEmpty) {

@@ -26,7 +26,6 @@ class QuestionDetailsPageState extends State<QuestionDetailsPage> {
   String? errorMessage;
   final TextEditingController answerController = TextEditingController();
   bool isSubmitting = false;
-  // Add state to track upvoting status
   bool isUpvoting = false;
 
   @override
@@ -113,7 +112,6 @@ class QuestionDetailsPageState extends State<QuestionDetailsPage> {
                     question: widget.question,
                     onUpvote: handleUpvote,
                     onViewDetails: (_) {},
-                    // Pass the upvoting state to the QuestionCard
                     isUpvoting: isUpvoting,
                   ),
 
@@ -160,7 +158,6 @@ class QuestionDetailsPageState extends State<QuestionDetailsPage> {
   }
 
   void handleUpvote(Question question) async {
-    // Set the upvoting state to true before starting
     setState(() {
       isUpvoting = true;
     });
@@ -184,7 +181,6 @@ class QuestionDetailsPageState extends State<QuestionDetailsPage> {
         SnackBar(content: Text('Failed to upvote: ${e.toString()}')),
       );
     } finally {
-      // Reset the upvoting state when done
       setState(() {
         isUpvoting = false;
       });

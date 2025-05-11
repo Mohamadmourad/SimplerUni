@@ -377,7 +377,7 @@ module.exports.sendChangePasswordLink = async (req, res)=>{
         await db.query(`UPDATE users SET passwordResetToken=$1 WHERE userId=$2`,[token, userData.rows[0].userid]);
         const subject = "Reset Password";
         const htmlContent = resetPasswordEmail(userData.rows[0].username, token);
-        console.log(`https://simpleruni/user/reset-password/${token}`)
+        console.log(`https://simpleruni.com/reset-password/user/${token}`)
         await sendEmail(email, subject, htmlContent);
         return res.status(200).json('link sended succesfully');
 

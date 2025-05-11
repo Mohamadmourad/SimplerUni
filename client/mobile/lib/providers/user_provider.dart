@@ -39,11 +39,8 @@ class UserProvider with ChangeNotifier {
   Future<void> removeUserFromPrefs() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      // Remove user data
       await prefs.remove('userData');
-      // Also remove auth token
       await prefs.remove('authToken');
-      // Clear any other auth-related data
       await prefs.remove('refreshToken');
       print("User data and authentication tokens removed from preferences");
     } catch (e) {

@@ -98,7 +98,6 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
   }
 
   Future<void> submitProfile() async {
-    // Don't submit if image is uploading
     if (isImageUploading) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -143,10 +142,8 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
       );
 
       if (result['success']) {
-        // Update local user data
         await updateUserData(optionalData);
 
-        // Fetch the updated user data from the server to ensure everything is current
         if (mounted) {
           final userProvider = Provider.of<UserProvider>(
             context,
@@ -259,7 +256,7 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
                         onTap:
                             isImageUploading
                                 ? null
-                                : selectImage, // Disable during upload
+                                : selectImage,
                         child: Container(
                           width: 120,
                           height: 120,
@@ -293,14 +290,13 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
                         onPressed:
                             isImageUploading
                                 ? null
-                                : selectImage, // Disable during upload
+                                : selectImage, 
                         child: Text(
                           isImageUploading
                               ? 'Uploading...'
                               : 'Choose Profile Picture',
                         ),
                       ),
-                      // Remove the standalone CircularProgressIndicator here
                     ],
                   ),
                 ),
@@ -324,17 +320,14 @@ class _ProfileOptionalInfoState extends State<ProfileOptionalInfo> {
                 AuthButton(
                   text: 'COMPLETE PROFILE',
                   isLoading: isLoading,
-                  // Disable when image is uploading or regular loading is happening
                   onPressed:
                       (isImageUploading || isLoading) ? null : submitProfile,
                 ),
                 const SizedBox(height: 16),
                 TextButton(
-                  // Disable when image is uploading or regular loading is happening
                   onPressed:
                       (isImageUploading || isLoading) ? null : submitProfile,
                   style: TextButton.styleFrom(
-                    // Show disabled state visually
                     foregroundColor:
                         (isImageUploading || isLoading)
                             ? Colors.grey

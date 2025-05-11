@@ -5,23 +5,22 @@ class JoinClubButton extends StatelessWidget {
   final bool hasRequested;
   final bool isProcessing;
   final VoidCallback onPressed;
-  final bool isAdmin; // Add this property
-  final VoidCallback? onShowMembers; // Add this property
-  final VoidCallback? onShowRequests; // Add this property
+  final bool isAdmin; 
+  final VoidCallback? onShowMembers; 
+  final VoidCallback? onShowRequests; 
 
   const JoinClubButton({
     Key? key,
     required this.hasRequested,
     required this.isProcessing,
     required this.onPressed,
-    this.isAdmin = false, // Default to false
+    this.isAdmin = false, 
     this.onShowMembers,
     this.onShowRequests,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // If the user is an admin, show admin-specific buttons
     if (isAdmin) {
       return Row(
         mainAxisSize: MainAxisSize.min,
@@ -69,7 +68,6 @@ class JoinClubButton extends StatelessWidget {
       );
     }
 
-    // If processing, show loading indicator
     if (isProcessing) {
       return SizedBox(
         height: 36,
@@ -83,7 +81,6 @@ class JoinClubButton extends StatelessWidget {
       );
     }
 
-    // Regular join button for non-admin users
     return TextButton(
       onPressed: onPressed,
       style: TextButton.styleFrom(

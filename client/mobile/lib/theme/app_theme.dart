@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Primary colors
   static const Color primaryColor = Color(0xFF6D27D9);
   static const Color backgroundColor = Color(0xFF000611);
 
-  // Secondary colors
   static const Color accentColor = Color(0xFF9D4EDD);
   static const Color textPrimary = Colors.white;
   static const Color textSecondary = Color(0xFFB8B8B8);
   static const Color cardColor = Color(0xFF0A1128);
   static const Color dividerColor = Color(0xFF2E2E2E);
 
-  // Status colors
   static const Color successColor = Color(0xFF4CAF50);
   static const Color errorColor = Color(0xFFE53935);
   static const Color warningColor = Color(0xFFFFC107);
@@ -101,6 +98,6 @@ class AppTheme {
   }
 
   static ThemeData get lightTheme {
-    return darkTheme; // Placeholder for future light theme
+    return darkTheme;
   }
 }

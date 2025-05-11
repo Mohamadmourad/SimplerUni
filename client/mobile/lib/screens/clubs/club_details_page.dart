@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:senior_project/functions/clubs/clubs_api.dart';
-import 'package:senior_project/functions/user/get_user_profile.dart'; // Add this import for the user profile API
+import 'package:senior_project/functions/user/get_user_profile.dart'; 
 import 'package:senior_project/theme/app_theme.dart';
-import 'package:go_router/go_router.dart'; // Add this import
+import 'package:go_router/go_router.dart'; 
 
 class ClubDetailsPage extends StatefulWidget {
   final String clubId;
@@ -23,7 +23,7 @@ class ClubDetailsPageState extends State<ClubDetailsPage> {
   String? errorMessage;
   List<dynamic> members = [];
   Map<String, dynamic> clubInfo = {};
-  Map<String, dynamic>? instructorInfo; // Add a field for instructor info
+  Map<String, dynamic>? instructorInfo; 
 
   @override
   void initState() {
@@ -168,7 +168,6 @@ class ClubDetailsPageState extends State<ClubDetailsPage> {
             child: Text(
               value,
               style: const TextStyle(fontSize: 16),
-              // Removed the blue color and underline
             ),
           ),
         ],
@@ -251,11 +250,9 @@ class ClubDetailsPageState extends State<ClubDetailsPage> {
                         child: Text(
                           member['username'] ?? 'Unknown',
                           style: const TextStyle(fontSize: 16),
-                          // Removed the blue color and underline
                         ),
                       ),
                       subtitle: Text(member['email'] ?? ''),
-                      // No trailing remove button for regular members
                     ),
                   );
                 },

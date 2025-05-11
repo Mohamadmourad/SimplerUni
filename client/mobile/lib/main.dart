@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:senior_project/modules/user_profile.dart';
 import 'package:senior_project/providers/user_provider.dart';
+import 'package:senior_project/screens/auth/forgot_password_page.dart';
 import 'package:senior_project/screens/chats/chat.dart';
 import 'package:senior_project/screens/auth/complete_profile.dart';
 import 'package:senior_project/screens/auth/profile_optional_info.dart';
@@ -103,7 +104,6 @@ class MyApp extends StatelessWidget {
                   );
                 },
               ),
-              // Add profile route for viewing other users' profiles
               GoRoute(
                 path: '/profile/:userId',
                 builder: (context, state) {
@@ -117,6 +117,10 @@ class MyApp extends StatelessWidget {
                     (context, state) => EditProfilePage(
                       userProfile: state.extra as UserProfile,
                     ),
+              ),
+              GoRoute(
+                path: '/forgot-password',
+                builder: (context, state) => const ForgotPasswordPage(),
               ),
             ],
           );

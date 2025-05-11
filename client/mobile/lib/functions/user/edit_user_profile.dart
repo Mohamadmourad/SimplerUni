@@ -9,7 +9,6 @@ Future<Map<String, dynamic>> editUserProfile({
   String? campusId,
   String? majorId,
 }) async {
-  // Only include fields that are provided
   final Map<String, dynamic> requestData = {};
 
   if (username != null) requestData['username'] = username;
@@ -18,7 +17,6 @@ Future<Map<String, dynamic>> editUserProfile({
   if (campusId != null) requestData['campusId'] = campusId;
   if (majorId != null) requestData['majorId'] = majorId;
 
-  // Only make the API call if there are fields to update
   if (requestData.isEmpty) {
     return {'success': true, 'message': 'No changes to update'};
   }
