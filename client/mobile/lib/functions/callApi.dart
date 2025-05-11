@@ -22,7 +22,7 @@ Future<Map<String, dynamic>> makeApiCall(
     };
   }
 
-  const String baseUrl = 'https://simpleruni.com';
+  const String baseUrl = 'https://api.simpleruni.com';
   Uri url = Uri.parse('$baseUrl/$urlParam');
 
   Map<String, String> headers = {

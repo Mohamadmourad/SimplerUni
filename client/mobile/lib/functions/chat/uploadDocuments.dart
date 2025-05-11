@@ -14,7 +14,7 @@ Future<String?> uploadFileToServerCrossPlatform({
 }) async {
   try {
     final uri = Uri.parse(
-      'https://simpleruni.com/document/uploadDocumentMobile',
+      'https://api.simpleruni.com/document/uploadDocumentMobile',
     );
 
     final mimeType = lookupMimeType(fileName) ?? 'application/octet-stream';

@@ -7,7 +7,7 @@ class SocketService {
     required String currentChatroomId,
     required Function(dynamic) addNewMessage,
   }) {
-    socket = IO.io('https://simpleruni.com', {
+    socket = IO.io('https://api.simpleruni.com', {
       'transports': ['websocket'],
       'autoConnect': false,
     });
