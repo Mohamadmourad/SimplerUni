@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -9,6 +9,16 @@ const AddUniversity = () => {
   const universityEmailRef = useRef(null);
   const usernameRef = useRef(null);
   const [loading, setLoading] = useState(false);
+  const [name,setName] = useState("");
+  const [email,setEmail] = useState("");
+
+   useEffect(()=>{
+    const queryParams = new URLSearchParams(location.search);
+    const email = queryParams.get('email');
+    const name = queryParams.get('name');
+    setEmail(email);
+    setName(name);
+   },[]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,6 +60,7 @@ const AddUniversity = () => {
                 placeholder="Enter university name"
                 required
                 disabled={loading}
+                value={name}
               />
             </div>
             <div>
@@ -62,6 +73,7 @@ const AddUniversity = () => {
                 placeholder="Enter university email"
                 required
                 disabled={loading}
+                value={email}
               />
             </div>
             <div>

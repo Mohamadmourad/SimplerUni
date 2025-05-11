@@ -4,11 +4,13 @@ import axios from "axios";
 import { CheckCircle, XCircle, UserCheck, UserX } from 'lucide-react';
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useRouter } from 'next/navigation';
 
 const UniversityAccessPage = () => {
   const [pendingUniversities, setPendingUniversities] = useState([]);
   const [acceptedUniversities, setAcceptedUniversities] = useState([]);
   const [loading, setLoading] = useState(false);
+   const router = useRouter();
 
   useEffect(() => {
     fetchUniversities();
@@ -23,22 +25,26 @@ const UniversityAccessPage = () => {
 
       setPendingUniversities(pendingRes.data);
       setAcceptedUniversities(acceptedRes.data);
+
+      console.log(pendingRes.data);
     } catch (err) {
       toast.error("Failed to fetch universities");
     }
   };
 
-  const handleAccept = async (universityId) => {
+  const handleAccept = async (requestId, name, email) => {
     setLoading(true);
     try {
       await axios.post(
         process.env.NEXT_PUBLIC_END_POINT + "/university/universityRequestAccept",
-        {requestId: universityId},
+        {requestId},
         { withCredentials: true }
       );
 
       toast.success("University accepted successfully!");
       fetchUniversities();
+      const encodedEmail = encodeURIComponent(email);
+      router.push(`/dashboard/addUniversity?name=${name}&email=${encodedEmail}`);
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to accept university");
     } finally {
@@ -89,7 +95,7 @@ const UniversityAccessPage = () => {
                     </div>
                     <div className="flex space-x-3">
                       <button
-                        onClick={() => handleAccept(university.requestid)}
+                        onClick={() => handleAccept(university.requestid, university.name, university.email)}
                         disabled={loading}
                         className="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
                       >
