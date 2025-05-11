@@ -1,10 +1,11 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:mime/mime.dart';
 import 'dart:convert';
-import 'package:senior_project/functions/callApi.dart'; 
 
 Future<String?> uploadFileToServerCrossPlatform({
   required Uint8List fileBytes,
@@ -12,27 +13,30 @@ Future<String?> uploadFileToServerCrossPlatform({
   required String fieldName,
 }) async {
   try {
+    final uri = Uri.parse(
+      'https://simpleruni.com/document/uploadDocumentMobile',
+    );
+
     final mimeType = lookupMimeType(fileName) ?? 'application/octet-stream';
     final base64File = base64Encode(fileBytes);
 
-    final requestBody = jsonEncode({
+    final body = jsonEncode({
       'fileName': fileName,
       'fieldName': fieldName,
       'fileData': base64File,
       'mimeType': mimeType,
     });
 
-    final response = await makeApiCall(
-      'POST',
-      requestBody,
-      'document/uploadDocumentMobile',
-      null, 
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: body,
     );
 
-    if (response['statusCode'] == 200) {
-      return response['body'].toString();
+    if (response.statusCode == 200) {
+      return response.body;
     } else {
-      print('Upload failed: ${response['statusCode']} - ${response['error']}');
+      print('Upload failed: ${response.statusCode} - ${response.body}');
       return null;
     }
   } catch (e) {

@@ -120,6 +120,8 @@ class ClubsPageState extends State<ClubsPage>
       Navigator.of(context).pop();
 
       if (success) {
+        await loadClubs();
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Club creation request sent successfully'),
@@ -306,7 +308,7 @@ class ClubsPageState extends State<ClubsPage>
     );
   }
 
-  Widget _buildClubCard(Club club) {
+  Widget buildClubCard(Club club) {
     final bool isProcessing = processingClubs[club.clubId] ?? false;
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final bool isAdmin = club.adminId == userProvider.currentUser?.userId;
