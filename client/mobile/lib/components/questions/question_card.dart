@@ -8,12 +8,14 @@ class QuestionCard extends StatelessWidget {
   final Question question;
   final Function(Question) onUpvote;
   final Function(Question) onViewDetails;
+  final bool isUpvoting;
 
   const QuestionCard({
     Key? key,
     required this.question,
     required this.onUpvote,
     required this.onViewDetails,
+    this.isUpvoting = false,
   }) : super(key: key);
 
   @override
@@ -28,7 +30,6 @@ class QuestionCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               GestureDetector(
-                // This will override the parent GestureDetector when tapped
                 onTap: () {
                   if (question.userId != null) {
                     context.push('/profile/${question.userId}');
@@ -88,7 +89,6 @@ class QuestionCard extends StatelessWidget {
               const SizedBox(height: 12),
               Text(question.content, style: const TextStyle(fontSize: 16)),
               const SizedBox(height: 16),
-
               if (question.tags.isNotEmpty)
                 SizedBox(
                   height: 32,
@@ -117,9 +117,7 @@ class QuestionCard extends StatelessWidget {
                             .toList(),
                   ),
                 ),
-
               const SizedBox(height: 12),
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -147,7 +145,6 @@ class QuestionCard extends StatelessWidget {
                       ],
                     ),
                   ),
-
                   Row(
                     children: [
                       Text(
@@ -157,22 +154,29 @@ class QuestionCard extends StatelessWidget {
                           fontSize: 14,
                         ),
                       ),
-                      IconButton(
-                        icon: Icon(
-                          Icons.arrow_upward,
-                          color:
+                      isUpvoting
+                          ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.purple,
+                              ),
+                            ),
+                          )
+                          : IconButton(
+                            icon: Icon(
                               question.hasUpvoted
-                                  ? AppColors.primaryColor
-                                  : null,
-                          size: 20,
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 36,
-                          minHeight: 36,
-                        ),
-                        padding: EdgeInsets.zero,
-                        onPressed: () => onUpvote(question),
-                      ),
+                                  ? Icons.arrow_upward
+                                  : Icons.arrow_upward_outlined,
+                              color:
+                                  question.hasUpvoted
+                                      ? Colors.purple
+                                      : Colors.grey,
+                            ),
+                            onPressed: () => onUpvote(question),
+                          ),
                     ],
                   ),
                 ],

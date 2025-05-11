@@ -1,9 +1,9 @@
 const {db} = require("../../db");
 const {DateTime} = require("luxon");
-const { hashText, createToken, handleErrors, compareHashedText, getEmailDomain, verifyToken } = require("./helper");
+const { hashText, createToken, handleErrors, compareHashedText, getEmailDomain, verifyToken, generateRandomString } = require("./helper");
 const { verifyToken: universityVerifyToken } = require("../university/helper")
 const { sendEmail } = require("../helper");
-const { otpVerificationEmail } = require("../emailTemplates");
+const { otpVerificationEmail, resetPasswordEmail } = require("../emailTemplates");
 
 module.exports.signup_post = async (req, res) => {
     let { email, password, username } = req.body;
@@ -361,5 +361,156 @@ module.exports.checkUserAccount = async (token)=>{
     }
     catch(e){
         console.log("error while checking user ", e);
+         return res.status(500).json({ error: 'Internal server error.' });
     }
 }
+
+module.exports.sendChangePasswordLink = async (req, res)=>{
+    try{
+        const { email } = req.body;
+        const userData = await db.query(`SELECT * FROM users WHERE email=$1`,[email]);
+        if(userData.rowCount === 0) 
+            return res.status(400).json({
+              error: 'That email is not registered.',
+            });
+        const token = generateRandomString();
+        await db.query(`UPDATE users SET passwordResetToken=$1 WHERE userId=$2`,[token, userData.rows[0].userid]);
+        const subject = "Reset Password";
+        const htmlContent = resetPasswordEmail(userData.rows[0].username, token);
+        console.log(`https://simpleruni/user/reset-password/${token}`)
+        await sendEmail(email, subject, htmlContent);
+        return res.status(200).json('link sended succesfully');
+
+    }
+    catch(e){
+        console.log("error while checking user ", e);
+        return res.status(500).json({ error: 'Internal server error.' });
+    }
+}
+
+module.exports.changeUserPassword = async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        if (!token || !newPassword) {
+            return res.status(400).json({ error: 'Token and new password are required.' });
+        }
+
+        const userData = await db.query(
+            `SELECT * FROM users WHERE passwordResetToken = $1`,
+            [token]
+        );
+
+        if (userData.rowCount === 0) {
+            return res.status(400).json({ error: 'Invalid or expired token.' });
+        }
+        const hashedPassword = await hashText(newPassword);
+
+        await db.query(
+            `UPDATE users SET password = $1, passwordResetToken = NULL WHERE userId = $2`,
+            [hashedPassword, userData.rows[0].userid]
+        );
+
+        return res.status(200).json('Password has been updated successfully.');
+    } catch (e) {
+        console.error('Error while changing password:', e);
+        return res.status(500).json({ error: 'Internal server error.' });
+    }
+};
+
+module.exports.editUserProfile = async (req, res) => {
+    try {
+        const token = req.headers.authorization;
+        const { userId, universityId } = verifyToken(token);
+        const {
+            username,
+            bio,
+            profilePicture,
+            campusId,
+            majorId
+        } = req.body;
+
+        if (!userId) {
+            return res.status(400).json({ error: "User ID is required." });
+        }
+        const userData = await db.query(
+            `SELECT * FROM users WHERE userId = $1`,
+            [userId]
+        );
+
+        if (userData.rowCount === 0) {
+            return res.status(404).json({ error: "User not found." });
+        }
+
+        const fieldsToUpdate = [];
+        const values = [];
+        let query = `UPDATE users SET `;
+
+        if (username) {
+            
+            fieldsToUpdate.push(`username = $${fieldsToUpdate.length + 1}`);
+            values.push(username);
+        }
+
+        if (bio) {
+            fieldsToUpdate.push(`bio = $${fieldsToUpdate.length + 1}`);
+            values.push(bio);
+        }
+
+        if (profilePicture) {
+            fieldsToUpdate.push(`profilePicture = $${fieldsToUpdate.length + 1}`);
+            values.push(profilePicture);
+        }
+
+        if (campusId) {
+        const currentCampusId = userData.rows[0].campusid;
+        const currentCampusChatroom = await db.query(
+            `SELECT chatroomid FROM campusus WHERE campusid = $1`,
+            [currentCampusId]
+        );
+        
+        await db.query(
+            `DELETE FROM chatroom_members WHERE chatroomid = $1 AND userid = $2`,
+            [currentCampusChatroom.rows[0].chatroomid, userId]
+        );
+
+        const newCampusChatroom = await db.query(
+            `SELECT chatroomid FROM campusus WHERE campusid = $1`,
+            [campusId]
+        );
+
+        await db.query(
+            `INSERT INTO chatroom_members (userid, chatroomid) VALUES ($1, $2)`,
+            [userId, newCampusChatroom.rows[0].chatroomid]
+        );
+        fieldsToUpdate.push(`campusId = $${fieldsToUpdate.length + 1}`);
+        values.push(campusId);
+    }
+
+
+        if (majorId) {
+            const currentMajorId = userData.rows[0].majorid;
+            const currentMajorChatroom = await db.query(`SELECT chatroomid FROM majors WHERE majorid=$1`,[currentMajorId]);
+            await db.query(`DELETE FROM chatroom_members WHERE chatroomid=$1 AND userid=$2`,[currentMajorChatroom.rows[0].chatroomid, userId]);
+
+            const majorChatroom = await db.query(`SELECT * FROM majors WHERE majorid=$1`,[majorId]);
+            await db.query(`INSERT INTO chatroom_members(userid,chatroomid) VALUES($1,$2)`,[userId,majorChatroom.rows[0].chatroomid]);
+            fieldsToUpdate.push(`majorId = $${fieldsToUpdate.length + 1}`);
+            values.push(majorId);
+        }
+
+        if (fieldsToUpdate.length === 0) {
+            return res.status(400).json({ error: "No fields to update provided." });
+        }
+
+        query += fieldsToUpdate.join(", ") + ` WHERE userId = $${fieldsToUpdate.length + 1}`;
+        values.push(userId);
+
+        await db.query(query, values);
+
+        return res.status(200).json({ message: "Profile updated successfully." });
+    } catch (e) {
+        console.error("Error while updating user profile:", e);
+        return res.status(500).json({ error: "Internal server error." });
+    }
+};

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:senior_project/components/clubs/club_card.dart';
 import 'package:senior_project/components/clubs/create_club_dialog.dart';
@@ -6,6 +7,8 @@ import 'package:senior_project/components/common/error_state.dart';
 import 'package:senior_project/functions/clubs/clubs_api.dart';
 import 'package:senior_project/modules/club.dart';
 import 'package:senior_project/providers/user_provider.dart';
+import 'package:senior_project/screens/clubs/club_join_requests_page.dart';
+import 'package:senior_project/screens/clubs/club_members_page.dart';
 
 class ClubsPage extends StatefulWidget {
   const ClubsPage({super.key});
@@ -20,19 +23,19 @@ class ClubsPageState extends State<ClubsPage>
   String? errorMessage;
   List<Club> myClubs = [];
   List<Club> availableClubs = [];
-  List<Club> adminClubs = []; // For instructors
-  List<Club> underReviewClubs = []; // Add this for clubs under review
+  List<Club> adminClubs = [];
+  List<Club> underReviewClubs = [];
   late TabController tabController;
   bool isStudent = true;
+  Map<String, bool> processingClubs = {};
 
   @override
   void initState() {
     super.initState();
-    // Check if the user is a student or instructor
+
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     isStudent = userProvider.currentUser?.isStudent ?? true;
 
-    // Initialize tab controller with appropriate number of tabs (3 for students now)
     tabController = TabController(length: isStudent ? 3 : 1, vsync: this);
     loadClubs();
   }
@@ -51,21 +54,19 @@ class ClubsPageState extends State<ClubsPage>
 
     try {
       if (isStudent) {
-        // Student view - load clubs they're in, available clubs, and under review clubs
         final results = await Future.wait([
           getClubsUserIsIn(),
           getClubsUserNotIn(),
-          getUnderReviewClubs(), // Add this call
+          getUnderReviewClubs(),
         ]);
 
         setState(() {
           myClubs = results[0];
           availableClubs = results[1];
-          underReviewClubs = results[2]; // Set under review clubs
+          underReviewClubs = results[2];
           isLoading = false;
         });
       } else {
-        // Instructor view - load clubs they're responsible for
         final clubs = await getAdminClubList();
 
         setState(() {
@@ -89,26 +90,26 @@ class ClubsPageState extends State<ClubsPage>
       return;
     }
 
-    try {
-      final success = await requestJoinClub(club.clubId!);
+    setState(() {
+      processingClubs[club.clubId!] = true;
+    });
 
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Request to join club sent successfully'),
-          ),
-        );
-        // Reload clubs to reflect changes
-        loadClubs();
+    try {
+      if (club.hasUserMadeRequest == true) {
+        await removeJoinClubRequest(club.clubId!);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to send join request')),
-        );
+        await requestJoinClub(club.clubId!);
       }
+
+      await loadClubs();
     } catch (e) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+    } finally {
+      setState(() {
+        processingClubs[club.clubId!] = false;
+      });
     }
   }
 
@@ -116,7 +117,7 @@ class ClubsPageState extends State<ClubsPage>
     try {
       final success = await makeClubRequest(name, description);
 
-      Navigator.of(context).pop(); // Close the dialog
+      Navigator.of(context).pop();
 
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -130,7 +131,7 @@ class ClubsPageState extends State<ClubsPage>
         );
       }
     } catch (e) {
-      Navigator.of(context).pop(); // Close the dialog
+      Navigator.of(context).pop();
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
@@ -151,7 +152,7 @@ class ClubsPageState extends State<ClubsPage>
         title: const Text('Clubs'),
         elevation: 0,
         actions: [
-          if (isStudent) // Only show create club button for students
+          if (isStudent)
             IconButton(
               icon: const Icon(Icons.add),
               tooltip: 'Request New Club',
@@ -163,12 +164,12 @@ class ClubsPageState extends State<ClubsPage>
                 ? TabBar(
                   controller: tabController,
                   tabs: const [
-                    Tab(text: 'MY CLUBS'),
-                    Tab(text: 'AVAILABLE'),
-                    Tab(text: 'UNDER REVIEW'),
+                    Tab(text: 'My Clubs'),
+                    Tab(text: 'Available'),
+                    Tab(text: 'Pending'),
                   ],
                 )
-                : null, 
+                : null,
       ),
       body:
           isLoading
@@ -189,7 +190,6 @@ class ClubsPageState extends State<ClubsPage>
     return TabBarView(
       controller: tabController,
       children: [
-        // My Clubs Tab
         RefreshIndicator(
           onRefresh: loadClubs,
           child:
@@ -213,7 +213,6 @@ class ClubsPageState extends State<ClubsPage>
                   ),
         ),
 
-        // Available Clubs Tab
         RefreshIndicator(
           onRefresh: loadClubs,
           child:
@@ -232,16 +231,20 @@ class ClubsPageState extends State<ClubsPage>
                   : ListView.builder(
                     itemCount: availableClubs.length,
                     itemBuilder: (context, index) {
+                      final club = availableClubs[index];
+                      final isProcessing =
+                          processingClubs[club.clubId] ?? false;
+
                       return ClubCard(
-                        club: availableClubs[index],
+                        club: club,
                         isUserMember: false,
-                        onJoin: () => handleJoinClub(availableClubs[index]),
+                        onJoin: () => handleJoinClub(club),
+                        isProcessingRequest: isProcessing,
                       );
                     },
                   ),
         ),
 
-        // Under Review Clubs Tab (new)
         RefreshIndicator(
           onRefresh: loadClubs,
           child:
@@ -290,13 +293,62 @@ class ClubsPageState extends State<ClubsPage>
               : ListView.builder(
                 itemCount: adminClubs.length,
                 itemBuilder: (context, index) {
+                  final club = adminClubs[index];
                   return ClubCard(
-                    club: adminClubs[index],
+                    club: club,
                     isUserMember: true,
-                    isAdmin: true, // Now the parameter is defined in ClubCard
+                    isAdmin: true,
+                    onShowMembers: () => showClubMembers(club),
+                    onShowRequests: () => showClubRequests(club),
                   );
                 },
               ),
     );
+  }
+
+  Widget _buildClubCard(Club club) {
+    final bool isProcessing = processingClubs[club.clubId] ?? false;
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final bool isAdmin = club.adminId == userProvider.currentUser?.userId;
+
+    return ClubCard(
+      club: club,
+      isUserMember: myClubs.any((c) => c.clubId == club.clubId),
+      onJoin: () => handleJoinClub(club),
+      isAdmin: isAdmin,
+      isProcessingRequest: isProcessing,
+      onShowMembers: isAdmin ? () => showClubMembers(club) : null,
+      onShowRequests: isAdmin ? () => showClubRequests(club) : null,
+    );
+  }
+
+  void showClubMembers(Club club) {
+    if (club.clubId != null) {
+      // Use NavigatorOf instead of context.push to navigate with parameters
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder:
+              (context) => ClubMembersPage(
+                clubId: club.clubId!,
+                clubName: club.name ?? 'Club Members',
+              ),
+        ),
+      );
+    }
+  }
+
+  void showClubRequests(Club club) {
+    if (club.clubId != null) {
+      // Use NavigatorOf instead of context.push to navigate with parameters
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder:
+              (context) => ClubJoinRequestsPage(
+                clubId: club.clubId!,
+                clubName: club.name ?? 'Join Requests',
+              ),
+        ),
+      );
+    }
   }
 }

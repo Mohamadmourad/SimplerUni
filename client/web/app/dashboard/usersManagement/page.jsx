@@ -9,12 +9,7 @@ import axios from "axios";
 const UsersManagement = () => {
   const router = useRouter();
 
-  const [users, setUsers] = useState([
-    { id: "1", name: "Alice Johnson", email: "alice@example.com", type: "admin", banned: false },
-    { id: "2", name: "Bob Smith", email: "bob@example.com", type: "moderator", banned: true },
-    { id: "3", name: "Charlie Brown", email: "charlie@example.com", type: "user", banned: false },
-    { id: "4", name: "Dana White", email: "dana@example.com", type: "user", banned: false },
-  ]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showBannedOnly, setShowBannedOnly] = useState(false);

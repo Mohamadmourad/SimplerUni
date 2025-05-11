@@ -1,13 +1,14 @@
 class Club {
-  String? clubId;
-  String? name;
-  String? description;
-  String? room;
-  String? adminId;
-  String? chatroomId;
-  String? status;
-  String? universityId;
-  DateTime? createdAt;
+  final String? clubId;
+  final String? name;
+  final String? description;
+  final String? room;
+  final String? adminId;
+  final String? chatroomId;
+  final String? status;
+  final String? universityId;
+  final DateTime? createdAt;
+  final bool? hasUserMadeRequest;
 
   Club({
     this.clubId,
@@ -19,6 +20,7 @@ class Club {
     this.status,
     this.universityId,
     this.createdAt,
+    this.hasUserMadeRequest,
   });
 
   factory Club.fromJson(Map<String, dynamic> json) {
@@ -37,6 +39,9 @@ class Club {
           json['created_at'] != null
               ? DateTime.parse(json['created_at'])
               : null,
+      hasUserMadeRequest:
+          json['hasUserMadeRequest'] == true ||
+          json['hasusermaderequest'] == true,
     );
   }
 
@@ -51,6 +56,7 @@ class Club {
       'status': status,
       'universityId': universityId,
       'created_at': createdAt?.toIso8601String(),
+      'hasUserMadeRequest': hasUserMadeRequest,
     };
   }
 }

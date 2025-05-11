@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import { Users, CheckCircle, XCircle, Plus, School, Activity } from "lucide-react";
+import { Users, CheckCircle, XCircle, Plus, School, Activity, UserCog } from "lucide-react";
 import { checkAuth } from "@/app/functions/checkAuth";
 
 export default function ClubsManagement() {
@@ -11,7 +11,7 @@ export default function ClubsManagement() {
   const [activeTab, setActiveTab] = useState("pendingClubs");
   const [pendingClubs, setPendingClubs] = useState([]);
   const [acceptedClubs, setAcceptedClubs] = useState([]);
-  const [instructors, setInstructors] = useState([]); // State for instructors
+  const [instructors, setInstructors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,8 +26,10 @@ export default function ClubsManagement() {
   });
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectClubId, setRejectClubId] = useState(null);
+  const [selectedClubForAdmin, setSelectedClubForAdmin] = useState(null);
+  const [showChangeAdminModal, setShowChangeAdminModal] = useState(false);
+  const [newAdminId, setNewAdminId] = useState("");
 
-  // Remove dummy instructors array
 
   useEffect(() => {
     const verify = async () => {
@@ -40,7 +42,7 @@ export default function ClubsManagement() {
     };
     verify();
     fetchClubs();
-    fetchInstructors(); // Add this call to fetch instructors
+    fetchInstructors(); 
   }, [router]);
 
   const fetchInstructors = async () => {
@@ -156,6 +158,42 @@ export default function ClubsManagement() {
     }
   };
 
+  const handleChangeAdmin = async () => {
+    if (!selectedClubForAdmin || !newAdminId) {
+      setError("Please select an instructor for the club");
+      return;
+    }
+
+    try {
+      await axios.put(
+        process.env.NEXT_PUBLIC_END_POINT + "/clubs/changeClubAdmin",
+        {
+          newAdminId: newAdminId,
+          clubId: selectedClubForAdmin.clubid
+        },
+        { withCredentials: true }
+      );
+      
+      setShowChangeAdminModal(false);
+      setSelectedClubForAdmin(null);
+      setNewAdminId("");
+      fetchClubs();
+    } catch (err) {
+      console.error("Error changing club admin:", err);
+      setError("Failed to change club administrator");
+    }
+  };
+
+  const handleChangeAdminClick = (club) => {
+    setSelectedClubForAdmin(club);
+    if (club.adminid) {
+      setNewAdminId(club.adminid);
+    } else {
+      setNewAdminId("");
+    }
+    setShowChangeAdminModal(true);
+  };
+
   const filteredPendingClubs = pendingClubs.filter(club => 
     club.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     club.description?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -251,7 +289,10 @@ export default function ClubsManagement() {
               />
             )}
             {activeTab === "acceptedClubs" && (
-              <AcceptedClubsTable clubs={filteredAcceptedClubs} />
+              <AcceptedClubsTable 
+                clubs={filteredAcceptedClubs} 
+                onChangeAdmin={handleChangeAdminClick}
+              />
             )}
           </div>
         )}
@@ -302,7 +343,7 @@ export default function ClubsManagement() {
                   value={clubForm.room}
                   onChange={(e) => setClubForm({...clubForm, room: e.target.value})}
                   className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  placeholder="Enter room location (optional)"
+                  placeholder="Enter room location"
                 />
               </div>
               
@@ -381,6 +422,74 @@ export default function ClubsManagement() {
           </div>
         </div>
       )}
+
+      {/* Change admin modal */}
+      {showChangeAdminModal && selectedClubForAdmin && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50">
+          <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <h2 className="text-xl font-semibold text-white mb-4">
+              Change Club Administrator
+            </h2>
+            <p className="text-gray-300 mb-4">
+              Select a new instructor to manage <span className="font-semibold">{selectedClubForAdmin.name}</span>
+            </p>
+            
+            {selectedClubForAdmin.adminid && (
+              <div className="mb-4 p-3 bg-gray-700 rounded-md">
+                <p className="text-sm text-gray-300 mb-1">Current Administrator:</p>
+                <p className="text-white font-medium">
+                  {instructors.find(i => i.userid === selectedClubForAdmin.adminid)?.username || 
+                   instructors.find(i => i.userid === selectedClubForAdmin.adminid)?.name || 
+                   "Unknown"} 
+                  {instructors.find(i => i.userid === selectedClubForAdmin.adminid)?.email && 
+                   ` - ${instructors.find(i => i.userid === selectedClubForAdmin.adminid)?.email}`}
+                </p>
+              </div>
+            )}
+            
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                New Club Instructor
+              </label>
+              <select
+                value={newAdminId}
+                onChange={(e) => setNewAdminId(e.target.value)}
+                className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                required
+              >
+                <option value="">Select an instructor</option>
+                {instructors.map((instructor, index) => (
+                  <option 
+                    key={instructor.userid || `instructor-${index}`} 
+                    value={instructor.userid}
+                  >
+                    {instructor.username || instructor.name} - {instructor.email}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowChangeAdminModal(false);
+                  setSelectedClubForAdmin(null);
+                }}
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md text-white"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleChangeAdmin}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md text-white"
+                disabled={!newAdminId}
+              >
+                Change Administrator
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -449,7 +558,7 @@ function PendingClubsTable({ clubs, onAccept, onReject }) {
   );
 }
 
-function AcceptedClubsTable({ clubs }) {
+function AcceptedClubsTable({ clubs, onChangeAdmin }) {
   if (clubs.length === 0) {
     return (
       <div className="text-center py-10">
@@ -475,6 +584,9 @@ function AcceptedClubsTable({ clubs }) {
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
               Creation Date
             </th>
+            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody className="bg-gray-800 divide-y divide-gray-700">
@@ -491,6 +603,15 @@ function AcceptedClubsTable({ clubs }) {
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                 {club.created_at ? new Date(club.created_at).toLocaleDateString() : "N/A"}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button
+                  onClick={() => onChangeAdmin(club)}
+                  className="text-blue-400 hover:text-blue-300"
+                  title="Change Administrator"
+                >
+                  <UserCog className="h-5 w-5" />
+                </button>
               </td>
             </tr>
           ))}

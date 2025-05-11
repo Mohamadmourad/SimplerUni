@@ -166,7 +166,7 @@ const clubAcceptanceEmail = (username, clubName) => `
         </tr>
         <tr>
             <td class="footer">
-            <p>© 2025 Csimpleruni. All rights reserved.</p>
+            <p>© 2025 simpleruni. All rights reserved.</p>
             </td>
         </tr>
         </table>
@@ -241,7 +241,7 @@ const resetPasswordEmail = (username, resetToken) => `
                 <p class="message">
                     We received a request to reset your password. Please click the button below to reset your password:
                 </p>
-                <a href="https://simpleruni.com/user/reset-password/${resetToken}" class="button">Reset Password</a>
+                <a href="https://simpleruni/user/reset-password/${resetToken}" class="button">Reset Password</a>
                 <p class="message">
                     If you didn't request this, please ignore this email or contact support if you have questions.
                 </p>
@@ -285,7 +285,7 @@ const adminResetPasswordEmail = (username, resetToken) => `
                 <p class="message">
                     We received a request to reset password of the admin ${username}. Please click the button below to reset your password:
                 </p>
-                <a href="https://simpleruni.com/admin/reset-password/${resetToken}" class="button">Reset Password</a>
+                <a href="https://simpleruni/admin/reset-password/${resetToken}" class="button">Reset Password</a>
                 <p class="message">
                     If you didn't request this, please ignore this email or contact support if you have questions.
                 </p>
@@ -301,4 +301,4 @@ const adminResetPasswordEmail = (username, resetToken) => `
     </html>
 `;
 
-module.exports = { accountAcceptanceEmail, otpVerificationEmail, newUniversityRequestEmail, clubAcceptanceEmail, clubRejectionEmail };
+module.exports = { accountAcceptanceEmail, otpVerificationEmail, newUniversityRequestEmail, clubAcceptanceEmail, clubRejectionEmail, resetPasswordEmail, adminResetPasswordEmail };
