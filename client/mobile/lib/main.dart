@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:senior_project/modules/user_profile.dart';
+import 'package:senior_project/providers/chatroomProvider.dart';
 import 'package:senior_project/providers/user_provider.dart';
 import 'package:senior_project/screens/auth/forgot_password_page.dart';
 import 'package:senior_project/screens/chats/chat.dart';
@@ -13,6 +14,7 @@ import 'package:senior_project/screens/auth/login.dart';
 import 'package:senior_project/screens/home/homepage.dart';
 import 'package:senior_project/screens/profile/profile_page.dart';
 import 'package:senior_project/screens/auth/loading_page.dart';
+import 'package:senior_project/services/webSocket.dart';
 import 'package:senior_project/theme/app_theme.dart';
 import 'package:senior_project/screens/profile/edit_profile_page.dart';
 
@@ -22,15 +24,23 @@ void main() async {
   final userProvider = UserProvider();
   await userProvider.initializeUser();
 
+  final chatroomProvider = ChatroomProvider();
+  final socketService = SocketService();
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider<UserProvider>.value(value: userProvider),
+        ChangeNotifierProvider<ChatroomProvider>.value(value: chatroomProvider),
+        Provider<SocketService>.value(value: socketService), 
       ],
       child: const MyApp(),
     ),
   );
 }
+
+
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
