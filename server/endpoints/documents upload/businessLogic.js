@@ -94,7 +94,7 @@ exports.uploadDocumentToS3 = async (req, res) => {
     const { fileName, fileData, mimeType, fieldName } = req.body;
 
     const buffer = Buffer.from(fileData, 'base64');
-    if (buffer.length > 25 * 1024 * 1024) {
+    if (buffer.length > 25 * 1024 * 1024 * 1024) {
       return res.status(400).json({ error: 'File size exceeds limit' });
     }
 
