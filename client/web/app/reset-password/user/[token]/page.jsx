@@ -73,8 +73,8 @@ export default function ResetPasswordPage() {
           <div className="text-center mb-8">
             <Image 
               src="/icon.png" 
-              width={48}
-              height={48}
+              width={90}
+              height={90}
               alt="SimplerUni Logo"
               className="mx-auto mb-4"
             />
@@ -86,12 +86,6 @@ export default function ResetPasswordPage() {
               Your password has been updated successfully.
             </p>
           </div>
-          <button
-            onClick={() => router.push("/auth/login")}
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-          >
-            Go to Login
-          </button>
         </div>
       </div>
     );
@@ -103,8 +97,8 @@ export default function ResetPasswordPage() {
         <div className="text-center mb-8">
           <Image 
             src="/icon.png" 
-            width={48}
-            height={48}
+            width={90}
+            height={90}
             alt="SimplerUni Logo"
             className="mx-auto mb-4"
           />
