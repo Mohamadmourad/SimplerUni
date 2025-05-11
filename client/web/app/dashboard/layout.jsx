@@ -112,8 +112,8 @@ export default function DashboardLayout({ children }) {
             <div className="flex items-center">
               <Image 
                 src="/icon.png" 
-                width={32} 
-                height={32} 
+                width={90} 
+                height={90} 
                 alt="SimplerUni Logo" 
                 className="text-purple-500"
               />

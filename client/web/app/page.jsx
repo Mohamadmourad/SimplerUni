@@ -86,8 +86,8 @@ function Home() {
             <div className="flex items-center">
               <Image 
                 src="/icon.png" 
-                width={32} 
-                height={32} 
+                width={64} 
+                height={64} 
                 alt="SimplerUni Logo" 
                 className="text-purple-500"
               />

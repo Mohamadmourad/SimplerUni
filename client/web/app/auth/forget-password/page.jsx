@@ -57,8 +57,8 @@ export default function ForgotPasswordPage() {
           <div className="text-center mb-8">
             <Image 
               src="/icon.png" 
-              width={48}
-              height={48}
+              width={90}
+              height={90}
               alt="SimplerUni Logo"
               className="mx-auto mb-4"
             />
@@ -84,8 +84,8 @@ export default function ForgotPasswordPage() {
         <div className="text-center mb-8">
           <Image 
             src="/icon.png" 
-            width={48}
-            height={48}
+            width={90}
+            height={90}
             alt="SimplerUni Logo"
             className="mx-auto mb-4"
           />
