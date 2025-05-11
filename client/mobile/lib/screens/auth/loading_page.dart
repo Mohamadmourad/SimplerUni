@@ -112,7 +112,6 @@ class LoadingPageState extends State<LoadingPage> {
       return _buildBannedUserScreen();
     }
 
-    // Regular loading screen
     return Scaffold(
       body: Center(
         child: Column(

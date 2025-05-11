@@ -14,8 +14,8 @@ class ClubCard extends StatelessWidget {
   final VoidCallback? onJoin;
   final bool isAdmin;
   final bool isProcessingRequest;
-  final VoidCallback? onShowMembers; // Add this parameter
-  final VoidCallback? onShowRequests; // Add this parameter
+  final VoidCallback? onShowMembers; 
+  final VoidCallback? onShowRequests;
 
   const ClubCard({
     super.key,
@@ -24,17 +24,17 @@ class ClubCard extends StatelessWidget {
     this.onJoin,
     this.isAdmin = false,
     this.isProcessingRequest = false,
-    this.onShowMembers, // Add this parameter
-    this.onShowRequests, // Add this parameter
+    this.onShowMembers, 
+    this.onShowRequests,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Check if the current user is the admin of this club
+    
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final userIsClubAdmin = club.adminId == userProvider.currentUser?.userId;
 
-    // Determine if this card shows an admin club
+   
     final showAsAdmin = isAdmin || userIsClubAdmin;
 
     return Card(
@@ -99,7 +99,7 @@ class ClubCard extends StatelessWidget {
             ElevatedButton.icon(
               icon: const Icon(Icons.info_outline),
               label: const Text('Club Details & Members'),
-              onPressed: onShowMembers, // Use the callback here
+              onPressed: onShowMembers, 
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryColor,
               ),
@@ -108,7 +108,7 @@ class ClubCard extends StatelessWidget {
             ElevatedButton.icon(
               icon: const Icon(Icons.pending_actions),
               label: const Text('View Join Requests'),
-              onPressed: onShowRequests, // Use the callback here
+              onPressed: onShowRequests, 
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange[700],
               ),
@@ -117,7 +117,6 @@ class ClubCard extends StatelessWidget {
         ),
       );
     } else {
-      // For regular members, show a more compact right-aligned button
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: Align(

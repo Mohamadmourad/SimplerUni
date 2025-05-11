@@ -82,7 +82,6 @@ class ProfilePageState extends State<ProfilePage> {
                     icon: const Icon(Icons.edit),
                     tooltip: 'Edit Profile',
                     onPressed: () {
-                      // Navigate to the edit profile page
                       context.push('/edit-profile', extra: userProfile);
                     },
                   ),
@@ -207,7 +206,6 @@ class ProfilePageState extends State<ProfilePage> {
                   label: 'University',
                   value: userProfile!.universityName ?? 'Not specified',
                 ),
-                // Only show campus and major for students
                 if (userProfile!.isStudent == true) ...[
                   const Divider(height: 20),
                   ProfileInfoRow(

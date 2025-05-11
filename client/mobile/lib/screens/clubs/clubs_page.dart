@@ -324,7 +324,6 @@ class ClubsPageState extends State<ClubsPage>
 
   void showClubMembers(Club club) {
     if (club.clubId != null) {
-      // Use NavigatorOf instead of context.push to navigate with parameters
       Navigator.of(context).push(
         MaterialPageRoute(
           builder:
@@ -339,7 +338,6 @@ class ClubsPageState extends State<ClubsPage>
 
   void showClubRequests(Club club) {
     if (club.clubId != null) {
-      // Use NavigatorOf instead of context.push to navigate with parameters
       Navigator.of(context).push(
         MaterialPageRoute(
           builder:
