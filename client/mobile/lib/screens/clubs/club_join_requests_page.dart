@@ -55,7 +55,7 @@ class _ClubJoinRequestsPageState extends State<ClubJoinRequestsPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Request accepted successfully')),
         );
-        loadRequests(); // Reload the list
+        loadRequests(); 
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to accept request')),
@@ -75,7 +75,7 @@ class _ClubJoinRequestsPageState extends State<ClubJoinRequestsPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Request rejected successfully')),
         );
-        loadRequests(); // Reload the list
+        loadRequests(); 
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to reject request')),
@@ -160,7 +160,6 @@ class _ClubJoinRequestsPageState extends State<ClubJoinRequestsPage> {
                             icon: const Icon(Icons.check_circle),
                             color: Colors.green,
                             onPressed: () {
-                              // Use lowercase 'userid' instead of 'userId'
                               final userId = request['userid'];
                               if (userId != null) {
                                 handleAcceptRequest(userId);
@@ -177,7 +176,6 @@ class _ClubJoinRequestsPageState extends State<ClubJoinRequestsPage> {
                             icon: const Icon(Icons.cancel),
                             color: Colors.red,
                             onPressed: () {
-                              // Use lowercase 'userid' instead of 'userId'
                               final userId = request['userid'];
                               if (userId != null) {
                                 handleRejectRequest(userId);

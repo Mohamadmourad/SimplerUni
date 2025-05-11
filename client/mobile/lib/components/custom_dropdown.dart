@@ -51,7 +51,7 @@ class CustomDropdown<T> extends StatelessWidget {
         color: AppColors.textPrimary,
         fontWeight: FontWeight.w500,
       ),
-      isExpanded: true, // Make the dropdown take full width
+      isExpanded: true,
     );
   }
 }

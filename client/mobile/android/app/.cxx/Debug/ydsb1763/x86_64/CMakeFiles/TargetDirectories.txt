@@ -1,2 +1,0 @@
-C:/Users/we/Desktop/simplerUni/client/mobile/android/app/.cxx/Debug/ydsb1763/x86_64/CMakeFiles/edit_cache.dir
-C:/Users/we/Desktop/simplerUni/client/mobile/android/app/.cxx/Debug/ydsb1763/x86_64/CMakeFiles/rebuild_cache.dir

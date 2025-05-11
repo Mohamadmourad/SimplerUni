@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:senior_project/modules/user_profile.dart';
 import 'package:senior_project/providers/user_provider.dart';
+import 'package:senior_project/screens/auth/forgot_password_page.dart';
 import 'package:senior_project/screens/chats/chat.dart';
 import 'package:senior_project/screens/auth/complete_profile.dart';
 import 'package:senior_project/screens/auth/profile_optional_info.dart';
@@ -10,8 +12,9 @@ import 'package:senior_project/screens/auth/signup.dart';
 import 'package:senior_project/screens/auth/login.dart';
 import 'package:senior_project/screens/home/homepage.dart';
 import 'package:senior_project/screens/profile/profile_page.dart';
-import 'package:senior_project/screens/auth/loading_page.dart'; 
+import 'package:senior_project/screens/auth/loading_page.dart';
 import 'package:senior_project/theme/app_theme.dart';
+import 'package:senior_project/screens/profile/edit_profile_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,9 +50,7 @@ class MyApp extends StatelessWidget {
             routes: [
               GoRoute(
                 path: '/',
-                builder:
-                    (context, state) =>
-                        const LoadingPage(),
+                builder: (context, state) => const LoadingPage(),
               ),
               GoRoute(
                 path: '/signup',
@@ -103,13 +104,23 @@ class MyApp extends StatelessWidget {
                   );
                 },
               ),
-              // Add profile route for viewing other users' profiles
               GoRoute(
                 path: '/profile/:userId',
                 builder: (context, state) {
                   final userId = state.pathParameters['userId'];
                   return ProfilePage(fromBottomNav: false, userId: userId);
                 },
+              ),
+              GoRoute(
+                path: '/edit-profile',
+                builder:
+                    (context, state) => EditProfilePage(
+                      userProfile: state.extra as UserProfile,
+                    ),
+              ),
+              GoRoute(
+                path: '/forgot-password',
+                builder: (context, state) => const ForgotPasswordPage(),
               ),
             ],
           );

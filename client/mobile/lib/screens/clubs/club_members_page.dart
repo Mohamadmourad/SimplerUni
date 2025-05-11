@@ -40,7 +40,6 @@ class _ClubMembersPageState extends State<ClubMembersPage> {
       final info = await getClubInfo(widget.clubId);
       setState(() {
         clubInfo = info;
-        // Extract members from the clubMembers property
         members = info['clubMembers'] as List<dynamic>? ?? [];
         isLoading = false;
       });
@@ -54,7 +53,6 @@ class _ClubMembersPageState extends State<ClubMembersPage> {
 
   Future<void> removeMember(String userId) async {
     try {
-      // Show confirmation dialog
       final shouldRemove =
           await showDialog<bool>(
             context: context,
@@ -83,16 +81,13 @@ class _ClubMembersPageState extends State<ClubMembersPage> {
 
       if (!shouldRemove) return;
 
-      // Show loading indicator
       setState(() {
         isLoading = true;
       });
 
-      // Call API to remove the member
       final success = await removeStudentFromClub(widget.clubId, userId);
 
       if (success) {
-        // Reload club info to refresh the members list
         await loadClubInfo();
 
         if (mounted) {
@@ -265,10 +260,7 @@ class _ClubMembersPageState extends State<ClubMembersPage> {
                         },
                         child: Text(
                           member['username'] ?? 'Unknown',
-                          style: TextStyle(
-                            color: Colors.blue[700],
-                            decoration: TextDecoration.underline,
-                          ),
+                          style: const TextStyle(fontSize: 16),
                         ),
                       ),
                       subtitle: Text(member['email'] ?? ''),

@@ -26,6 +26,7 @@ class QuestionDetailsPageState extends State<QuestionDetailsPage> {
   String? errorMessage;
   final TextEditingController answerController = TextEditingController();
   bool isSubmitting = false;
+  bool isUpvoting = false;
 
   @override
   void initState() {
@@ -111,6 +112,7 @@ class QuestionDetailsPageState extends State<QuestionDetailsPage> {
                     question: widget.question,
                     onUpvote: handleUpvote,
                     onViewDetails: (_) {},
+                    isUpvoting: isUpvoting,
                   ),
 
                   const Divider(height: 32, thickness: 1),
@@ -156,16 +158,18 @@ class QuestionDetailsPageState extends State<QuestionDetailsPage> {
   }
 
   void handleUpvote(Question question) async {
+    setState(() {
+      isUpvoting = true;
+    });
+
     try {
       if (question.hasUpvoted) {
-        
         await removeUpvoteFromQuestion(question.questionId);
         setState(() {
           widget.question.upvoteCount--;
           widget.question.hasUpvoted = false;
         });
       } else {
-        
         await upvoteQuestion(question.questionId);
         setState(() {
           widget.question.upvoteCount++;
@@ -176,6 +180,10 @@ class QuestionDetailsPageState extends State<QuestionDetailsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to upvote: ${e.toString()}')),
       );
+    } finally {
+      setState(() {
+        isUpvoting = false;
+      });
     }
   }
 

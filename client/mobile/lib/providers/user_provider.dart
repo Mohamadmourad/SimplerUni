@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:senior_project/modules/user.dart';
+import 'package:senior_project/modules/user_profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:senior_project/functions/user/get_user_data.dart';
@@ -38,11 +39,8 @@ class UserProvider with ChangeNotifier {
   Future<void> removeUserFromPrefs() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      // Remove user data
       await prefs.remove('userData');
-      // Also remove auth token
       await prefs.remove('authToken');
-      // Clear any other auth-related data
       await prefs.remove('refreshToken');
       print("User data and authentication tokens removed from preferences");
     } catch (e) {
@@ -111,6 +109,20 @@ class UserProvider with ChangeNotifier {
       isLoading = false;
       notifyListeners();
       return false;
+    }
+  }
+
+  void updateUserProfile(UserProfile updatedProfile) {
+    if (currentUser != null) {
+ 
+      final currentUserId = currentUser!.userId;
+
+      currentUser = User(
+        userId: currentUserId,
+        username: updatedProfile.username,
+      );
+
+      notifyListeners();
     }
   }
 }

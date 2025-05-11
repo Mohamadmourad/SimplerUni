@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { School, Mail, Lock, ArrowRight } from "lucide-react";
+import { Mail, Lock, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import axios from "axios";
 import { useRouter } from 'next/navigation';
 
@@ -29,17 +30,18 @@ export default function AdminLogin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try{
-    setisClickable(false);
-    setError("");
-    await axios.post(process.env.NEXT_PUBLIC_END_POINT + "/university/login",{
-      username,
-      password
-    },{ withCredentials: true });
-    setisClickable(true);
-    router.push('/dashboard');
+      setisClickable(false);
+      setError("");
+      await axios.post(process.env.NEXT_PUBLIC_END_POINT + "/university/login",{
+        username,
+        password
+      },{ withCredentials: true });
+      setisClickable(true);
+      router.push('/dashboard');
     }
     catch(e){
-      setError(e);
+      const errorMessage = e.response?.data?.error || e.response?.data?.message || e.message || "Login failed";
+      setError(errorMessage);
       setisClickable(true);
     }
   };
@@ -48,7 +50,13 @@ export default function AdminLogin() {
     <div className="min-h-screen flex items-center justify-center bg-gray-900">
       <div className="bg-gray-800 rounded-2xl p-8 max-w-md w-full mx-4 relative shadow-xl">
         <div className="text-center mb-8">
-          <School className="w-12 h-12 text-purple-500 mx-auto mb-4" />
+          <Image 
+            src="/icon.png" 
+            width={48}
+            height={48}
+            alt="SimplerUni Logo"
+            className="mx-auto mb-4"
+          />
           <h2 className="text-3xl font-bold text-white">SimplerUni Dashboard</h2>
           <p className="text-gray-300 mt-2">Sign in to manage your university portal</p>
         </div>
@@ -67,10 +75,12 @@ export default function AdminLogin() {
                 onChange={(e) => setUsername(e.target.value)}
                 required
               />
-              <label className="text-sm font-medium text-red-600 mb-2">
-              {error}
-            </label>
             </div>
+            {error && (
+              <p className="mt-2 text-sm font-medium text-red-500">
+                {error}
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -91,9 +101,11 @@ export default function AdminLogin() {
           <div className="flex items-center justify-between">
             <div className="flex items-center">
             </div>
-            <button className="text-sm font-medium text-purple-500 hover:text-purple-400">
+            <Link href="/auth/forget-password">
+             <span className="text-sm font-medium text-purple-500 hover:text-purple-400 cursor-pointer">
               Forgot password?
-            </button>
+            </span>
+            </Link>
           </div>
           <button
             type="submit"

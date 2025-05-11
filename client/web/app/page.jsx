@@ -75,22 +75,26 @@ function Home() {
 
   const scrollToSection = (id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-    setMobileMenuOpen(false); // Close menu after clicking a link
+    setMobileMenuOpen(false); 
   };
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation */}
       <nav className="bg-gray-900 fixed w-full z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
-              <School className="w-8 h-8 text-purple-500" />
+              <Image 
+                src="/icon.png" 
+                width={32} 
+                height={32} 
+                alt="SimplerUni Logo" 
+                className="text-purple-500"
+              />
               <span className="ml-2 text-white text-xl font-bold">SimplerUni</span>
             </div>
             <div className="hidden md:flex items-center space-x-8">
               <button onClick={() => scrollToSection("home")} className="text-gray-300 hover:text-white">Home</button>
-              <button onClick={() => scrollToSection("features")} className="text-gray-300 hover:text-white">Features</button>
               <button onClick={() => scrollToSection("benefits")} className="text-gray-300 hover:text-white">Benefits</button>
               <button onClick={() => scrollToSection("cta")} className="text-gray-300 hover:text-white">Get Started</button>
               <Link href="/auth/login">
@@ -115,7 +119,6 @@ function Home() {
           </div>
         </div>
 
-        {/* Mobile menu, show/hide based on menu state */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-gray-800">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
@@ -124,12 +127,6 @@ function Home() {
                 className="block text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-base font-medium w-full text-left"
               >
                 Home
-              </button>
-              <button 
-                onClick={() => scrollToSection("features")} 
-                className="block text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-base font-medium w-full text-left"
-              >
-                Features
               </button>
               <button 
                 onClick={() => scrollToSection("benefits")} 
@@ -153,7 +150,6 @@ function Home() {
         )}
       </nav>
 
-      {/* Hero Section */}
       <div id="home" className="relative pt-16">
         <div className="absolute inset-0 w-full h-full bg-black">
           <div className="absolute inset-0 w-full h-full opacity-40">
@@ -188,7 +184,6 @@ function Home() {
         </div>
       </div>
 
-      {/* Benefits Section */}
       <div id="benefits" className="bg-gray-50 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">Why Choose SimplerUni?</h2>
@@ -202,17 +197,18 @@ function Home() {
 
       <UniversitySlider />
 
-      {/* CTA Section */}
       <div id="cta" className="bg-gray-900 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-left">
           <h2 className="text-4xl font-bold mb-6">Join the Future of Campus Life</h2>
           <p className="text-gray-300 mb-8 max-w-2xl text-lg">
             Experience a smarter way to stay connected and organized in university.
           </p>
+          <Link href="/auth/request-access">
           <button className="inline-flex items-center px-8 py-4 rounded-full bg-purple-600 text-white hover:bg-purple-700 transition-colors text-lg">
             <Trophy className="w-5 h-5 mr-2" />
             Get Started Today
           </button>
+            </Link>
         </div>
       </div>
     </div>

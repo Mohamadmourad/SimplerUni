@@ -22,10 +22,8 @@ Future<Map<String, dynamic>> sign_up(
     final data = response['body'];
     await prefs.setString('authToken', data["authToken"]);
 
-    // Create user object from response data
     if (data["user"] != null) {
       final user = User.fromJson(data["user"]);
-      // Save user to provider state
       Provider.of<UserProvider>(context, listen: false).setUser(user);
     }
 

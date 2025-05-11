@@ -13,6 +13,8 @@ router.post('/addMajor',universityController.addMajor);
 router.post('/universityRequest',universityController.universityRequest);
 router.post('/universityRequestAccept',universityController.universityRequestAccept);
 router.post('/universityRequestReject',universityController.universityRequestReject);
+router.post('/sendChangePasswordLink', universityController.sendChangePasswordLink);
+router.post('/changeUserPassword', universityController.changeUserPassword);
 
 router.get('/getUniversity', universityController.getUniversity);
 router.get('/getAllCampsus',universityController.getAllCampsus);

@@ -29,6 +29,43 @@ module.exports.acceptClubRequest = async (req, res) => {
     }
 };
 
+module.exports.rejectClubRequest = async (req, res) => {
+    const { clubId } = req.body;
+
+    if (!clubId) {
+        return res.status(400).json({ error: "Club ID is required" });
+    }
+
+    try {
+        await db.query(`DELETE FROM clubs WHERE clubId = $1`, [clubId]);
+        res.status(200).json({ message: "Club request rejected and deleted successfully" });
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json("Deleting club request failed");
+    }
+};
+
+module.exports.deleteClub = async (req, res) => {
+    const { clubId } = req.params;
+
+    if (!clubId) {
+        return res.status(400).json({ error: "Club ID is required" });
+    }
+
+    try {
+        await db.query(`DELETE FROM chatroom_members WHERE chatroomid = (SELECT chatroomId FROM clubs WHERE clubId = $1)`, [clubId]);
+        await db.query(`DELETE FROM chatrooms WHERE chatroomId = (SELECT chatroomId FROM clubs WHERE clubId = $1)`, [clubId]);
+        await db.query(`DELETE FROM clubs WHERE clubId = $1`, [clubId]);
+
+        res.status(200).json({ message: "Club deleted successfully" });
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json("Deleting club failed");
+    }
+};
+
+
+
 module.exports.makeClubRequest = async (req, res)=>{ 
     const token = req.headers.authorization;
     if (!token) {

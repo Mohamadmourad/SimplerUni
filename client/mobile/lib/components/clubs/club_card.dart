@@ -5,12 +5,17 @@ import 'package:go_router/go_router.dart';
 import 'package:senior_project/screens/clubs/club_members_page.dart';
 import 'package:senior_project/screens/clubs/club_join_requests_page.dart';
 import 'package:senior_project/screens/clubs/club_details_page.dart';
+import 'package:provider/provider.dart';
+import 'package:senior_project/providers/user_provider.dart';
 
 class ClubCard extends StatelessWidget {
   final Club club;
   final bool isUserMember;
   final VoidCallback? onJoin;
   final bool isAdmin;
+  final bool isProcessingRequest;
+  final VoidCallback? onShowMembers; 
+  final VoidCallback? onShowRequests;
 
   const ClubCard({
     super.key,
@@ -18,10 +23,20 @@ class ClubCard extends StatelessWidget {
     required this.isUserMember,
     this.onJoin,
     this.isAdmin = false,
+    this.isProcessingRequest = false,
+    this.onShowMembers, 
+    this.onShowRequests,
   });
 
   @override
   Widget build(BuildContext context) {
+    
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userIsClubAdmin = club.adminId == userProvider.currentUser?.userId;
+
+   
+    final showAsAdmin = isAdmin || userIsClubAdmin;
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Padding(
@@ -62,8 +77,10 @@ class ClubCard extends StatelessWidget {
                 ],
               ),
             ],
+            if (showAsAdmin)
+              Padding(padding: const EdgeInsets.only(top: 8, bottom: 4)),
             if (isUserMember)
-              _buildMemberActions(context)
+              _buildMemberActions(context, showAsAdmin)
             else if (onJoin != null)
               _buildJoinButton(context),
           ],
@@ -72,8 +89,8 @@ class ClubCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMemberActions(BuildContext context) {
-    if (isAdmin) {
+  Widget _buildMemberActions(BuildContext context, bool isClubAdmin) {
+    if (isClubAdmin) {
       return Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
@@ -82,19 +99,7 @@ class ClubCard extends StatelessWidget {
             ElevatedButton.icon(
               icon: const Icon(Icons.info_outline),
               label: const Text('Club Details & Members'),
-              onPressed: () {
-                if (club.clubId != null) {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder:
-                          (context) => ClubMembersPage(
-                            clubId: club.clubId!,
-                            clubName: club.name ?? 'Club Details',
-                          ),
-                    ),
-                  );
-                }
-              },
+              onPressed: onShowMembers, 
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryColor,
               ),
@@ -103,19 +108,7 @@ class ClubCard extends StatelessWidget {
             ElevatedButton.icon(
               icon: const Icon(Icons.pending_actions),
               label: const Text('View Join Requests'),
-              onPressed: () {
-                if (club.clubId != null) {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder:
-                          (context) => ClubJoinRequestsPage(
-                            clubId: club.clubId!,
-                            clubName: club.name ?? 'Join Requests',
-                          ),
-                    ),
-                  );
-                }
-              },
+              onPressed: onShowRequests, 
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange[700],
               ),
@@ -124,7 +117,6 @@ class ClubCard extends StatelessWidget {
         ),
       );
     } else {
-      // For regular members, show a more compact right-aligned button
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: Align(
@@ -158,13 +150,32 @@ class ClubCard extends StatelessWidget {
   Widget _buildJoinButton(BuildContext context) {
     return Align(
       alignment: Alignment.centerRight,
-      child: ElevatedButton(
-        onPressed: onJoin,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primaryColor,
-        ),
-        child: const Text('Request to Join'),
-      ),
+      child:
+          isProcessingRequest
+              ? SizedBox(
+                height: 24,
+                width: 24,
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    AppColors.primaryColor,
+                  ),
+                  strokeWidth: 2,
+                ),
+              )
+              : ElevatedButton(
+                onPressed: onJoin,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      club.hasUserMadeRequest == true
+                          ? Colors.grey[400]
+                          : AppColors.primaryColor,
+                ),
+                child: Text(
+                  club.hasUserMadeRequest == true
+                      ? 'Requested'
+                      : 'Request to Join',
+                ),
+              ),
     );
   }
 }

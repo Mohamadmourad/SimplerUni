@@ -23,6 +23,7 @@ class QuestionsPageState extends State<QuestionsPage> {
   String currentFilter = 'recent';
   List<Question> questions = [];
   String? errorMessage;
+  Map<String, bool> upvotingQuestions = {};
 
   @override
   void initState() {
@@ -125,6 +126,7 @@ class QuestionsPageState extends State<QuestionsPage> {
                 onUpvote: handleUpvote,
                 onViewDetails: viewQuestionDetails,
                 onRefresh: refreshQuestions,
+                upvotingQuestions: upvotingQuestions,
               ),
     );
   }
@@ -172,6 +174,10 @@ class QuestionsPageState extends State<QuestionsPage> {
   }
 
   Future<void> handleUpvote(Question question) async {
+    setState(() {
+      upvotingQuestions[question.questionId] = true;
+    });
+
     try {
       if (question.hasUpvoted) {
         await removeUpvoteFromQuestion(question.questionId);
@@ -190,6 +196,10 @@ class QuestionsPageState extends State<QuestionsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to process upvote: ${e.toString()}')),
       );
+    } finally {
+      setState(() {
+        upvotingQuestions[question.questionId] = false;
+      });
     }
   }
 

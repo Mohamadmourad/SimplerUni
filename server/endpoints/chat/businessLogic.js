@@ -87,7 +87,6 @@ module.exports.addToChatroom = async (req, res)=>{
 
 module.exports.getMessages = async (req, res)=>{
   const { chatroomId, before } = req.body;
-  console.log(before);
   try{
     const messages = await db.query(
         `
@@ -98,9 +97,8 @@ module.exports.getMessages = async (req, res)=>{
         WHERE c.chatroomid = $1
         AND m.created_at < $2
         ORDER BY m.created_at DESC
-        LIMIT $3
         `,
-        [chatroomId, before || new Date(), 10]
+        [chatroomId, before || new Date()]
     );
     return res.status(200).json(messages.rows);
   }
