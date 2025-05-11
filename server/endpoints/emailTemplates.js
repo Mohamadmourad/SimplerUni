@@ -285,7 +285,7 @@ const adminResetPasswordEmail = (username, resetToken) => `
                 <p class="message">
                     We received a request to reset password of the admin ${username}. Please click the button below to reset your password:
                 </p>
-                <a href="https://simpleruni/reset-password/admin/${resetToken}" class="button">Reset Password</a>
+                <a href="https://simpleruni.com/reset-password/admin/${resetToken}" class="button">Reset Password</a>
                 <p class="message">
                     If you didn't request this, please ignore this email or contact support if you have questions.
                 </p>
