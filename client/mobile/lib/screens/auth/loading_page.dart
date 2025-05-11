@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:senior_project/functions/user/get_user_data.dart';
 import 'package:senior_project/providers/user_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:senior_project/functions/user/get_user_profile.dart';
 import 'dart:convert';
 
 class LoadingPage extends StatefulWidget {
@@ -41,7 +40,13 @@ class LoadingPageState extends State<LoadingPage> {
           if (userId != null) {
             try {
               final user = await fetchCurrentUserData();
-              if (user != null && user.isBanned == true) {
+              if (user == null) {
+                print("User not found on the server. Logging out.");
+                await clearUserDataAndLogout();
+                return;
+              }
+
+              if (user.isBanned == true) {
                 setState(() {
                   isUserBanned = true;
                   isLoading = false;
@@ -50,6 +55,14 @@ class LoadingPageState extends State<LoadingPage> {
               }
             } catch (e) {
               print("Error fetching user profile: $e");
+
+              if (e.toString().contains("404") ||
+                  e.toString().contains("not found") ||
+                  e.toString().contains("deleted")) {
+                print("User likely deleted or not found. Logging out.");
+                await clearUserDataAndLogout();
+                return;
+              }
             }
           }
 
@@ -77,7 +90,6 @@ class LoadingPageState extends State<LoadingPage> {
       await prefs.remove('userData');
       await prefs.remove('authToken');
 
-      // Also clear any other user-related data
       await prefs.remove('selectedMajorId');
       await prefs.remove('selectedCampusId');
 
